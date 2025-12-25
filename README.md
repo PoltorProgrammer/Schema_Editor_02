@@ -1,6 +1,8 @@
 # MediXtract Schema Editor
 
-[![Open App](https://img.shields.io/badge/Open-Live%20Demo-blue?style=for-the-badge&logo=googlechrome)](https://poltorprogrammer.github.io/Schema_Editor_02/index.html)
+<a href="https://poltorprogrammer.github.io/Schema_Editor_02/index.html" target="_blank">
+  <img src="https://img.shields.io/badge/Open-Live%20Demo-blue?style=for-the-badge&logo=googlechrome" alt="Open App">
+</a>
 
 **A premium, high-performance interface for validating and managing MediXtract data schemas.**
 
