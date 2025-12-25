@@ -5,7 +5,27 @@ DESKTOP_PATH="$HOME/Desktop"
 LAUNCHER_PATH="$PROJECT_ROOT/tools/start_app.sh"
 ICON_PATH="$PROJECT_ROOT/tools/MediXtract-Circular-logo.ico"
 
-echo "Generating Shortcut..."
+echo "---------------------------------------------------"
+echo "🔍 Checking for Node.js..."
+
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js is not installed!"
+    read -p "Would you like to open the Node.js download page? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            open "https://nodejs.org/"
+        else
+            xdg-open "https://nodejs.org/"
+        fi
+        exit 1
+    fi
+else
+    NODE_VERSION=$(node -v)
+    echo "✅ Node.js found: $NODE_VERSION"
+fi
+
+echo "🚀 Generating Shortcut..."
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # Mac Shortcut (Command file)

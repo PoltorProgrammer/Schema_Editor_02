@@ -23,17 +23,17 @@ This tool is built with a "User-First" philosophy, focusing on clarity, speed, a
 ## 🚀 Quick Start
 
 ### 🪟 Windows
-1.  Ensure [Node.js](https://nodejs.org/) is installed.
-2.  Double-click **`Generate Shortcut.bat`**.
+1.  Double-click **`Generate Shortcut.bat`**.
+2.  The script will automatically check for Node.js. If missing, it will offer to install it for you (via Windows Package Manager).
 3.  Launch the **"Schema Editor"** icon from your Desktop.
 
 ### 🍎 Mac / 🐧 Linux
-1.  Ensure [Node.js](https://nodejs.org/) is installed.
-2.  Run the following in your terminal:
+1.  Run the following in your terminal:
     ```bash
     chmod +x "Generate Shortcut.sh" tools/*.sh
     ./"Generate Shortcut.sh"
     ```
+2.  The script will verify if Node.js is installed and guide you if it's missing.
 3.  Launch the **"Schema Editor"** app from your Desktop.
 
 ---
