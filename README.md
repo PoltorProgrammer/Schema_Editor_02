@@ -71,4 +71,10 @@ projects/
 [![Email](https://img.shields.io/badge/Email-poltorprogrammer%40gmail.com-red?logo=gmail&labelColor=lightgrey)](mailto:poltorprogrammer@gmail.com)
 
 ---
-*Developed for the MediXtract Ecosystem. Designed for precision, built for speed.*
+<p align="center">
+  <i>Developed for the <a href="https://medixtract.github.io/MediXtract/" target="_blank">MediXtract Ecosystem</a>. Designed for precision, built for speed.</i>
+  <br><br>
+  <a href="mailto:medixtract.developers@gmail.com">
+    <img src="https://img.shields.io/badge/MediXtract_Support-medixtract.developers%40gmail.com-blue?logo=gmail&labelColor=lightgrey" alt="MediXtract Support">
+  </a>
+</p>
