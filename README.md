@@ -76,7 +76,8 @@ projects/
 
 This project is a core component of the [MediXtract Ecosystem](https://medixtract.github.io/MediXtract/), dedicated to advancing medical data processing and validation.
 
-[![Website](https://img.shields.io/badge/Visit-MediXtract_Website-blue?style=flat-square&logo=googlechrome&logoColor=white)](https://medixtract.github.io/MediXtract/)
+[![Website](https://img.shields.io/badge/Visit-MediXtract_Website-blue?style=for-the-badge&logo=googlechrome&logoColor=white)](https://medixtract.github.io/MediXtract/)
+
 [![Email](https://img.shields.io/badge/Email-medixtract.developers%40gmail.com-blue?logo=gmail&labelColor=lightgrey)](mailto:medixtract.developers@gmail.com)
 
 ---
