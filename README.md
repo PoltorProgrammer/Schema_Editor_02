@@ -51,7 +51,7 @@ projects/
         └── ground_truth_01.json   <-- The reference for comparison
 ```
 
-> **Note:** The `projects/` folder is listed in `.gitignore` to protect your sensitive local data from being uploaded to public clouds.
+> **Security Note:** Both the `projects/` folder and the `js/projects-config.js` metadata are excluded from Git. This ensuring your project names and data remain private. The configuration is automatically re-generated every time you run the app locally.
 
 ---
 

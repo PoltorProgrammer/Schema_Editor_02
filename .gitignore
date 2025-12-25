@@ -5,6 +5,7 @@ node_modules/
 # Local Project Data (Excluded for security and privacy)
 projects/*
 !projects/.gitkeep
+js/projects-config.js
 
 # OS specific files
 .DS_Store
