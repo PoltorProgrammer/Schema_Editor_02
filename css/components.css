@@ -50,6 +50,15 @@
     box-shadow: var(--shadow-lg);
 }
 
+.btn-success.unsaved {
+    background: #e67e22 !important; /* Orange for unsaved changes */
+    border-color: #d35400 !important;
+}
+
+.btn-success.unsaved:hover:not(:disabled) {
+    background: #d35400 !important;
+}
+
 .btn-ghost {
     background: transparent;
     color: var(--gray-600);

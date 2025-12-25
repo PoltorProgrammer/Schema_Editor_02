@@ -54,6 +54,12 @@ async function getHandle() {
 
 Object.assign(SchemaEditor.prototype, {
     async showProjectSelection(forceDashboard) {
+        if (this.hasUnsavedChanges) {
+            const confirm = await AppUI.showConfirm('Unsaved Changes', 'You have unsaved changes. Are you sure you want to leave?');
+            if (!confirm) return;
+            this.hasUnsavedChanges = false; // Reset if user confirmed leaving
+            this.updateSaveButtonUI();
+        }
         const projectSelection = document.getElementById('projectSelection');
         const schemaEditor = document.getElementById('schemaEditor');
         const emptyState = document.getElementById('emptyState');

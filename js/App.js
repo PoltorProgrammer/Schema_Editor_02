@@ -15,6 +15,7 @@ class SchemaEditor {
         this.currentProject = null;
         this.projectsDirectoryHandle = null;
         this.panelStates = {}; // Persistent UI state for field details panel
+        this.hasUnsavedChanges = false;
 
         this.filters = {
             search: '',
@@ -43,6 +44,37 @@ class SchemaEditor {
         this.checkBrowserSupport();
         this.loadSettings();
         this.initializeTheme();
+        this.initializeUnsavedChangesHandler();
         this.showProjectSelection();
+    }
+
+    initializeUnsavedChangesHandler() {
+        window.addEventListener('beforeunload', (e) => {
+            if (this.hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = ''; // Standard way to show confirm dialog
+            }
+        });
+    }
+
+    markAsUnsaved() {
+        if (this.hasUnsavedChanges) return;
+        this.hasUnsavedChanges = true;
+        this.updateSaveButtonUI();
+    }
+
+    updateSaveButtonUI() {
+        const saveBtn = document.getElementById('saveBtn');
+        if (!saveBtn) return;
+        
+        if (this.hasUnsavedChanges) {
+            saveBtn.classList.add('unsaved');
+            if (!saveBtn.innerHTML.includes('*')) {
+                saveBtn.innerHTML = saveBtn.innerHTML.replace('Save Changes', 'Save Changes *');
+            }
+        } else {
+            saveBtn.classList.remove('unsaved');
+            saveBtn.innerHTML = saveBtn.innerHTML.replace(' *', '');
+        }
     }
 }

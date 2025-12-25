@@ -219,6 +219,7 @@ Object.assign(SchemaEditor.prototype, {
             if (val === '' || val === false) delete def[prop];
             else def[prop] = val;
         }
+        this.markAsUnsaved();
     },
 
     handleFieldPropertyChange(e) {
@@ -314,6 +315,7 @@ Object.assign(SchemaEditor.prototype, {
 
         this.updateFieldProperty(this.selectedField, prop, val);
         if (e.target.tagName === 'TEXTAREA') AppUI.autoResizeTextarea(e.target);
+        this.markAsUnsaved();
         this.refreshFieldData(this.selectedField);
     },
 
@@ -326,7 +328,7 @@ Object.assign(SchemaEditor.prototype, {
 
         def.performance[patientId].severity = level;
         def.performance[patientId].last_updated = new Date().toISOString();
-
+        this.markAsUnsaved();
         this.refreshFieldData(this.selectedField);
     },
 
@@ -375,6 +377,7 @@ Object.assign(SchemaEditor.prototype, {
             }
 
             this.renderLabels(def.labels);
+            this.markAsUnsaved();
         }
     },
 
@@ -385,6 +388,7 @@ Object.assign(SchemaEditor.prototype, {
         if (def.labels) {
             def.labels = def.labels.filter(l => l !== label);
             this.renderLabels(def.labels);
+            this.markAsUnsaved();
         }
     },
 
@@ -427,6 +431,7 @@ Object.assign(SchemaEditor.prototype, {
 
         this.renderOutputList(patientId, def.performance[patientId].output);
         input.value = '';
+        this.markAsUnsaved();
         this.refreshFieldData(this.selectedField);
 
         // Re-focus the newly rendered input and show all options (persistent behavior)
@@ -446,6 +451,7 @@ Object.assign(SchemaEditor.prototype, {
         if (def.performance[patientId]?.output) {
             def.performance[patientId].output.splice(index, 1);
             this.renderOutputList(patientId, def.performance[patientId].output);
+            this.markAsUnsaved();
             this.refreshFieldData(this.selectedField);
         }
     },
@@ -465,6 +471,7 @@ Object.assign(SchemaEditor.prototype, {
             }
 
             this.updatePatientSummary(patientId, def.performance[patientId].output);
+            this.markAsUnsaved();
         }
     },
 
@@ -484,6 +491,7 @@ Object.assign(SchemaEditor.prototype, {
             }
 
             this.updatePatientSummary(patientId, def.performance[patientId].output);
+            this.markAsUnsaved();
         }
     },
 

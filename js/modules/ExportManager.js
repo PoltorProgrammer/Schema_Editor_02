@@ -38,6 +38,8 @@ Object.assign(SchemaEditor.prototype, {
             await writable.close();
 
             AppUI.hideProcessing();
+            this.hasUnsavedChanges = false;
+            this.updateSaveButtonUI();
             AppUI.showSaveSuccess('Project saved!');
         } catch (error) {
             AppUI.hideProcessing();
