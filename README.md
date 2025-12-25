@@ -68,7 +68,7 @@ projects/
 **Tomás González Bartomeu**  
 *Known as **PoltorProgrammer***
 
-[![Email](https://img.shields.io/badge/Email-poltorprogrammer%40gmail.com-lightgrey?logo=gmail&labelColor=EA4335)](mailto:poltorprogrammer@gmail.com)
+[![Email](https://img.shields.io/badge/Email-poltorprogrammer%40gmail.com-red?logo=gmail&labelColor=lightgrey)](mailto:poltorprogrammer@gmail.com)
 
 ---
 *Developed for the MediXtract Ecosystem. Designed for precision, built for speed.*
