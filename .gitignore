@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+.npm/
+
+# Local Project Data (Excluded for security and privacy)
+projects/*
+!projects/.gitkeep
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Build/Dev files
+.vscode/
+.idea/
+*.log

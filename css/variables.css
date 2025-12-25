@@ -1,0 +1,99 @@
+/* Modern CSS Reset & Variables */
+:root {
+    --color-primary: #1D6491;
+    --color-accent: #4361EE;
+    --color-purple: #3B1AAF;
+    --color-purple-soft: #A593E0;
+    --color-purple-dark: #2C1154;
+    --color-background: #FFFFFF;
+    --color-light: #C8DFF8;
+    --color-muted-text: #3A506B;
+    --color-muted: #A6B1E1;
+    --color-dark: #112B3C;
+
+    /* Semantic color mappings */
+    --primary: var(--color-primary);
+    --primary-dark: var(--color-purple);
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --gray-50: #F8FAFC;
+    --gray-100: var(--color-light);
+    --gray-200: #E2E8F0;
+    --gray-300: var(--color-muted);
+    --gray-400: var(--color-purple-soft);
+    --gray-500: var(--color-muted-text);
+    --gray-600: var(--color-muted-text);
+    --gray-700: var(--color-dark);
+    --gray-800: var(--color-purple-dark);
+    --gray-900: var(--color-dark);
+    --white: var(--color-background);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px 0 rgb(29 100 145 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(29 100 145 / 0.1), 0 1px 2px -1px rgb(29 100 145 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(29 100 145 / 0.1), 0 4px 6px -4px rgb(29 100 145 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(29 100 145 / 0.1), 0 8px 10px -6px rgb(29 100 145 / 0.1);
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+    --color-primary: #4A9EFF;
+    --color-accent: #6B73FF;
+    --color-purple: #8B5FBF;
+    --color-purple-soft: #7C3AED;
+    --color-purple-dark: #5B21B6;
+    --color-background: #0F172A;
+    --color-light: #1E293B;
+    --color-muted-text: #CBD5E1;
+    --color-muted: #64748B;
+    --color-dark: #F1F5F9;
+
+    /* Dark mode semantic mappings */
+    --gray-50: #0F172A;
+    --gray-100: var(--color-light);
+    --gray-200: #334155;
+    --gray-300: var(--color-muted);
+    --gray-400: var(--color-purple-soft);
+    --gray-500: var(--color-muted-text);
+    --gray-600: var(--color-muted-text);
+    --gray-700: var(--color-dark);
+    --gray-800: #F8FAFC;
+    --gray-900: var(--color-dark);
+    --white: var(--color-background);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+}
+
+/* Joan Theme Variables - Ultra Dark */
+[data-theme="joan"] {
+    --color-primary: #6B7FFF;
+    --color-accent: #8B8BFF;
+    --color-purple: #9B7FBF;
+    --color-purple-soft: #8C6AED;
+    --color-purple-dark: #6B31C6;
+    --color-background: #000000;
+    --color-light: #111111;
+    --color-muted-text: #CCCCCC;
+    --color-muted: #666666;
+    --color-dark: #EEEEEE;
+
+    /* Joan mode semantic mappings */
+    --gray-50: #000000;
+    --gray-100: var(--color-light);
+    --gray-200: #222222;
+    --gray-300: var(--color-muted);
+    --gray-400: var(--color-purple-soft);
+    --gray-500: var(--color-muted-text);
+    --gray-600: var(--color-muted-text);
+    --gray-700: var(--color-dark);
+    --gray-800: #F8F8F8;
+    --gray-900: var(--color-dark);
+    --white: var(--color-background);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.6), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.8), 0 8px 10px -6px rgb(0 0 0 / 0.6);
+}

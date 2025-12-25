@@ -1,0 +1,363 @@
+/* Dark mode header adjustments */
+[data-theme="dark"] .app-header,
+[data-theme="joan"] .app-header {
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+[data-theme="joan"] .app-header {
+    background: rgba(0, 0, 0, 0.95);
+}
+
+[data-theme="dark"] .header-left h1,
+[data-theme="joan"] .header-left h1 {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .schema-info,
+[data-theme="joan"] .schema-info {
+    color: var(--gray-500);
+}
+
+[data-theme="dark"] .field-stats,
+[data-theme="joan"] .field-stats {
+    background: var(--color-light);
+    color: var(--gray-700);
+}
+
+/* Dark mode for banners */
+[data-theme="dark"] .info-banner,
+[data-theme="dark"] .warning-banner,
+[data-theme="joan"] .info-banner,
+[data-theme="joan"] .warning-banner {
+    background: var(--color-light);
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .error-banner,
+[data-theme="joan"] .error-banner {
+    background: #1F2937;
+    color: #FCA5A5;
+}
+
+[data-theme="joan"] .error-banner {
+    background: #111111;
+}
+
+[data-theme="dark"] .banner-text span,
+[data-theme="joan"] .banner-text span {
+    color: var(--gray-500);
+}
+
+/* Dark mode empty state */
+[data-theme="dark"] .empty-state,
+[data-theme="joan"] .empty-state {
+    background: var(--color-background);
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .empty-state h2,
+[data-theme="joan"] .empty-state h2 {
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .empty-state p,
+[data-theme="joan"] .empty-state p {
+    color: var(--gray-500);
+}
+
+[data-theme="dark"] .empty-icon,
+[data-theme="joan"] .empty-icon {
+    color: var(--gray-300);
+}
+
+/* Dark mode schema editor */
+[data-theme="dark"] .schema-editor,
+[data-theme="joan"] .schema-editor {
+    background: var(--color-background);
+    border: 1px solid var(--gray-200);
+}
+
+/* Dark mode table */
+[data-theme="dark"] .field-name,
+[data-theme="joan"] .field-name {
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .field-description,
+[data-theme="joan"] .field-description {
+    color: var(--gray-500);
+}
+
+[data-theme="dark"] .field-comments,
+[data-theme="joan"] .field-comments {
+    color: var(--gray-500);
+}
+
+/* Dark mode form elements */
+[data-theme="dark"] .form-field label,
+[data-theme="joan"] .form-field label {
+    color: var(--gray-500);
+}
+
+[data-theme="dark"] .form-field input,
+[data-theme="dark"] .form-field select,
+[data-theme="dark"] .form-field textarea,
+[data-theme="dark"] .enum-input,
+[data-theme="joan"] .form-field input,
+[data-theme="joan"] .form-field select,
+[data-theme="joan"] .form-field textarea,
+[data-theme="joan"] .enum-input {
+    background: var(--color-light);
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .form-field input:focus,
+[data-theme="dark"] .form-field select:focus,
+[data-theme="dark"] .form-field textarea:focus,
+[data-theme="dark"] .enum-input:focus,
+[data-theme="joan"] .form-field input:focus,
+[data-theme="joan"] .form-field select:focus,
+[data-theme="joan"] .form-field textarea:focus,
+[data-theme="joan"] .enum-input:focus {
+    border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .form-section h4,
+[data-theme="joan"] .form-section h4 {
+    color: var(--gray-700);
+    border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .checkbox-item label,
+[data-theme="joan"] .checkbox-item label {
+    color: var(--gray-500);
+}
+
+/* Dark mode search and filters */
+[data-theme="dark"] .search-input input,
+[data-theme="joan"] .search-input input {
+    background: var(--color-light);
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .dropdown-trigger,
+[data-theme="joan"] .dropdown-trigger {
+    background: var(--color-light);
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .dropdown-content,
+[data-theme="joan"] .dropdown-content {
+    background: var(--color-background);
+    border-color: var(--gray-200);
+}
+
+[data-theme="dark"] .dropdown-option,
+[data-theme="joan"] .dropdown-option {
+    color: var(--gray-600);
+    border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .dropdown-option:hover,
+[data-theme="joan"] .dropdown-option:hover {
+    background: var(--color-light);
+}
+
+[data-theme="dark"] .filter-toggle,
+[data-theme="joan"] .filter-toggle {
+    background: var(--color-light);
+    border-color: var(--gray-200);
+    color: var(--gray-600);
+}
+
+[data-theme="dark"] .filter-toggle:hover,
+[data-theme="joan"] .filter-toggle:hover {
+    background: var(--gray-200);
+}
+
+[data-theme="dark"] .results-info,
+[data-theme="joan"] .results-info {
+    color: var(--gray-500);
+}
+
+/* Dark mode loading and modals */
+[data-theme="dark"] .loading-content,
+[data-theme="joan"] .loading-content {
+    background: var(--color-background);
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .spinner,
+[data-theme="joan"] .spinner {
+    border-color: var(--gray-200);
+    border-top-color: var(--color-primary);
+}
+
+/* Dark mode panel details */
+[data-theme="dark"] .field-details-panel,
+[data-theme="joan"] .field-details-panel {
+    background: var(--color-background);
+    border-left-color: var(--gray-200);
+}
+
+[data-theme="dark"] .panel-title h3,
+[data-theme="joan"] .panel-title h3 {
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .field-type-badge,
+[data-theme="joan"] .field-type-badge {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .panel-content,
+[data-theme="joan"] .panel-content {
+    background: var(--color-background);
+}
+
+/* Dark mode adjustments for settings */
+[data-theme="dark"] .settings-content {
+    background: var(--color-background);
+    border: 1px solid var(--gray-200);
+}
+
+[data-theme="dark"] .settings-header {
+    background: var(--color-light);
+}
+
+[data-theme="dark"] .settings-header h3 {
+    color: var(--gray-700);
+}
+
+[data-theme="dark"] .settings-section h4 {
+    color: var(--gray-700);
+    border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .setting-item label {
+    color: var(--gray-500);
+}
+
+[data-theme="dark"] .theme-option {
+    background: var(--color-light);
+    border-color: var(--gray-200);
+    color: var(--gray-500);
+}
+
+[data-theme="dark"] .theme-option.active {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(107, 115, 255, 0.3);
+}
+
+[data-theme="dark"] .column-item {
+    background: var(--color-light);
+    border-bottom-color: var(--gray-200);
+    color: var(--gray-600);
+}
+
+[data-theme="dark"] .column-item:hover {
+    background: var(--gray-200);
+}
+
+[data-theme="dark"] .column-visibility-toggle:hover {
+    background: var(--gray-200);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .field-details-panel {
+        width: 80vw;
+        min-width: 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .filter-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .search-input {
+        min-width: auto;
+    }
+
+    .filter-group {
+        flex-wrap: wrap;
+    }
+
+    .custom-dropdown {
+        min-width: 120px;
+    }
+
+    .filter-toggles {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(4, 1fr);
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .filter-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .field-details-panel {
+        width: 100vw;
+        min-width: unset;
+        left: 0;
+    }
+
+    .table-header,
+    .field-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-content {
+        width: 95vw;
+        max-height: 90vh;
+    }
+
+    .theme-selector {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .theme-option {
+        flex: none;
+        min-width: auto;
+    }
+}

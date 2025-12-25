@@ -1,0 +1,14 @@
+{
+    "name": "schema-editor",
+    "version": "1.0.0",
+    "description": "MediXtract Schema Editor",
+    "scripts": {
+        "start": "node tools/discover_projects.js && npx serve ."
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "serve": "^14.2.0"
+    }
+}
