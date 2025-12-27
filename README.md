@@ -14,8 +14,8 @@ The **MediXtract Schema Editor** is a sophisticated tool designed to bridge the 
 - [✨ Key Features](#-key-features)
 - [🚀 Quick Start](#-quick-start)
 - [💻 Installation & Setup](#-installation--setup)
-- [� Utility Scripts](#-utility-scripts-windows)
-- [�📁 Project Structure](#-project-structure)
+- [🔧 Utility Scripts](#-utility-scripts-windows)
+- [📁 Project Structure](#-project-structure)
 - [📖 Usage Guide](#-usage-guide)
   - [Dashboard & Project Selection](#dashboard--project-selection)
   - [The Schema Editor](#the-schema-editor)
@@ -90,7 +90,7 @@ If you prefer a manual developer setup:
 
 ---
 
-## � Utility Scripts (Windows)
+## 🔧 Utility Scripts (Windows)
 
 The repository includes helper scripts in the root directory to simplify setup and maintenance.
 
@@ -108,7 +108,7 @@ The repository includes helper scripts in the root directory to simplify setup a
 
 ---
 
-## �📁 Project Structure
+## 📁 Project Structure
 
 For the editor to function primarily, your data must follow a strict directory structure inside the `projects/` folder. This ensures the **Project Manager** can auto-link Analysis files with their corresponding Validation and Output data.
 
