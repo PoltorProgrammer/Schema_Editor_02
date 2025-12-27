@@ -1,0 +1,111 @@
+/* Project Cards */
+.project-card {
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 240px;
+    justify-content: center;
+}
+
+/* Standard Project Card Styling */
+.project-card:not(.add-project-card) {
+    background: var(--white);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid transparent;
+}
+
+.project-card:not(.add-project-card):hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.project-card:not(.add-project-card) .project-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, var(--color-light) 0%, #f0f4ff 100%);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: var(--shadow);
+}
+
+.project-card:not(.add-project-card):hover .project-icon {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+    color: var(--white);
+    transform: scale(1.1) rotate(-5deg);
+    box-shadow: var(--shadow-lg);
+}
+
+.project-details h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--gray-900);
+}
+
+.project-details p {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    font-weight: 500;
+}
+
+/* Add Project Card */
+.add-project-card {
+    border: 2px dashed var(--gray-300);
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--gray-500);
+    min-height: 200px;
+}
+
+.project-card.add-project-card {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.add-project-card:hover,
+.project-card.add-project-card:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-4px);
+}
+
+.add-project-card .project-icon {
+    background: transparent;
+    color: inherit;
+}
+
+.project-card.add-project-card .project-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.project-card.add-project-card:hover .project-icon {
+    background: var(--color-light);
+    color: var(--color-primary);
+    transform: rotate(90deg);
+}

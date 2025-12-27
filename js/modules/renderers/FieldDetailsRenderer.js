@@ -182,9 +182,7 @@ Object.assign(SchemaEditor.prototype, {
         fragment.appendChild(propertiesSec);
 
         const performanceSec = this.createFormSection('Per Patient Analysis', true, state.openSections.has('Per Patient Analysis'));
-        const validationPatients = Object.keys(this.validationData || {});
-        const performancePatients = Object.keys(def.performance || {});
-        const patients = Array.from(new Set([...validationPatients, ...performancePatients])).sort();
+        const patients = Object.keys(this.validationData || {}).sort();
 
         patients.forEach(pid => {
             performanceSec.querySelector('.form-section-content').appendChild(this.createPatientCollapsible(pid, def));

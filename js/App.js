@@ -24,7 +24,9 @@ class SchemaEditor {
             types: [],
             groups: [],
             labels: [],
-            statuses: []
+            statuses: [],
+            reviewed: [],
+            severity: []
         };
 
         this.typeOptions = new Set();
@@ -35,7 +37,9 @@ class SchemaEditor {
             type: { isOpen: false, selected: [] },
             group: { isOpen: false, selected: [] },
             label: { isOpen: false, selected: [] },
-            status: { isOpen: false, selected: [] }
+            status: { isOpen: false, selected: [] },
+            reviewed: { isOpen: false, selected: [] },
+            severity: { isOpen: false, selected: [] }
         };
 
         this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
@@ -46,6 +50,7 @@ class SchemaEditor {
         this.checkBrowserSupport();
         this.loadSettings();
         this.initializeTheme();
+        this.applyFilterVisibility();
         this.initializeUnsavedChangesHandler();
         this.showProjectSelection();
     }

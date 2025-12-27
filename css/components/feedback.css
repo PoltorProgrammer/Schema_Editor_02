@@ -1,0 +1,350 @@
+/* Loading & States */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-content {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--shadow-xl);
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--gray-200);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Banners */
+.info-banner,
+.warning-banner,
+.error-banner {
+    background: var(--white);
+    border-left: 4px solid var(--primary);
+    margin: 0 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+}
+
+.warning-banner {
+    border-left-color: var(--warning);
+}
+
+.error-banner {
+    border-left-color: var(--danger);
+    background: #fef2f2;
+    color: var(--danger);
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+}
+
+.error-banner.info-banner {
+    background: var(--primary-light);
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+}
+
+.banner-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.banner-text {
+    flex: 1;
+}
+
+.banner-text strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.banner-text span {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.banner-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray-400);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: var(--radius);
+}
+
+.banner-close:hover {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
+
+/* Indicators */
+.indicator-icon {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.indicator-icon.pending {
+    border-color: #A78BFA;
+}
+
+.indicator-icon.matched {
+    border-color: #64748B;
+}
+
+.indicator-icon.improved {
+    border-color: #10B981;
+}
+
+.indicator-icon.issued {
+    border-color: #EF4444;
+}
+
+.indicator-icon.dismissed {
+    border-color: #94A3B8;
+}
+
+.indicator-fill {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.indicator.comments {
+    background: var(--success);
+}
+
+.indicator.errors {
+    background: var(--danger);
+}
+
+.indicator.changes {
+    background: var(--warning);
+}
+
+.indicator.label-dot {
+    background: #8B5CF6;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.indicator.solved {
+    background: #10B981;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.4);
+}
+
+/* Analysis Specific Indicators */
+.analysis-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 12px 2px 8px;
+    height: 28px;
+    border-radius: 14px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    border: 1px solid transparent;
+    width: fit-content;
+    white-space: nowrap;
+}
+
+.analysis-indicator::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.analysis-indicator.matched {
+    background: #FFFFFF;
+    color: #475569;
+    border-color: #E2E8F0;
+}
+
+.analysis-indicator.matched::before {
+    background: #94A3B8;
+}
+
+.analysis-indicator.unmatched {
+    background: #FED7D7;
+    color: #9B2C2C;
+    border-color: #FEB2B2;
+}
+
+.analysis-indicator.unmatched::before {
+    background: #F56565;
+}
+
+.analysis-indicator.improved {
+    background: #C6F6D5;
+    color: #22543D;
+    border-color: #9AE6B4;
+}
+
+.analysis-indicator.improved::before {
+    background: #48BB78;
+}
+
+.analysis-indicator.pending {
+    background: #DDD6FE;
+    color: #4C1D95;
+    border-color: #C4B5FD;
+}
+
+.analysis-indicator.pending::before {
+    background: #A78BFA;
+}
+
+.analysis-indicator.dismissed {
+    background: #E2E8F0;
+    color: #475569;
+    border-color: #CBD5E1;
+}
+
+.analysis-indicator.dismissed::before {
+    background: #94A3B8;
+}
+
+.analysis-indicator.mixed {
+    background: #FEFCBF;
+    color: #744210;
+    border-color: #FAF089;
+}
+
+.analysis-indicator.mixed::before {
+    background: #ECC94B;
+}
+
+/* Indicator icon variant for dashboard table */
+.analysis-indicator.indicator-only {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+    border-width: 2px;
+}
+
+.analysis-indicator.indicator-only::before {
+    display: none;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 3rem;
+    box-shadow: var(--shadow);
+}
+
+.empty-icon {
+    color: var(--gray-300);
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--gray-900);
+}
+
+.empty-state p {
+    color: var(--gray-600);
+    margin-bottom: 2rem;
+    max-width: 400px;
+}
+
+/* Up to Date Feedback Animation */
+.up-to-date-feedback {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(16, 185, 129, 0.95);
+    color: var(--white);
+    padding: 0.625rem 1.25rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: upToDatePop 2.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes upToDatePop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -30%) scale(0.8);
+    }
+
+    15% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    85% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -70%) scale(1);
+    }
+}

@@ -74,9 +74,14 @@ Object.assign(SchemaEditor.prototype, {
             }
         }
 
-        // Restore scroll position
+        // Restore scroll position immediately to prevent jumping
+        panel.scrollTop = state.scroll;
+
+        // Secondary safety check in next frame for dynamic content
         requestAnimationFrame(() => {
-            panel.scrollTop = state.scroll;
+            if (panel.scrollTop !== state.scroll) {
+                panel.scrollTop = state.scroll;
+            }
         });
     },
 

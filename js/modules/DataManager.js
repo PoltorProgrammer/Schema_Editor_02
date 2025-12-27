@@ -8,15 +8,18 @@ Object.assign(SchemaEditor.prototype, {
         if (!variables || typeof variables !== 'object') return;
 
         const validationPatients = Object.keys(this.validationData || {});
-        const medixtractPatients = Object.keys(this.medixtractOutputData || {});
-        // Collect all patient IDs from all properties' performance objects
-        const performancePatients = new Set();
+        const patients = validationPatients.sort();
+
+        // Purge patients that have no validation data from performance tracking
         Object.values(variables).forEach(def => {
             if (def && def.performance) {
-                Object.keys(def.performance).forEach(pid => performancePatients.add(pid));
+                Object.keys(def.performance).forEach(pid => {
+                    if (!validationPatients.includes(pid)) {
+                        delete def.performance[pid];
+                    }
+                });
             }
         });
-        const patients = Array.from(new Set([...validationPatients, ...medixtractPatients, ...performancePatients])).sort();
 
         this.allFields = Object.entries(variables).map(([key, def]) => {
             if (key === 'note' || !def || typeof def !== 'object') return null;
@@ -34,14 +37,16 @@ Object.assign(SchemaEditor.prototype, {
                         pending: true,
                         unmatched: null,
                         output: [],
+                        reviewed: false,
                         last_updated: new Date().toISOString()
                     };
                 }
                 const perf = def.performance[patientId];
                 if (!perf.output) perf.output = [];
 
-                // Pre-populate output from MediXtract output files if empty
-                if (perf.output.length === 0 && this.medixtractOutputData?.[patientId]) {
+                // Always sync output from MediXtract output files
+                if (this.medixtractOutputData?.[patientId]) {
+                    perf.output = []; // Reset existing output to ensure it reflects folder contents
                     const outputs = Array.isArray(this.medixtractOutputData[patientId])
                         ? this.medixtractOutputData[patientId]
                         : [this.medixtractOutputData[patientId]];
@@ -50,6 +55,7 @@ Object.assign(SchemaEditor.prototype, {
                     outputs.forEach(outputJson => {
                         const mOutput = outputJson[id];
                         if (mOutput !== undefined) {
+                            // Normalize to array for uniform processing, but handle non-array values gracefully
                             const values = Array.isArray(mOutput) ? mOutput : [mOutput];
                             values.forEach(val => {
                                 if (val !== null && val !== undefined) {
@@ -68,16 +74,38 @@ Object.assign(SchemaEditor.prototype, {
                 const patientData = this.validationData[patientId];
                 if (!patientData) return;
 
-                const patientValArray = patientData[id];
-                const humanValue = Array.isArray(patientValArray) ? patientValArray[0] : null;
+                const valRaw = patientData[id];
+                // Handle both array format [value, ...] and direct value format
+                const humanValue = Array.isArray(valRaw)
+                    ? (valRaw.length > 0 ? valRaw[0] : null)
+                    : (valRaw !== undefined ? valRaw : null);
+
+                const totalCount = perf.output.reduce((sum, o) => sum + (Number(o.count) || 0), 0);
+                const matchingOutput = perf.output.find(o => String(o.value) === String(humanValue));
+                const matchingCount = matchingOutput ? Number(matchingOutput.count) : 0;
+                const matchPercentage = totalCount > 0 ? (matchingCount / totalCount) * 100 : 0;
 
                 const aiValue = AppUtils.getMostCommonValue(perf.output);
+                // A match is only automatic if the most common value matches AND it meets the 90% threshold
+                const isMatch = (aiValue !== null && humanValue !== null && String(aiValue) === String(humanValue) && matchPercentage >= 90);
 
-                if (perf.pending && aiValue !== null && humanValue !== null) {
-                    const isMatch = (String(aiValue) === String(humanValue));
-                    perf.matched = isMatch;
-                    perf.unmatched = isMatch ? null : { structural: false };
-                    perf.pending = false;
+                if (isMatch) {
+                    // Auto-match if pending or if it was previously an auto-unmatched/discrepancy state
+                    const noManualUnmatched = !perf.unmatched || typeof perf.unmatched !== 'object' || Object.values(perf.unmatched).every(v => v === false);
+                    if (perf.pending || (noManualUnmatched && !perf.dismissed && !perf.matched)) {
+                        perf.matched = true;
+                        perf.unmatched = null;
+                        perf.pending = false;
+                    }
+                } else if (aiValue !== null && humanValue !== null) {
+                    // It's a discrepancy or doesn't meet the 90% threshold. 
+                    // If it was auto-marked as matched or unmatched before, reset to pending.
+                    const noManualUnmatched = !perf.unmatched || typeof perf.unmatched !== 'object' || Object.values(perf.unmatched).every(v => v === false);
+                    if (perf.matched || (noManualUnmatched && !perf.dismissed)) {
+                        perf.matched = false;
+                        perf.unmatched = null;
+                        perf.pending = true;
+                    }
                 }
             });
 
@@ -119,7 +147,8 @@ Object.assign(SchemaEditor.prototype, {
                     return patients.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
                 }).join('\n'),
                 humanValue: patients.map(pid => {
-                    const val = this.validationData[pid]?.[id]?.[0] || '--';
+                    const valRaw = this.validationData[pid]?.[id];
+                    const val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
                     const displayVal = AppUtils.formatValueWithLabel(val, def);
                     return patients.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
                 }).join('\n'),
@@ -197,9 +226,7 @@ Object.assign(SchemaEditor.prototype, {
                 }
             }
 
-            const validationPatients = Object.keys(this.validationData || {});
-            const performancePatients = Object.keys(def.performance || {});
-            const pidList = Array.from(new Set([...validationPatients, ...performancePatients])).sort();
+            const pidList = Object.keys(this.validationData || {}).sort();
             const aiVal = pidList.map(pid => {
                 const outputs = def.performance?.[pid]?.output || [];
                 const val = AppUtils.getMostCommonValue(outputs) || '--';
@@ -207,7 +234,8 @@ Object.assign(SchemaEditor.prototype, {
                 return pidList.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
             }).join('\n');
             const humanVal = pidList.map(pid => {
-                const val = this.validationData[pid]?.[id]?.[0] || '--';
+                const valRaw = this.validationData[pid]?.[id];
+                const val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
                 const displayVal = AppUtils.formatValueWithLabel(val, def);
                 return pidList.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
             }).join('\n');
@@ -300,10 +328,13 @@ Object.assign(SchemaEditor.prototype, {
                 const match = val.match(/\(([^)]+)\)$/);
                 if (match) cleanVal = match[1];
 
-                if (!this.validationData[patientId][this.selectedField]) {
-                    this.validationData[patientId][this.selectedField] = [cleanVal, "", 1];
-                } else {
+                const currentVal = this.validationData[patientId][this.selectedField];
+
+                // Respect existing format (Array vs Primitive) to support both legacy and new simplified JSON
+                if (Array.isArray(currentVal)) {
                     this.validationData[patientId][this.selectedField][0] = cleanVal;
+                } else {
+                    this.validationData[patientId][this.selectedField] = cleanVal;
                 }
             } else if (unmatchedProp) {
                 if (!perf.unmatched || typeof perf.unmatched !== 'object') perf.unmatched = {};
@@ -378,15 +409,59 @@ Object.assign(SchemaEditor.prototype, {
             perf.pending = true;
         } else if (status === 'matched') {
             perf.matched = true;
+            perf.reviewed = true; // Auto-review matched records
         } else if (status === 'dismissed') {
             perf.dismissed = true;
         } else if (status === 'unmatched') {
             // For unmatched, we expect a reason, but support generic if needed (though UI prevents it)
             perf.unmatched = unmatchedReason ? { [unmatchedReason]: true } : { structural: true };
+            perf.reviewed = false; // Require review for issues/improvements
         }
 
         perf.last_updated = new Date().toISOString();
+        this.markAsUnsaved();
         this.refreshFieldData(this.selectedField);
+    },
+
+    setReviewedStatus(patientId, isReviewed) {
+        if (!this.selectedField || !patientId) return;
+        const variables = this.currentSchema.properties || this.currentSchema;
+        const def = variables[this.selectedField];
+        if (!def.performance) def.performance = {};
+        if (!def.performance[patientId]) def.performance[patientId] = {};
+
+        const perf = def.performance[patientId];
+        perf.reviewed = isReviewed;
+        perf.last_updated = new Date().toISOString();
+
+        this.markAsUnsaved();
+
+        // Surgical DOM update to prevent scrolling jumps/re-renders
+        const card = document.querySelector(`.patient-collapsible[data-patient-id="${patientId}"]`);
+        if (card) {
+            card.classList.toggle('is-reviewed', isReviewed);
+            card.classList.toggle('is-pending-review', !isReviewed);
+
+            const header = card.querySelector('.patient-header');
+            if (header) {
+                const badgeContainer = header.querySelector('div[style*="display: flex"]');
+                if (badgeContainer) {
+                    const existingBang = badgeContainer.querySelector('span[style*="color: var(--warning)"]');
+                    if (!isReviewed && !existingBang) {
+                        badgeContainer.insertAdjacentHTML('afterbegin', '<span style="color: var(--warning); font-weight: 900; font-size: 1.1rem; line-height: 1;">!</span>');
+                    } else if (isReviewed && existingBang) {
+                        existingBang.remove();
+                    }
+                }
+            }
+        }
+
+        // Sync with sidebar table row
+        const idx = this.allFields.findIndex(f => f.id === this.selectedField);
+        if (idx !== -1) {
+            this.allFields[idx].definition = def;
+            this.updateTableRow(this.selectedField);
+        }
     },
 
     addLabel(label, e) {
@@ -419,108 +494,7 @@ Object.assign(SchemaEditor.prototype, {
         }
     },
 
-    addOutput(patientId, e) {
-        if (e) e.stopPropagation();
-        const input = document.getElementById(`newOutput-${patientId}`);
-        if (!input) return;
-        const val = input.value.trim();
-        if (!val) return;
-        const variables = this.currentSchema.properties || this.currentSchema;
-        const def = variables[this.selectedField];
 
-        // Check if variable has restricted options
-        let restrictedOptions = [];
-        if (def.options && Array.isArray(def.options)) {
-            restrictedOptions = def.options.map(o => String(o.value));
-        } else if (def.enum && Array.isArray(def.enum)) {
-            restrictedOptions = def.enum.map(e => String(e));
-        }
-
-        if (restrictedOptions.length > 0 && !restrictedOptions.includes(val)) {
-            AppUI.showError(`Invalid option: "${val}" is not allowed for this field.`);
-            input.focus();
-            setTimeout(() => {
-                const errorEl = document.getElementById('errorMessage');
-                if (errorEl) errorEl.style.display = 'none';
-            }, 3000);
-            return;
-        }
-
-        if (!def.performance[patientId]) def.performance[patientId] = { output: [] };
-        if (!def.performance[patientId].output) def.performance[patientId].output = []; // Ensure output array exists
-
-        const existing = def.performance[patientId].output.find(o => String(o.value) === val);
-        if (existing) {
-            existing.count = (Number(existing.count) || 1) + 1;
-        } else {
-            def.performance[patientId].output.push({ value: val, count: 1 });
-        }
-
-        this.renderOutputList(patientId, def.performance[patientId].output);
-        input.value = '';
-        this.markAsUnsaved();
-        this.refreshFieldData(this.selectedField);
-
-        // Re-focus the newly rendered input and show all options (persistent behavior)
-        const newInput = document.getElementById(`newOutput-${patientId}`);
-        if (newInput) {
-            newInput.focus();
-            this.renderComboboxOptions(patientId, '');
-            const container = document.getElementById(`combobox-${patientId}`);
-            if (container) container.classList.add('open');
-        }
-    },
-
-    removeOutput(patientId, index, e) {
-        if (e) e.stopPropagation();
-        const variables = this.currentSchema.properties || this.currentSchema;
-        const def = variables[this.selectedField];
-        if (def.performance[patientId]?.output) {
-            def.performance[patientId].output.splice(index, 1);
-            this.renderOutputList(patientId, def.performance[patientId].output);
-            this.markAsUnsaved();
-            this.refreshFieldData(this.selectedField);
-        }
-    },
-
-    updateOutputCount(patientId, index, delta, e) {
-        if (e && e.type === 'click') e.stopPropagation();
-        const variables = this.currentSchema.properties || this.currentSchema;
-        const def = variables[this.selectedField];
-        if (def.performance[patientId]?.output?.[index]) {
-            const out = def.performance[patientId].output[index];
-            out.count = Math.max(1, (out.count || 1) + delta);
-
-            // Update input value directly to maintain focus/state without re-rendering list
-            const inputs = document.querySelectorAll(`#outputsList-${patientId} .output-count-input`);
-            if (inputs && inputs[index]) {
-                inputs[index].value = out.count;
-            }
-
-            this.updatePatientSummary(patientId, def.performance[patientId].output);
-            this.markAsUnsaved();
-        }
-    },
-
-    setOutputCount(patientId, index, value) {
-        const variables = this.currentSchema.properties || this.currentSchema;
-        const def = variables[this.selectedField];
-        if (def.performance[patientId]?.output?.[index]) {
-            const out = def.performance[patientId].output[index];
-            let newVal = parseInt(value);
-            if (isNaN(newVal) || newVal < 1) newVal = 1;
-            out.count = newVal;
-
-            // Sync DOM in case user entered invalid value
-            const inputs = document.querySelectorAll(`#outputsList-${patientId} .output-count-input`);
-            if (inputs && inputs[index]) {
-                inputs[index].value = newVal;
-            }
-
-            this.updatePatientSummary(patientId, def.performance[patientId].output);
-            this.markAsUnsaved();
-        }
-    },
 
     ensureFilterArrays() {
         if (!this.filters.types || !Array.isArray(this.filters.types)) this.filters.types = [];

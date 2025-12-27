@@ -10,8 +10,20 @@
         type="image/png">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/editor.css">
+    <!-- Components -->
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/forms.css">
+    <link rel="stylesheet" href="css/components/feedback.css">
+    <link rel="stylesheet" href="css/components/dropdowns.css">
+    <link rel="stylesheet" href="css/components/chips.css">
+    <link rel="stylesheet" href="css/components/cards.css">
+    <!-- Layouts -->
+    <link rel="stylesheet" href="css/layouts/dashboard.css">
+    <link rel="stylesheet" href="css/layouts/schema-editor.css">
+    <link rel="stylesheet" href="css/layouts/table.css">
+    <link rel="stylesheet" href="css/layouts/panel.css">
+    <link rel="stylesheet" href="css/layouts/patient-analysis.css">
+    <!-- Other -->
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/themes.css">
 </head>
@@ -266,10 +278,65 @@
                             </div>
                         </div>
 
+                        <!-- Custom Reviewed Filter Dropdown -->
+                        <div class="custom-dropdown" id="reviewedFilter">
+                            <div class="dropdown-trigger">
+                                <span class="dropdown-label">All Reviewed</span>
+                                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="currentColor">
+                                    <path d="M7,10L12,15L17,10H7Z" />
+                                </svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <div class="dropdown-option" data-value="reviewed">
+                                    <div class="dropdown-option-checkbox"></div>
+                                    <span class="option-label">Reviewed</span>
+                                </div>
+                                <div class="dropdown-option" data-value="not_reviewed">
+                                    <div class="dropdown-option-checkbox"></div>
+                                    <span class="option-label">Not Reviewed</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Severity Filter Dropdown -->
+                        <div class="custom-dropdown" id="severityFilter">
+                            <div class="dropdown-trigger">
+                                <span class="dropdown-label">All Severities</span>
+                                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="currentColor">
+                                    <path d="M7,10L12,15L17,10H7Z" />
+                                </svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <div class="dropdown-option" data-value="1">
+                                    <div class="dropdown-option-checkbox"></div>
+                                    <span class="option-label">Severity 1</span>
+                                </div>
+                                <div class="dropdown-option" data-value="2">
+                                    <div class="dropdown-option-checkbox"></div>
+                                    <span class="option-label">Severity 2</span>
+                                </div>
+                                <div class="dropdown-option" data-value="3">
+                                    <div class="dropdown-option-checkbox"></div>
+                                    <span class="option-label">Severity 3</span>
+                                </div>
+                                <div class="dropdown-option" data-value="4">
+                                    <div class="dropdown-option-checkbox"></div>
+                                    <span class="option-label">Severity 4</span>
+                                </div>
+                                <div class="dropdown-option" data-value="5">
+                                    <div class="dropdown-option-checkbox"></div>
+                                    <span class="option-label">Severity 5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-actions">
                         <div class="results-count-container">
                             <span id="resultsCount">0 fields</span>
                         </div>
-
                         <button id="clearFilters" class="btn btn-ghost btn-sm">Clear</button>
                     </div>
                 </div>
@@ -355,6 +422,17 @@
                                     </svg>
                                     Joan
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Visibility Settings -->
+                    <div class="settings-section">
+                        <h4>Active Filters</h4>
+                        <div class="setting-item">
+                            <label>Choose which filters to show in the toolbar</label>
+                            <div class="filter-visibility-list" id="filterVisibilityList">
+                                <!-- Filter visibility checkboxes will be rendered here -->
                             </div>
                         </div>
                     </div>
@@ -470,6 +548,21 @@
                     <button class="btn btn-primary" onclick="app.finalizeCreateProject()">Create Project</button>
                     <button class="btn btn-secondary"
                         onclick="document.getElementById('createProjectModal').style.display='none'">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <!-- Custom Generic Modal -->
+        <div id="customModal" class="custom-modal" style="display: none;">
+            <div class="custom-modal-overlay"></div>
+            <div class="custom-modal-content">
+                <div class="custom-modal-header">
+                    <h3 id="customModalTitle">Title</h3>
+                </div>
+                <div class="custom-modal-body">
+                    <p id="customModalMessage">Message goes here.</p>
+                </div>
+                <div class="custom-modal-footer" id="customModalFooter">
+                    <!-- Buttons will be injected here -->
                 </div>
             </div>
         </div>

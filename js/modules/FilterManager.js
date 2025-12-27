@@ -35,15 +35,17 @@ Object.assign(SchemaEditor.prototype, {
     },
 
     clearAllFilters() {
-        this.filters = { search: '', types: [], groups: [], labels: [], statuses: [] };
+        this.filters = { search: '', types: [], groups: [], labels: [], statuses: [], reviewed: [], severity: [] };
         this.dropdowns.type.selected = [];
         this.dropdowns.group.selected = [];
         this.dropdowns.label.selected = [];
         this.dropdowns.status.selected = [];
+        this.dropdowns.reviewed.selected = [];
+        this.dropdowns.severity.selected = [];
         document.getElementById('searchInput').value = '';
         const clearBtn = document.getElementById('clearSearch');
         if (clearBtn) clearBtn.style.display = 'none';
-        ['type', 'group', 'label', 'status'].forEach(t => {
+        ['type', 'group', 'label', 'status', 'reviewed', 'severity'].forEach(t => {
             this.updateDropdownDisplay(t);
             this.updateDropdownOptions(t);
         });
@@ -56,7 +58,18 @@ Object.assign(SchemaEditor.prototype, {
             // Search filter
             if (this.filters.search) {
                 const s = this.filters.search;
-                if (![f.id, f.description, f.comments, f.group].some(v => v.toLowerCase().includes(s))) return false;
+                const matchesProps = [f.id, f.description, f.comments, f.group].some(v => v && v.toLowerCase().includes(s));
+                const matchesPatients = Object.entries(f.definition.performance || {}).some(([pid, perf]) => {
+                    const comment = perf.comment || (
+                        this.validationData &&
+                        this.validationData[pid] &&
+                        Array.isArray(this.validationData[pid][f.id]) &&
+                        this.validationData[pid][f.id][1]
+                    ) || '';
+                    return comment && comment.toLowerCase().includes(s);
+                });
+
+                if (!matchesProps && !matchesPatients) return false;
             }
 
             // Categories
@@ -85,6 +98,28 @@ Object.assign(SchemaEditor.prototype, {
                 });
                 if (!hasMatch) return false;
             }
+
+            // Reviewed filter
+            if (this.filters.reviewed.length) {
+                const hasMatch = this.filters.reviewed.some(r => {
+                    const perfs = Object.values(f.definition.performance || {});
+                    if (r === 'reviewed') return perfs.every(p => p.reviewed);
+                    if (r === 'not_reviewed') return perfs.some(p => !p.reviewed);
+                    return false;
+                });
+                if (!hasMatch) return false;
+            }
+
+            // Severity filter
+            if (this.filters.severity.length) {
+                const hasMatch = this.filters.severity.some(s => {
+                    const perfs = Object.values(f.definition.performance || {});
+                    return perfs.some(p => p.severity === parseInt(s));
+                });
+                if (!hasMatch) return false;
+            }
+
+            return true;
 
             return true;
         });
@@ -140,7 +175,7 @@ Object.assign(SchemaEditor.prototype, {
             else selected.splice(index, 1);
         }
 
-        const filterMap = { 'type': 'types', 'group': 'groups', 'label': 'labels', 'status': 'statuses' };
+        const filterMap = { 'type': 'types', 'group': 'groups', 'label': 'labels', 'status': 'statuses', 'reviewed': 'reviewed', 'severity': 'severity' };
         this.filters[filterMap[type]] = [...selected];
         this.updateDropdownDisplay(type);
         this.updateDropdownOptions(type);
@@ -150,7 +185,7 @@ Object.assign(SchemaEditor.prototype, {
     updateDropdownDisplay(type) {
         const label = document.querySelector(`#${type}Filter .dropdown-label`);
         const selected = this.dropdowns[type].selected;
-        const defaultLabels = { type: 'All Types', group: 'All Groups', label: 'All Labels', status: 'All Statuses' };
+        const defaultLabels = { type: 'All Types', group: 'All Groups', label: 'All Labels', status: 'All Statuses', reviewed: 'All Reviewed', severity: 'All Severities' };
 
         if (selected.length === 0) {
             label.innerHTML = defaultLabels[type];

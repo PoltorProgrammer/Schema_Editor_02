@@ -70,13 +70,122 @@ const AppUI = {
         document.getElementById('loadingIndicator').style.display = 'none';
     },
 
-    showConfirm(title, message) {
+    showConfirm(title, message, confirmText = 'Confirm', cancelText = 'Cancel', focusCancel = false) {
         return new Promise((resolve) => {
-            if (confirm(`${title}\n\n${message}`)) {
-                resolve(true);
-            } else {
-                resolve(false);
+            const modal = document.getElementById('customModal');
+            const titleEl = document.getElementById('customModalTitle');
+            const messageEl = document.getElementById('customModalMessage');
+            const footerEl = document.getElementById('customModalFooter');
+
+            if (!modal) {
+                // Fallback
+                resolve(confirm(`${title}\n\n${message}`));
+                return;
             }
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            footerEl.innerHTML = '';
+
+            const cancelBtn = document.createElement('button');
+            const confirmBtn = document.createElement('button');
+
+            cancelBtn.textContent = cancelText;
+            confirmBtn.textContent = confirmText;
+
+            // Apply styles based on priority
+            if (focusCancel) {
+                cancelBtn.className = 'btn btn-primary';
+                confirmBtn.className = 'btn btn-ghost';
+            } else {
+                cancelBtn.className = 'btn btn-ghost';
+                confirmBtn.className = 'btn btn-primary';
+            }
+
+            const cleanup = () => {
+                modal.classList.remove('active');
+                document.removeEventListener('keydown', handleKey); // Remove ESC listener
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 200);
+            };
+
+            const handleKey = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cleanup();
+                    resolve(false);
+                }
+            };
+            document.addEventListener('keydown', handleKey);
+
+            cancelBtn.onclick = () => {
+                cleanup();
+                resolve(false);
+            };
+
+            confirmBtn.onclick = () => {
+                cleanup();
+                resolve(true);
+            };
+
+            footerEl.appendChild(cancelBtn);
+            footerEl.appendChild(confirmBtn);
+
+            modal.style.display = 'flex';
+            // Force reflow
+            requestAnimationFrame(() => {
+                modal.classList.add('active');
+                if (focusCancel) {
+                    cancelBtn.focus();
+                } else {
+                    confirmBtn.focus();
+                }
+            });
+        });
+    },
+
+    showAlert(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            const titleEl = document.getElementById('customModalTitle');
+            const messageEl = document.getElementById('customModalMessage');
+            const footerEl = document.getElementById('customModalFooter');
+
+            if (!modal) {
+                alert(`${title}\n\n${message}`);
+                resolve();
+                return;
+            }
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            footerEl.innerHTML = '';
+
+            const okBtn = document.createElement('button');
+            okBtn.className = 'btn btn-primary';
+            okBtn.textContent = 'OK';
+
+            const cleanup = () => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 200);
+            };
+
+            okBtn.onclick = () => {
+                cleanup();
+                resolve();
+            };
+
+            footerEl.appendChild(okBtn);
+
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.add('active');
+                okBtn.focus();
+            });
         });
     },
 

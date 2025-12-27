@@ -194,40 +194,44 @@ Object.assign(SchemaEditor.prototype, {
                 if (handle.kind === 'directory' && (name.endsWith('_project') || name.endsWith('-project'))) {
                     try {
                         // Check subdirectory structure
-                        const analysisHandle = await handle.getDirectoryHandle('analysis_data');
-                        const validationHandle = await handle.getDirectoryHandle('validation_data');
+                        let analysisHandle = null;
+                        let validationHandle = null;
                         let medixtractHandle = null;
+
+                        try {
+                            validationHandle = await handle.getDirectoryHandle('validation_data');
+                        } catch (e) {
+                            // Validation data is mandatory for a valid project in this context
+                            // console.warn(`Skipping ${name}: No validation_data folder`);
+                            continue;
+                        }
+
+                        try {
+                            analysisHandle = await handle.getDirectoryHandle('analysis_data');
+                        } catch (e) {
+                            // Analysis data might be missing, we can try to generate it
+                        }
+
                         try {
                             medixtractHandle = await handle.getDirectoryHandle('medixtract_output');
-                        } catch (e) { /* might not exist yet */ }
-
-                        // Deep Validation: Check Analysis Data
-                        let hasValidAnalysis = false;
-                        for await (const [fName, fHandle] of analysisHandle.entries()) {
-                            if (fName.endsWith('.json')) {
-                                try {
-                                    const file = await fHandle.getFile();
-                                    const text = await file.text();
-                                    const json = JSON.parse(text);
-                                    if (json && typeof json === 'object') {
-                                        hasValidAnalysis = true;
-                                        break;
-                                    }
-                                } catch (e) { /* invalid json */ }
-                            }
-                        }
+                        } catch (e) { /* might not exist */ }
 
                         // Deep Validation: Check Validation Data
                         const validationFiles = [];
                         for await (const [vName, vHandle] of validationHandle.entries()) {
                             if (vName.endsWith('.json')) {
                                 try {
+                                    // Just verify it's openable/readable? Or assume valid for speed?
+                                    // Original code read text. We can stick to that.
+                                    // But reading ALL files might be slow for large projects.
+                                    // Let's assume name format implies patient ID. 
+                                    // BUT generateAnalysisFile reads them.
+                                    // Let's stick to existing logic of reading to be safe.
                                     const file = await vHandle.getFile();
                                     const text = await file.text();
-                                    JSON.parse(text); // Verify validity
+                                    JSON.parse(text);
 
                                     const patientId = vName.split('-')[0];
-
                                     validationFiles.push({
                                         name: vName,
                                         patientId: patientId
@@ -236,7 +240,7 @@ Object.assign(SchemaEditor.prototype, {
                             }
                         }
 
-                        // Deep Validation: Check MediXtract Output Data
+                        // Check MediXtract Output Data
                         const medixtractFiles = [];
                         if (medixtractHandle) {
                             for await (const [mName, mHandle] of medixtractHandle.entries()) {
@@ -244,10 +248,9 @@ Object.assign(SchemaEditor.prototype, {
                                     try {
                                         const file = await mHandle.getFile();
                                         const text = await file.text();
-                                        JSON.parse(text); // Verify validity
+                                        JSON.parse(text);
 
                                         const patientId = mName.split('-')[0];
-
                                         medixtractFiles.push({
                                             name: mName,
                                             patientId: patientId
@@ -257,12 +260,39 @@ Object.assign(SchemaEditor.prototype, {
                             }
                         }
 
+                        // Deep Validation: Check Analysis Data
+                        let hasValidAnalysis = false;
+                        if (analysisHandle) {
+                            for await (const [fName, fHandle] of analysisHandle.entries()) {
+                                if (fName.endsWith('.json')) {
+                                    try {
+                                        const file = await fHandle.getFile();
+                                        const text = await file.text();
+                                        const json = JSON.parse(text);
+                                        if (json && typeof json === 'object') {
+                                            hasValidAnalysis = true;
+                                            break;
+                                        }
+                                    } catch (e) { /* invalid json */ }
+                                }
+                            }
+                        }
+
+                        // Auto-Generation Logic
+                        if (!hasValidAnalysis && validationFiles.length > 0 && medixtractFiles.length > 0) {
+                            // Try to generate analysis data from template
+                            const success = await this.generateAnalysisFile(handle, name, validationFiles, medixtractFiles, validationHandle, medixtractHandle);
+                            if (success) {
+                                hasValidAnalysis = true;
+                            }
+                        }
+
                         if (hasValidAnalysis && validationFiles.length > 0) {
                             newProjects.push({
                                 name,
                                 handle,
-                                validationFiles, // Attach discovered validation files 
-                                medixtractOutputFiles: medixtractFiles // Attach discovered medixtract output files
+                                validationFiles,
+                                medixtractOutputFiles: medixtractFiles
                             });
                         }
 
@@ -330,7 +360,7 @@ Object.assign(SchemaEditor.prototype, {
             await writable.write(content);
             await writable.close();
         } catch (e) {
-            console.warn("Failed to update config file:", e);
+            // console.warn("Failed to update config file:", e);
         }
     },
 
@@ -847,5 +877,187 @@ Object.assign(SchemaEditor.prototype, {
         } finally {
             AppUI.hideLoading();
         }
+    },
+
+    async generateAnalysisFile(projectHandle, projectName, validationFiles, medixtractFiles, validationDirHandle, medixtractDirHandle) {
+        try {
+            console.log("Attempting to auto-generate analysis data for", projectName);
+            // 1. Get Template
+            let templateData;
+            try {
+                // Try projects root 'template' folder
+                const templateDir = await this.projectsDirectoryHandle.getDirectoryHandle('template');
+                const templateFile = await templateDir.getFileHandle('template.json');
+                const file = await templateFile.getFile();
+                templateData = JSON.parse(await file.text());
+            } catch (e) {
+                console.error("Could not find template/template.json for generation", e);
+                return false;
+            }
+
+            // 2. Load Data
+            const humanData = {};
+            const aiData = {};
+
+            // Validation Data
+            for (const vf of validationFiles) {
+                try {
+                    const fh = await validationDirHandle.getFileHandle(vf.name);
+                    const json = JSON.parse(await (await fh.getFile()).text());
+                    humanData[vf.patientId] = json;
+                } catch (e) { console.warn("Error reading validation file for gen", vf.name); }
+            }
+
+            // MediXtract Data
+            for (const mf of medixtractFiles) {
+                try {
+                    const fh = await medixtractDirHandle.getFileHandle(mf.name);
+                    const json = JSON.parse(await (await fh.getFile()).text());
+                    if (!aiData[mf.patientId]) aiData[mf.patientId] = [];
+                    // Handle array wrapper if present, though users usually fix this
+                    if (Array.isArray(json)) {
+                        aiData[mf.patientId].push(...json);
+                    } else {
+                        aiData[mf.patientId].push(json);
+                    }
+                } catch (e) { console.warn("Error reading medixtract file for gen", mf.name); }
+            }
+
+            // 3. Construct Analysis Data
+            const newAnalysis = {
+                properties: {}
+            };
+
+            // Get Union of keys from validation data map
+            const validKeys = new Set();
+            for (const pid in humanData) {
+                Object.keys(humanData[pid]).forEach(k => validKeys.add(k));
+            }
+
+            if (templateData.groups) newAnalysis.groups = templateData.groups;
+
+            for (const [key, prop] of Object.entries(templateData.properties)) {
+                if (!validKeys.has(key)) continue;
+
+                newAnalysis.properties[key] = { ...prop, performance: {} };
+                const performance = newAnalysis.properties[key].performance;
+
+                for (const pid of Object.keys(humanData)) {
+                    // Initialize patient perf
+                    const hVal = humanData[pid][key]; // Human Value
+                    const aiVals = aiData[pid] ? aiData[pid].map(o => o[key]).filter(v => v !== undefined) : [];
+
+                    // Determine AI Value (Most Frequent)
+                    let bestAiVal = null;
+                    if (aiVals.length > 0) {
+                        const counts = {};
+                        for (const av of aiVals) {
+                            const vStr = String(av);
+                            counts[vStr] = (counts[vStr] || 0) + 1;
+                        }
+                        let maxC = -1;
+                        let maxV = null;
+                        for (const v in counts) {
+                            if (counts[v] > maxC) {
+                                maxC = counts[v];
+                                maxV = v;
+                            }
+                        }
+                        bestAiVal = maxV;
+                    }
+
+                    // Compare
+                    const hValStr = (hVal === null || hVal === undefined) ? "" : String(hVal);
+                    const aiValStr = (bestAiVal === null) ? "" : String(bestAiVal);
+
+                    // Similarity
+                    let similarity = 0;
+                    if (hValStr.toLowerCase() === aiValStr.toLowerCase()) {
+                        similarity = 1.0;
+                    } else if (hValStr && aiValStr) {
+                        similarity = this._calculateSimilarity(hValStr, aiValStr);
+                    }
+
+                    // Logic: Match >= 90% (0.9)
+                    const isMatch = similarity >= 0.9;
+
+                    performance[pid] = {
+                        pending: !isMatch,
+                        severity: 1,
+                        comment: "",
+                        last_updated: new Date().toISOString(),
+                        output: [],
+                        reviewed: isMatch,
+                        matched: isMatch,
+                        unmatched: !isMatch ? hValStr : null
+                    };
+
+                    // Populate output counts
+                    if (aiVals.length > 0) {
+                        const counts = {};
+                        aiVals.forEach(v => {
+                            const s = String(v);
+                            counts[s] = (counts[s] || 0) + 1;
+                        });
+                        performance[pid].output = Object.entries(counts).map(([val, count]) => ({
+                            value: val,
+                            count: count
+                        }));
+                    }
+                }
+            }
+
+            // 4. Write File
+            const analysisDir = await projectHandle.getDirectoryHandle('analysis_data', { create: true });
+
+            const cleanName = projectName.replace(/[-_]project$/, '').replace(/_/g, '_');
+            const fileName = `${cleanName}-analysis_data.json`;
+            console.log("Writing generated analysis file:", fileName);
+
+            const fileHandle = await analysisDir.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(JSON.stringify(newAnalysis, null, 2));
+            await writable.close();
+
+            return true;
+
+        } catch (e) {
+            console.error("Generator Error", e);
+            return false;
+        }
+    },
+
+    _calculateSimilarity(s1, s2) {
+        if (s1 === s2) return 1.0;
+        if (!s1 || !s2) return 0.0;
+
+        s1 = String(s1).toLowerCase();
+        s2 = String(s2).toLowerCase();
+
+        const longer = s1.length > s2.length ? s1 : s2;
+        const shorter = s1.length > s2.length ? s2 : s1;
+        const longerLength = longer.length;
+        if (longerLength === 0) return 1.0;
+
+        // Levenshtein distance
+        const costs = new Array();
+        for (let i = 0; i <= shorter.length; i++) {
+            let lastValue = i;
+            for (let j = 0; j <= longer.length; j++) {
+                if (i == 0) costs[j] = j;
+                else {
+                    if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (shorter.charAt(i - 1) != longer.charAt(j - 1))
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+            }
+            if (i > 0) costs[longer.length] = lastValue;
+        }
+
+        return (longerLength - costs[longer.length]) / parseFloat(longerLength);
     }
 });

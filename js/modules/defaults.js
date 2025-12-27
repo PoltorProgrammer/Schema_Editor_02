@@ -24,6 +24,14 @@ const DEFAULT_SETTINGS = {
         description: 3,
         comments: 2,
         type: 1
+    },
+    filterVisibility: {
+        type: true,
+        group: true,
+        label: true,
+        status: true,
+        reviewed: true,
+        severity: true
     }
 };
 

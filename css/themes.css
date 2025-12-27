@@ -82,18 +82,18 @@
 }
 
 /* Dark mode table */
-[data-theme="dark"] .field-name,
-[data-theme="joan"] .field-name {
+[data-theme="dark"] .field-row .field-name,
+[data-theme="joan"] .field-row .field-name {
     color: var(--gray-700);
 }
 
-[data-theme="dark"] .field-description,
-[data-theme="joan"] .field-description {
+[data-theme="dark"] .field-row .field-description,
+[data-theme="joan"] .field-row .field-description {
     color: var(--gray-500);
 }
 
-[data-theme="dark"] .field-comments,
-[data-theme="joan"] .field-comments {
+[data-theme="dark"] .field-row .field-comments,
+[data-theme="joan"] .field-row .field-comments {
     color: var(--gray-500);
 }
 

@@ -3,13 +3,14 @@
  */
 Object.assign(SchemaEditor.prototype, {
     createPatientCollapsible(patientId, def) {
-        const patientData = this.validationData[patientId]?.[this.selectedField] || [];
-        const humanValue = patientData[0] || '--';
+        const valRaw = this.validationData[patientId]?.[this.selectedField];
+        const humanValue = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
         const perf = def.performance?.[patientId] || { pending: true, output: [] };
         const outputs = perf.output || [];
 
         const container = document.createElement('div');
-        container.className = 'patient-collapsible';
+        container.className = `patient-collapsible ${perf.reviewed ? 'is-reviewed' : 'is-pending-review'}`;
+        container.dataset.patientId = patientId;
         let statusClass = 'pending';
         let statusLabel = 'Pending';
         if (perf.matched) {
@@ -30,58 +31,74 @@ Object.assign(SchemaEditor.prototype, {
         container.innerHTML = `
             <div class="patient-header" onclick="app.togglePatientSection('${patientId}', event)">
                 <h5>Patient: ${patientId}</h5>
-                <span class="analysis-indicator ${statusClass}">
-                    ${statusLabel}
-                </span>
+                <div style="display: flex; align-items: center; gap: 0.625rem;">
+                    ${!perf.reviewed ? '<span style="color: var(--warning); font-weight: 900; font-size: 1.1rem; line-height: 1;">!</span>' : ''}
+                    <span class="analysis-indicator ${statusClass}">
+                        ${statusLabel}
+                    </span>
+                </div>
             </div>
             <div class="patient-content">
+                <div class="variable-reference-section" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius);">
+                    <div style="margin-bottom: 0.75rem;">
+                        <label style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.25rem;">Description</label>
+                        <div style="font-size: 0.875rem; color: var(--gray-700); line-height: 1.5;">${def.description || 'No description provided.'}</div>
+                    </div>
+                    ${def.options && def.options.length > 0 ? `
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">Available Options</label>
+                        <div class="chips-container" style="border: none; padding: 0; background: transparent; min-height: auto; gap: 0.375rem;">
+                            ${def.options.map(o => `
+                                <span class="chip" style="background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-200); padding: 0.25rem 0.625rem; border-radius: 6px; font-weight: 400; font-size: 0.8125rem;">
+                                    <span style="font-weight: 600; color: var(--primary);">${o.value}</span>
+                                    <span style="margin: 0 0.25rem; opacity: 0.3;">•</span>
+                                    <span>${o.label}</span>
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
                 <div class="patient-validation-section" style="margin-bottom: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
-                    <div class="form-field" ${def.type === 'comment' ? 'style="display: none;"' : ''}>
-                        <label>Output</label>
+                    <div class="form-field">
+                        <label>MediXtract Output</label>
                         ${(() => {
                 const summary = this.calculatePatientSummaryState(patientId, outputs, humanValue === '--' ? '' : humanValue);
-                return `<input type="text" readonly id="summaryOutput-${patientId}" class="no-dropdown-icon" value="${summary.displayVal}" style="${summary.style}">
+                return `<div class="medixtract-output" id="summaryOutput-${patientId}" style="${summary.style}">${summary.displayVal}</div>
                                     <div id="validationMsg-${patientId}" style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem; display: ${summary.msgDisplay};">No human validation value introduced</div>`;
             })()}
                     </div>
                     <div class="form-field">
-                        <label>Human Validation</label>
-                        ${AppUtils.hasEnumValues(def) ?
-                this.renderHumanValidationSelect(patientId, humanValue, def) :
-                `
-                            <input type="text" value="${humanValue === '--' ? '' : humanValue}" data-patient="${patientId}" data-perf-prop="human_val" oninput="app.updatePatientSummary('${patientId}')">
-                            <div id="humanValError-${patientId}" class="schema-validation-message" style="display: none; margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
-                                Invalid option: Value does not match schema options
-                            </div>
-                            `
-            }
+                        <label>Human Output</label>
+                        ${(() => {
+                let displayVal = humanValue === '--' ? '' : humanValue;
+                if (AppUtils.hasEnumValues(def)) {
+                    const options = (def.options || []).concat(def.enum ? def.enum.map(e => ({ value: e, label: '' })) : []);
+                    const opt = options.find(o => String(o.value) === String(humanValue));
+                    if (opt && opt.label) displayVal = `${opt.label} (${opt.value})`;
+                }
+                return `<input type="text" readonly value="${displayVal}" data-patient="${patientId}" data-perf-prop="human_val">`;
+            })()}
                     </div>
                 </div>
 
-                <div class="patient-outputs-section" style="margin-bottom: 1.5rem;">
-                    <label style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">MediXtract Analysis Outputs</label>
-                    <div id="outputsList-${patientId}" class="output-list">
-                        ${this.generateOutputsListHtml(patientId, outputs)}
-                    </div>
-                    <div style="margin-top: 0.5rem;">
-                        <div class="combobox-container" id="combobox-${patientId}">
-                            <input type="text" 
-                                id="newOutput-${patientId}" 
-                                class="combobox-input"
-                                placeholder="Type to search and press Enter to add..." 
-                                autocomplete="off"
-                                onfocus="app.handleComboboxFocus('${patientId}')"
-                                onblur="app.handleComboboxBlur('${patientId}')"
-                                oninput="app.handleComboboxInput('${patientId}', this.value)"
-                                onkeydown="app.handleOutputInputKey('${patientId}', event)">
-                            <div class="combobox-dropdown" id="comboboxList-${patientId}"></div>
-                        </div>
-                    </div>
-                </div>
+
 
                 <div class="status-section-container" style="margin-bottom: 1.5rem;">
-                    <label style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">Review Status</label>
-                    <div class="status-section" style="margin-top: 0.5rem;">
+                    <div class="status-section-header" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <label style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">Review Status</label>
+                        <div style="display: ${perf.matched ? 'none' : 'flex'}; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">Reviewed</span>
+                            <label class="switch">
+                                <input type="checkbox" 
+                                    id="rev-check-${patientId}"
+                                    ${perf.reviewed ? 'checked' : ''} 
+                                    onclick="event.stopPropagation(); app.setReviewedStatus('${patientId}', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="status-section">
                         <div class="status-main-row" style="display: flex; gap: 0.5rem;">
                             <button class="status-btn ${perf.pending ? 'active pending' : ''}" onclick="app.setReviewStatus('${patientId}', 'pending')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/></svg>
@@ -116,6 +133,10 @@ Object.assign(SchemaEditor.prototype, {
 
                 <div class="bottom-section" style="display: flex; flex-direction: column; gap: 1.25rem;">
                     <div class="form-field full-width">
+                        <label>Explanation / Comment</label>
+                        <textarea class="no-dropdown-icon" data-patient="${patientId}" data-perf-prop="comment" placeholder="Explain the discrepancy or result...">${perf.comment || (Array.isArray(valRaw) ? valRaw[1] : '') || ''}</textarea>
+                    </div>
+                    <div class="form-field full-width">
                         <label>Severity (1-5)</label>
                         <div class="severity-scale" style="display: flex; gap: 4px; align-items: center; height: 36px;">
                             ${[1, 2, 3, 4, 5].map(lvl => {
@@ -132,10 +153,6 @@ Object.assign(SchemaEditor.prototype, {
                                 `;
             }).join('')}
                         </div>
-                    </div>
-                    <div class="form-field full-width">
-                        <label>Explanation / Comment</label>
-                        <textarea class="no-dropdown-icon" data-patient="${patientId}" data-perf-prop="comment" placeholder="Explain the discrepancy or result...">${perf.comment || patientData[1] || ''}</textarea>
                     </div>
                 </div>
             </div>
@@ -169,53 +186,7 @@ Object.assign(SchemaEditor.prototype, {
         </button>`;
     },
 
-    renderOutputList(patientId, outputs) {
-        const container = document.getElementById(`outputsList-${patientId}`);
-        if (!container) return;
-        container.innerHTML = this.generateOutputsListHtml(patientId, outputs);
-        this.updatePatientSummary(patientId, outputs);
-    },
 
-    generateOutputsListHtml(patientId, outputs) {
-        if (!outputs) return '';
-        const def = this.currentSchema.properties[this.selectedField];
-
-        return outputs.map((out, index) => {
-            let label = '';
-            if (def.options) {
-                const opt = def.options.find(o => String(o.value) === String(out.value));
-                if (opt) label = opt.label;
-            }
-
-            return `
-                <div class="output-item">
-                    <div class="output-value">
-                        <span class="label-val" style="font-weight: 600; color: var(--gray-900);">${label || out.value}</span>
-                        ${label ? `<span class="code-val" style="margin-left: 8px; color: var(--gray-500); font-size: 0.75rem;">(${out.value})</span>` : ''}
-                    </div>
-                    <div class="output-controls">
-                        <button class="btn-icon-sm" 
-                            onmousedown="app.handleOutputMouseDown('${patientId}', ${index}, -1, event)" 
-                            onmouseup="app.handleOutputMouseUp(event)" 
-                            onmouseleave="app.handleOutputMouseUp(event)">-</button>
-                        <input type="number" class="output-count-input" value="${out.count}" min="1" 
-                        <input type="number" class="output-count-input" value="${out.count}" min="1" 
-                            onblur="app.setOutputCount('${patientId}', ${index}, this.value)"
-                            onkeydown="if(event.key === 'Enter') { this.blur(); }">
-                        <button class="btn-icon-sm" 
-                            onmousedown="app.handleOutputMouseDown('${patientId}', ${index}, 1, event)" 
-                            onmouseup="app.handleOutputMouseUp(event)" 
-                            onmouseleave="app.handleOutputMouseUp(event)">+</button>
-                    </div>
-                    <button class="btn-remove-sm" onclick="app.removeOutput('${patientId}', ${index}, event)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
-                        </svg>
-                    </button>
-                </div>
-            `;
-        }).join('');
-    },
 
     calculatePatientSummaryState(patientId, outputs, humanValStr) {
         if (!outputs) {
@@ -235,15 +206,28 @@ Object.assign(SchemaEditor.prototype, {
         const fieldDef = variables[this.selectedField];
         const isComment = fieldDef.type === 'comment';
 
+        const seenValues = new Set();
         const displayVal = outputStats.map(s => {
+            const valStr = String(s.value).trim();
+            // Basic HTML escape to prevent injection and layout issues
+            const safeVal = valStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+            if (isComment) {
+                if (seenValues.has(valStr)) return null;
+                seenValues.add(valStr);
+                return `<span style="display: inline-block; background: var(--white); color: var(--gray-700); border: 1px solid var(--gray-300); padding: 3px 8px; border-radius: 12px; margin: 2px; font-size: 0.8125rem;">${safeVal}</span>`;
+            }
+
             let label = '';
             if (fieldDef.options) {
                 const opt = fieldDef.options.find(o => String(o.value) === String(s.value));
                 if (opt) label = opt.label;
             }
-            const name = label ? `${label} (${s.value})` : s.value;
-            return isComment ? name : `${name} (${s.percentage}%)`;
-        }).join(isComment ? ' | ' : ', ');
+
+            const valuePrefix = `(${safeVal})`;
+            const labelPart = label ? ` ${label}` : '';
+            return `${valuePrefix}${labelPart} - ${s.percentage}% (${s.count}/${totalCount})`;
+        }).filter(v => v !== null).join(isComment ? '' : '\n').trim();
 
         let bgColor = '';
         let borderColor = '';
@@ -287,8 +271,14 @@ Object.assign(SchemaEditor.prototype, {
             }
         }
 
-        const style = bgColor ? `background-color: ${bgColor}; border-color: ${borderColor}; color: var(--gray-900); font-weight: 500;` : '';
-        return { displayVal, bgColor, borderColor, msgDisplay, style };
+        let baseStyle = "white-space: pre-wrap; overflow-wrap: break-word; width: 100%; padding: 0.75rem; border-radius: var(--radius); font-size: 0.875rem; line-height: 1.5; box-sizing: border-box; display: block;";
+        if (bgColor) {
+            baseStyle += `background-color: ${bgColor}; border: 1px solid ${borderColor}; color: var(--gray-900); font-weight: 500;`;
+        } else {
+            baseStyle += `background-color: var(--white); border: 1px solid var(--gray-300); color: var(--gray-700);`;
+        }
+
+        return { displayVal, bgColor, borderColor, msgDisplay, style: baseStyle };
     },
 
     updatePatientSummary(patientId, outputs) {
@@ -306,8 +296,8 @@ Object.assign(SchemaEditor.prototype, {
         // to ensure we always have the correct baseline comparison
         if (!humanValStr && this.validationData && this.validationData[patientId] && this.selectedField) {
             const stored = this.validationData[patientId][this.selectedField];
-            if (Array.isArray(stored) && stored[0]) {
-                humanValStr = stored[0];
+            if (stored !== undefined && stored !== null) {
+                humanValStr = Array.isArray(stored) ? (stored[0] || '') : stored;
             }
         }
 
@@ -316,105 +306,14 @@ Object.assign(SchemaEditor.prototype, {
         const msgEl = document.getElementById(`validationMsg-${patientId}`);
 
         if (input) {
-            input.value = summary.displayVal;
-            input.style.removeProperty('background-color');
-            input.style.removeProperty('border-color');
-            input.style.removeProperty('color');
-            if (summary.style) {
-                input.style.cssText = summary.style;
-            } else {
-                input.style.cssText = ''; // Reset if no style
-            }
+            input.innerHTML = summary.displayVal;
+            if (summary.style) input.style.cssText = summary.style;
         }
         if (msgEl) msgEl.style.display = summary.msgDisplay;
     },
 
-    renderHumanValidationSelect(patientId, value, def) {
-        const options = (def.options || []).concat(def.enum ? def.enum.map(e => ({ value: e, label: '' })) : []);
-        const html = options.map(o => {
-            const display = o.label ? `${o.label} (${o.value})` : String(o.value);
-            return `<option value="${o.value}" ${String(o.value) === String(value) ? 'selected' : ''}>${display}</option>`;
-        }).join('');
 
-        return `
-            <select data-patient="${patientId}" data-perf-prop="human_val" onchange="app.handleFieldPropertyChange(event)">
-                ${html}
-            </select>
-        `;
-    },
 
-    renderComboboxOptions(patientId, filter = '') {
-        const container = document.getElementById(`comboboxList-${patientId}`);
-        if (!container) return;
 
-        const def = this.currentSchema.properties[this.selectedField];
-        let options = [];
-        if (def.options && Array.isArray(def.options)) {
-            options = def.options.map(o => ({ value: o.value, label: o.label }));
-        } else if (def.enum && Array.isArray(def.enum)) {
-            options = def.enum.map(e => ({ value: e, label: '' }));
-        }
 
-        const containerWrap = document.getElementById(`combobox-${patientId}`);
-
-        if (options.length === 0) {
-            if (containerWrap) containerWrap.classList.remove('open');
-            container.innerHTML = '';
-            return;
-        }
-
-        const filtered = options.filter(o =>
-            String(o.value).toLowerCase().includes(filter.toLowerCase()) ||
-            String(o.label).toLowerCase().includes(filter.toLowerCase())
-        );
-
-        if (filtered.length === 0 && filter === '') {
-            container.innerHTML = '<div class="combobox-option no-results">No options available</div>';
-        } else if (filtered.length === 0) {
-            container.innerHTML = '<div class="combobox-option no-results">No matches found</div>';
-        } else {
-            if (containerWrap) containerWrap.classList.add('open');
-            container.innerHTML = filtered.map(o => `
-                <div class="combobox-option" data-value="${String(o.value).replace(/'/g, "\\'")}" onmousedown="app.selectComboboxOption('${patientId}', '${String(o.value).replace(/'/g, "\\'")}', event)">
-                    <div class="option-content" style="display: flex; flex-direction: column;">
-                        <span class="option-label" style="font-weight: 600;">${o.label || o.value}</span>
-                        ${o.label ? `<span class="option-hint">Code: ${o.value}</span>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-    },
-    handleOutputMouseDown(patientId, index, delta, e) {
-        if (e) {
-            // Do NOT prevent default here, so that active input can blur and commit its value
-            e.stopPropagation();
-        }
-
-        // Initial change
-        this.updateOutputCount(patientId, index, delta);
-
-        // Clear any existing
-        this.stopOutputChange();
-
-        // Start long press timer
-        this._outputChangeTimer = setTimeout(() => {
-            this._outputChangeInterval = setInterval(() => {
-                this.updateOutputCount(patientId, index, delta);
-            }, 80);
-        }, 1000);
-    },
-
-    handleOutputMouseUp(e) {
-        this.stopOutputChange();
-        if (e) {
-            // Optional: remove focus from button if needed
-        }
-    },
-
-    stopOutputChange() {
-        if (this._outputChangeTimer) clearTimeout(this._outputChangeTimer);
-        if (this._outputChangeInterval) clearInterval(this._outputChangeInterval);
-        this._outputChangeTimer = null;
-        this._outputChangeInterval = null;
-    }
 });

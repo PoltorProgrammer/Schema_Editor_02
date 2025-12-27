@@ -1,0 +1,105 @@
+/* Fields Table */
+.fields-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.fields-table {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-header {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: var(--color-light);
+    border-bottom: 1px solid var(--gray-200);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-muted-text);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.field-row {
+    display: grid;
+    gap: 1rem;
+    padding: 0.625rem 1.5rem;
+    border-bottom: 1px solid var(--gray-100);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    align-items: center;
+}
+
+.field-row:hover {
+    background: var(--gray-50);
+}
+
+.field-row.selected {
+    background: rgba(200, 223, 248, 0.6);
+    border-color: var(--color-primary);
+}
+
+.field-row .field-name {
+    font-weight: 600;
+    color: var(--gray-900);
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+    font-size: 0.875rem;
+}
+
+.field-row .field-type,
+.field-row .field-group {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid;
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.field-row .field-description,
+.field-row .field-comments {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.field-row .field-comments {
+    font-style: italic;
+}
+
+.field-row .field-value {
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--gray-700);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.field-value>div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.field-row .field-indicators {
+    display: flex;
+    gap: 0.375rem;
+    justify-content: flex-end;
+}

@@ -28,7 +28,7 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('clearSearch').addEventListener('click', this.clearSearch.bind(this));
 
         // Custom dropdowns
-        ['type', 'group', 'label', 'status'].forEach(t => {
+        ['type', 'group', 'label', 'status', 'reviewed', 'severity'].forEach(t => {
             const el = document.getElementById(`${t}Filter`);
             if (el) {
                 el.querySelector('.dropdown-trigger').addEventListener('click', (e) => {
@@ -38,15 +38,17 @@ Object.assign(SchemaEditor.prototype, {
             }
         });
 
-        // Hardcoded dropdown options for status
-        const statusDropdown = document.getElementById('statusFilter');
-        if (statusDropdown) {
-            statusDropdown.querySelectorAll('.dropdown-option').forEach(opt => {
-                opt.addEventListener('click', (e) => {
-                    this.handleDropdownOptionClick('status', opt.dataset.value, e);
+        // Hardcoded dropdown options for status, reviewed, severity
+        ['status', 'reviewed', 'severity'].forEach(type => {
+            const dropdown = document.getElementById(`${type}Filter`);
+            if (dropdown) {
+                dropdown.querySelectorAll('.dropdown-option').forEach(opt => {
+                    opt.addEventListener('click', (e) => {
+                        this.handleDropdownOptionClick(type, opt.dataset.value, e);
+                    });
                 });
-            });
-        }
+            }
+        });
 
         document.getElementById('clearFilters').addEventListener('click', this.clearAllFilters.bind(this));
 
@@ -79,6 +81,23 @@ Object.assign(SchemaEditor.prototype, {
                 if (searchInput) {
                     searchInput.focus();
                     searchInput.select();
+                }
+            } else if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'))) {
+                if (this.hasUnsavedChanges) {
+                    e.preventDefault();
+                    // Pass true as last argument to focus Cancel button by default
+                    AppUI.showConfirm(
+                        'Unsaved Changes',
+                        'You have unsaved changes. Reloading will discard them. Are you sure?',
+                        'Reload',
+                        'Cancel',
+                        true
+                    ).then(confirm => {
+                        if (confirm) {
+                            this.hasUnsavedChanges = false;
+                            window.location.reload();
+                        }
+                    });
                 }
             }
         });

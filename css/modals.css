@@ -120,6 +120,39 @@
     box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
 }
 
+/* Filter Visibility Box */
+.filter-visibility-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.checkbox-item:hover {
+    background: var(--gray-50);
+    border-color: var(--color-primary);
+}
+
+.checkbox-item .column-label {
+    font-weight: 500;
+}
+
 /* Column Order List */
 .column-order-list {
     border: 1px solid var(--gray-200);
@@ -224,4 +257,79 @@
     padding: 1.5rem;
     border-top: 1px solid var(--gray-200);
     background: var(--gray-50);
+}
+
+/* Generic Custom Modal */
+.custom-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    /* Higher than settings modal */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.custom-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.custom-modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.7);
+    /* Darker overlay for focus */
+    backdrop-filter: blur(2px);
+}
+
+.custom-modal-content {
+    position: relative;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    width: min(90vw, 400px);
+    /* Smaller width for dialogs */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid var(--gray-200);
+}
+
+.custom-modal.active .custom-modal-content {
+    transform: translateY(0);
+}
+
+.custom-modal-header {
+    padding: 1.25rem 1.5rem 1rem;
+    padding-bottom: 0;
+}
+
+.custom-modal-header h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    line-height: 1.4;
+}
+
+.custom-modal-body {
+    padding: 1rem 1.5rem;
+    color: var(--gray-600);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+
+.custom-modal-footer {
+    padding: 1rem 1.5rem 1.25rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-100);
 }
