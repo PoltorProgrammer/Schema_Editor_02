@@ -15,6 +15,8 @@ class SchemaEditor {
         this.currentProject = null;
         this.projectsDirectoryHandle = null;
         this.panelStates = {}; // Persistent UI state for field details panel
+        this.validationData = {};
+        this.medixtractOutputData = {};
         this.hasUnsavedChanges = false;
 
         this.filters = {
@@ -66,7 +68,7 @@ class SchemaEditor {
     updateSaveButtonUI() {
         const saveBtn = document.getElementById('saveBtn');
         if (!saveBtn) return;
-        
+
         if (this.hasUnsavedChanges) {
             saveBtn.classList.add('unsaved');
             if (!saveBtn.innerHTML.includes('*')) {

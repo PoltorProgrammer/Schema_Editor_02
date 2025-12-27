@@ -27,6 +27,11 @@ This tool is built with a "User-First" philosophy, focusing on clarity, speed, a
 2.  The script will automatically check for Node.js. If missing, it will offer to install it for you (via Windows Package Manager).
 3.  Launch the **"Schema Editor"** icon from your Desktop.
 
+### 🔄 Keeping the Program Updated
+To get the latest features and bug fixes:
+*   **Windows**: Double-click **`Update Program.bat`** in the root folder.
+*   **Safety**: The script will safely update your installation while preserving all your work in the `projects/` folder.
+
 ### 🍎 Mac / 🐧 Linux
 1.  Run the following in your terminal:
     ```bash

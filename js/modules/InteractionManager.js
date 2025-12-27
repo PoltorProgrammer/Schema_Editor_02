@@ -10,6 +10,8 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('addProjectQuickBtn').addEventListener('click', this.handleCreateProject.bind(this));
         document.getElementById('addPatientBtn').addEventListener('click', this.handleAddPatientClick.bind(this));
         document.getElementById('patientFileInput').addEventListener('change', (e) => this.handleAddPatientFile(e));
+        document.getElementById('addOutputBtn').addEventListener('click', this.handleAddOutputClick.bind(this));
+        document.getElementById('outputFileInput').addEventListener('change', (e) => this.handleAddOutputFile(e));
         document.getElementById('saveBtn').addEventListener('click', this.saveChanges.bind(this));
         document.getElementById('downloadFilteredBtn').addEventListener('click', this.downloadFilteredFields.bind(this));
 

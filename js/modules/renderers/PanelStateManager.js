@@ -112,6 +112,7 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('saveBtn').style.display = 'inline-flex';
         document.getElementById('saveBtn').disabled = false;
         document.getElementById('addPatientBtn').style.display = 'flex';
+        document.getElementById('addOutputBtn').style.display = 'flex';
         document.getElementById('downloadFilteredBtn').style.display = 'flex';
         document.getElementById('projectDashboardBtn').style.display = 'flex';
         document.getElementById('loadingIndicator').style.display = 'none';

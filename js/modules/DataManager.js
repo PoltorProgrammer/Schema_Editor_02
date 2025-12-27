@@ -8,6 +8,7 @@ Object.assign(SchemaEditor.prototype, {
         if (!variables || typeof variables !== 'object') return;
 
         const validationPatients = Object.keys(this.validationData || {});
+        const medixtractPatients = Object.keys(this.medixtractOutputData || {});
         // Collect all patient IDs from all properties' performance objects
         const performancePatients = new Set();
         Object.values(variables).forEach(def => {
@@ -15,7 +16,7 @@ Object.assign(SchemaEditor.prototype, {
                 Object.keys(def.performance).forEach(pid => performancePatients.add(pid));
             }
         });
-        const patients = Array.from(new Set([...validationPatients, ...performancePatients])).sort();
+        const patients = Array.from(new Set([...validationPatients, ...medixtractPatients, ...performancePatients])).sort();
 
         this.allFields = Object.entries(variables).map(([key, def]) => {
             if (key === 'note' || !def || typeof def !== 'object') return null;
@@ -27,12 +28,6 @@ Object.assign(SchemaEditor.prototype, {
             if (!def.performance) def.performance = {};
 
             patients.forEach(patientId => {
-                const patientData = this.validationData[patientId];
-                if (!patientData) return;
-
-                const patientValArray = patientData[id];
-                const humanValue = Array.isArray(patientValArray) ? patientValArray[0] : null;
-
                 if (!def.performance[patientId]) {
                     def.performance[patientId] = {
                         matched: false,
@@ -44,6 +39,24 @@ Object.assign(SchemaEditor.prototype, {
                 }
                 const perf = def.performance[patientId];
                 if (!perf.output) perf.output = [];
+
+                // Pre-populate output from MediXtract output files if empty
+                if (perf.output.length === 0 && this.medixtractOutputData?.[patientId]?.[id]) {
+                    const mOutput = this.medixtractOutputData[patientId][id];
+                    const values = Array.isArray(mOutput) ? mOutput : [mOutput];
+                    values.forEach(val => {
+                        if (val !== null && val !== undefined) {
+                            perf.output.push({ value: String(val), count: 1 });
+                        }
+                    });
+                }
+
+                const patientData = this.validationData[patientId];
+                if (!patientData) return;
+
+                const patientValArray = patientData[id];
+                const humanValue = Array.isArray(patientValArray) ? patientValArray[0] : null;
+
                 const aiValue = AppUtils.getMostCommonValue(perf.output);
 
                 if (perf.pending && aiValue !== null && humanValue !== null) {

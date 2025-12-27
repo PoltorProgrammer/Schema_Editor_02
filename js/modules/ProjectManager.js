@@ -72,6 +72,7 @@ Object.assign(SchemaEditor.prototype, {
 
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('addPatientBtn').style.display = 'none';
+        document.getElementById('addOutputBtn').style.display = 'none';
         document.getElementById('downloadFilteredBtn').style.display = 'none';
 
         const isUserAction = forceDashboard && (typeof forceDashboard === 'object' || forceDashboard === true);
@@ -190,11 +191,15 @@ Object.assign(SchemaEditor.prototype, {
             const newProjects = [];
             for await (const [name, handle] of this.projectsDirectoryHandle.entries()) {
                 // Determine if it looks like a project folder (ends with _project)
-                if (handle.kind === 'directory' && name.endsWith('_project')) {
+                if (handle.kind === 'directory' && (name.endsWith('_project') || name.endsWith('-project'))) {
                     try {
                         // Check subdirectory structure
                         const analysisHandle = await handle.getDirectoryHandle('analysis_data');
                         const validationHandle = await handle.getDirectoryHandle('validation_data');
+                        let medixtractHandle = null;
+                        try {
+                            medixtractHandle = await handle.getDirectoryHandle('medixtract_output');
+                        } catch (e) { /* might not exist yet */ }
 
                         // Deep Validation: Check Analysis Data
                         let hasValidAnalysis = false;
@@ -221,8 +226,7 @@ Object.assign(SchemaEditor.prototype, {
                                     const text = await file.text();
                                     JSON.parse(text); // Verify validity
 
-                                    const patientMatch = vName.match(/^([^_]+)_/);
-                                    const patientId = patientMatch ? patientMatch[1] : vName.replace('.json', '');
+                                    const patientId = vName.split('-')[0];
 
                                     validationFiles.push({
                                         name: vName,
@@ -232,11 +236,33 @@ Object.assign(SchemaEditor.prototype, {
                             }
                         }
 
+                        // Deep Validation: Check MediXtract Output Data
+                        const medixtractFiles = [];
+                        if (medixtractHandle) {
+                            for await (const [mName, mHandle] of medixtractHandle.entries()) {
+                                if (mName.endsWith('.json')) {
+                                    try {
+                                        const file = await mHandle.getFile();
+                                        const text = await file.text();
+                                        JSON.parse(text); // Verify validity
+
+                                        const patientId = mName.split('-')[0];
+
+                                        medixtractFiles.push({
+                                            name: mName,
+                                            patientId: patientId
+                                        });
+                                    } catch (e) { /* invalid json */ }
+                                }
+                            }
+                        }
+
                         if (hasValidAnalysis && validationFiles.length > 0) {
                             newProjects.push({
                                 name,
                                 handle,
-                                validationFiles // Attach discovered validation files 
+                                validationFiles, // Attach discovered validation files 
+                                medixtractOutputFiles: medixtractFiles // Attach discovered medixtract output files
                             });
                         }
 
@@ -295,7 +321,8 @@ Object.assign(SchemaEditor.prototype, {
             const configData = projects.map(p => ({
                 name: p.name,
                 path: `projects/${p.name}`,
-                validationFiles: p.validationFiles || []
+                validationFiles: p.validationFiles || [],
+                medixtractOutputFiles: p.medixtractOutputFiles || []
             }));
 
             const content = `const PRE_DISCOVERED_PROJECTS = ${JSON.stringify(configData, null, 2)};`;
@@ -403,7 +430,7 @@ Object.assign(SchemaEditor.prototype, {
     },
 
     createProjectCard(project, isRecent = false) {
-        const displayName = project.name.replace(/_project$/, '').replace(/_/g, ' ');
+        const displayName = project.name.replace(/[-_]project$/, '').replace(/_/g, ' ');
         const card = document.createElement('div');
         card.className = 'project-card' + (isRecent ? ' recent-project' : '');
         card.onclick = () => this.loadProject(project.name);
@@ -420,7 +447,7 @@ Object.assign(SchemaEditor.prototype, {
                 <h3 style="text-transform: capitalize;">${displayName}</h3>
                 <p>${isRecent ? 'Recently Edited' : (project.isPreDiscovered ? 'Auto-discovered' : 'Local folder')}</p>
                 <div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">
-                   ${patientCount} Patient${patientCount !== 1 ? 's' : ''}
+                   ${patientCount} Patient${patientCount !== 1 ? 's' : ''} | ${project.medixtractOutputFiles?.length || 0} Outputs
                 </div>
             </div>
         `;
@@ -436,6 +463,7 @@ Object.assign(SchemaEditor.prototype, {
             this.currentProject = project;
             localStorage.setItem('lastActiveProject', projectName);
             this.validationData = {};
+            this.medixtractOutputData = {};
 
             let analysisData;
 
@@ -444,7 +472,7 @@ Object.assign(SchemaEditor.prototype, {
                 let validationHandle = await project.handle.getDirectoryHandle('validation_data');
 
                 let mainFileHandle;
-                const baseName = projectName.replace('_project', '');
+                const baseName = projectName.replace(/[-_]project/, '');
 
                 for await (const [name, handle] of analysisHandle.entries()) {
                     if (name.endsWith('.json')) {
@@ -469,12 +497,26 @@ Object.assign(SchemaEditor.prototype, {
                     }
                 }
 
+                if (project.medixtractOutputFiles) {
+                    try {
+                        const mHandleDir = await project.handle.getDirectoryHandle('medixtract_output');
+                        for (const mFile of project.medixtractOutputFiles) {
+                            try {
+                                const mHandle = await mHandleDir.getFileHandle(mFile.name);
+                                const mData = JSON.parse(await (await mHandle.getFile()).text());
+                                this.medixtractOutputData[mFile.patientId] = mData;
+                            } catch (e) { console.warn("Error loading medixtract file", mFile.name); }
+                        }
+                    } catch (e) { console.warn("MediXtract output folder not found or skipped"); }
+                }
+
             } else if (project.isPreDiscovered) {
-                const baseName = projectName.replace('_project', '');
+                const baseName = projectName.replace(/[-_]project/, '');
                 const variants = [
+                    `${baseName}-analysis_data.json`,
                     `${baseName}_analysis_data.json`,
                     'analysis_data.json',
-                    `patient_01_${baseName}_analysis_data.json`,
+                    `patient01-${baseName}-analysis_data.json`,
                     `patient01_${baseName}_analysis_data.json`
                 ];
 
@@ -495,10 +537,19 @@ Object.assign(SchemaEditor.prototype, {
                         } catch (e) { }
                     }
                 }
+
+                if (project.medixtractOutputFiles) {
+                    for (const m of project.medixtractOutputFiles) {
+                        try {
+                            const mRes = await fetch(`${project.path}/medixtract_output/${m.name}`);
+                            if (mRes.ok) this.medixtractOutputData[m.patientId] = await mRes.json();
+                        } catch (e) { }
+                    }
+                }
             }
 
             this.currentSchema = analysisData;
-            document.getElementById('currentVersion').textContent = `Project: ${projectName}`;
+            document.getElementById('currentVersion').textContent = `Project: ${projectName.replace(/[-_]project$/, '')}`;
 
             try {
                 this.processProjectData();
@@ -545,7 +596,7 @@ Object.assign(SchemaEditor.prototype, {
             return; // Silent fail or console as user requested no banners
         }
 
-        const projectName = rawName.toLowerCase().replace(/\s+/g, '_') + '_project';
+        const projectName = rawName.toLowerCase().replace(/\s+/g, '_') + '-project';
 
         try {
             if (!this.projectsDirectoryHandle) {
@@ -562,13 +613,15 @@ Object.assign(SchemaEditor.prototype, {
             const projectHandle = await this.projectsDirectoryHandle.getDirectoryHandle(projectName, { create: true });
             const analysisDir = await projectHandle.getDirectoryHandle('analysis_data', { create: true });
             const validationDir = await projectHandle.getDirectoryHandle('validation_data', { create: true });
+            const medixtractDir = await projectHandle.getDirectoryHandle('medixtract_output', { create: true });
 
-            const schemaHandle = await analysisDir.getFileHandle(`${rawName}_analysis_data.json`, { create: true });
+            const cleanName = rawName.toLowerCase().replace(/\s+/g, '_');
+            const schemaHandle = await analysisDir.getFileHandle(`${cleanName}-analysis_data.json`, { create: true });
             const schemaWritable = await schemaHandle.createWritable();
             await schemaWritable.write(await schemaFile.text());
             await schemaWritable.close();
 
-            const validationHandle = await validationDir.getFileHandle(`${rawName}_validation_data.json`, { create: true });
+            const validationHandle = await validationDir.getFileHandle(`patient01-${cleanName}-validation_data.json`, { create: true });
             const validationWritable = await validationHandle.createWritable();
             await validationWritable.write(await validationFile.text());
             await validationWritable.close();
@@ -644,8 +697,7 @@ Object.assign(SchemaEditor.prototype, {
                 }
 
                 const vName = file.name;
-                const patientMatch = vName.match(/^([^_]+)_/);
-                const patientId = patientMatch ? patientMatch[1] : vName.replace('.json', '');
+                const patientId = vName.split('-')[0];
 
                 if (!this.validationData) this.validationData = {};
                 this.validationData[patientId] = json;
@@ -680,6 +732,108 @@ Object.assign(SchemaEditor.prototype, {
 
         } catch (error) {
             console.error("Error processing patient files:", error);
+        } finally {
+            AppUI.hideLoading();
+        }
+    },
+
+    async handleAddOutputClick() {
+        if ('showOpenFilePicker' in window && this.currentProject) {
+            try {
+                const pickerOpts = {
+                    types: [{
+                        description: 'JSON Files',
+                        accept: { 'application/json': ['.json'] },
+                    }],
+                    multiple: true
+                };
+
+                if (this.currentProject.handle) {
+                    try {
+                        pickerOpts.startIn = await this.currentProject.handle.getDirectoryHandle('medixtract_output');
+                    } catch (e) {
+                        pickerOpts.startIn = this.projectsDirectoryHandle || 'documents';
+                    }
+                } else if (this.projectsDirectoryHandle) {
+                    pickerOpts.startIn = this.projectsDirectoryHandle;
+                }
+
+                const fileHandles = await window.showOpenFilePicker(pickerOpts);
+                const files = [];
+                for (const handle of fileHandles) {
+                    files.push(await handle.getFile());
+                }
+                await this.processOutputFiles(files);
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error("File picker error:", e);
+                    document.getElementById('outputFileInput').click();
+                }
+            }
+        } else {
+            document.getElementById('outputFileInput').click();
+        }
+    },
+
+    async handleAddOutputFile(e) {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        await this.processOutputFiles(files);
+        e.target.value = ''; // Reset input
+    },
+
+    async processOutputFiles(files) {
+        if (!files || files.length === 0) return;
+
+        AppUI.showLoading('Adding new output data...');
+
+        try {
+            for (const file of files) {
+                const text = await file.text();
+                let json;
+                try {
+                    json = JSON.parse(text);
+                } catch (err) {
+                    console.error("Invalid JSON file:", file.name, err);
+                    continue;
+                }
+
+                const mName = file.name;
+                const patientId = mName.split('-')[0];
+
+                if (!this.medixtractOutputData) this.medixtractOutputData = {};
+                this.medixtractOutputData[patientId] = json;
+
+                if (this.currentProject && this.currentProject.handle) {
+                    try {
+                        const medixtractHandle = await this.currentProject.handle.getDirectoryHandle('medixtract_output', { create: true });
+                        const fileHandle = await medixtractHandle.getFileHandle(mName, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(text);
+                        await writable.close();
+
+                        if (!this.currentProject.medixtractOutputFiles) this.currentProject.medixtractOutputFiles = [];
+                        if (!this.currentProject.medixtractOutputFiles.some(mf => mf.name === mName)) {
+                            this.currentProject.medixtractOutputFiles.push({
+                                name: mName,
+                                patientId: patientId
+                            });
+                            if (this.appRootHandle) {
+                                await this.updateConfigFile(this.projects);
+                            }
+                        }
+                    } catch (saveErr) {
+                        console.warn("Failed to save output file:", saveErr);
+                    }
+                }
+            }
+
+            this.processProjectData();
+            this.populateFilterOptions();
+            this.showSchemaEditor();
+
+        } catch (error) {
+            console.error("Error processing output files:", error);
         } finally {
             AppUI.hideLoading();
         }
