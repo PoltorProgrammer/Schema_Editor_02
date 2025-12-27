@@ -25,6 +25,7 @@ The **MediXtract Schema Editor** is a sophisticated tool designed to bridge the 
 - [⚙️ Configuration](#-configuration)
 - [🤝 Contributing](#-contributing)
 - [👤 Author](#-author)
+- [🏥 MediXtract Ecosystem](#-medixtract-ecosystem)
 
 ---
 
