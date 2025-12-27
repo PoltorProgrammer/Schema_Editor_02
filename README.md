@@ -208,3 +208,16 @@ The `js/projects-config.js` file acts as a fallback or pre-configuration map.
 *Known as **PoltorProgrammer***
 
 [![Email](https://img.shields.io/badge/Email-poltorprogrammer%40gmail.com-red?logo=gmail&labelColor=lightgrey)](mailto:poltorprogrammer@gmail.com)
+
+---
+
+## 🏥 MediXtract Ecosystem
+
+This project is a core component of the [MediXtract Ecosystem](https://medixtract.github.io/MediXtract/), dedicated to advancing medical data processing and validation.
+
+[![Website](https://img.shields.io/badge/Visit-MediXtract_Website-blue?style=for-the-badge&logo=googlechrome&logoColor=white)](https://medixtract.github.io/MediXtract/)
+
+[![Email](https://img.shields.io/badge/Email-medixtract.developers%40gmail.com-blue?logo=gmail&labelColor=lightgrey)](mailto:medixtract.developers@gmail.com)
+
+---
+*Developed for precision, built for speed.*
