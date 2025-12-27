@@ -164,11 +164,11 @@ The main view is a high-density data grid.
 
 | Status | Icon Color | Definition |
 | :--- | :--- | :--- |
-| **Pending** | ⚪ Grey | Comparison not yet analyzed. Default state. |
-| **Matched** | 🟢 Green | AI Output matches Human Validation (>90% confidence). |
-| **Improved** | 🔵 Blue | AI found valid data that was missing or incorrect in Human Validation. |
+| **Pending** | 🟣 Purple | Comparison not yet analyzed. Default state. |
+| **Matched** | ⚪ White | AI Output matches Human Validation (>90% confidence). |
+| **Improved** | 🟢 Blue | AI found valid data that was missing or incorrect in Human Validation. |
 | **Issued** | 🔴 Red | AI Output is incorrect or contradictory. |
-| **Dismissed** | ⚫ Black | Field is not relevant for the current analysis context. |
+| **Dismissed** | ⚪ Grey | Field is not relevant for the current analysis context. |
 
 *Sub-statuses for Improvements/Issues allow for detailed error categorization (e.g., Structural Error, Formatting Issue, Ambiguous).*
 
