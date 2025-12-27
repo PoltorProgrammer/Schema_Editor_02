@@ -20,7 +20,15 @@ if (Test-Path (Join-Path $currentDir ".git")) {
         Write-Host $pullOutput
         
         Write-Host "Restoring local changes..."
-        git stash pop
+        # Quietly pop the stash. We use --quiet if available or just pipe to null.
+        git stash pop 2>$null
+        
+        # Ensure that any core files missing from the disk are restored
+        $deletedFiles = git ls-files --deleted
+        if ($deletedFiles) {
+            Write-Host "Restoring missing program files..." -ForegroundColor Yellow
+            git checkout -- $deletedFiles
+        }
         
         Write-Host "`nUpdate complete via Git!" -ForegroundColor Green
         return
