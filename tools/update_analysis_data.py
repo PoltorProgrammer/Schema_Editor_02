@@ -58,7 +58,7 @@ def update_analysis_data():
     for fpath in med_files:
         filename = os.path.basename(fpath)
         # Extract patient ID (e.g., patient_A)
-        # Format: patient_A-[0001]-munchen-medixtract_output.json
+        # Format: patient_A-00010000-munchen-medixtract_output.json
         parts = filename.split('-')
         p_id = parts[0] # patient_A
         

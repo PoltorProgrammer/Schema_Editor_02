@@ -504,7 +504,8 @@ Object.assign(SchemaEditor.prototype, {
                             try {
                                 const mHandle = await mHandleDir.getFileHandle(mFile.name);
                                 const mData = JSON.parse(await (await mHandle.getFile()).text());
-                                this.medixtractOutputData[mFile.patientId] = mData;
+                                if (!this.medixtractOutputData[mFile.patientId]) this.medixtractOutputData[mFile.patientId] = [];
+                                this.medixtractOutputData[mFile.patientId].push(mData);
                             } catch (e) { console.warn("Error loading medixtract file", mFile.name); }
                         }
                     } catch (e) { console.warn("MediXtract output folder not found or skipped"); }
@@ -542,7 +543,11 @@ Object.assign(SchemaEditor.prototype, {
                     for (const m of project.medixtractOutputFiles) {
                         try {
                             const mRes = await fetch(`${project.path}/medixtract_output/${m.name}`);
-                            if (mRes.ok) this.medixtractOutputData[m.patientId] = await mRes.json();
+                            if (mRes.ok) {
+                                const mData = await mRes.json();
+                                if (!this.medixtractOutputData[m.patientId]) this.medixtractOutputData[m.patientId] = [];
+                                this.medixtractOutputData[m.patientId].push(mData);
+                            }
                         } catch (e) { }
                     }
                 }
@@ -696,8 +701,9 @@ Object.assign(SchemaEditor.prototype, {
                     continue;
                 }
 
-                const vName = file.name;
-                const patientId = vName.split('-')[0];
+                const patientId = json.Patient ? (Array.isArray(json.Patient) ? json.Patient[0] : json.Patient) : file.name.split('-')[0];
+                const projectPart = this.currentProject?.name?.replace(/[-_]project$/, '') || 'project';
+                const vName = `${patientId}-${projectPart}-validation_data.json`;
 
                 if (!this.validationData) this.validationData = {};
                 this.validationData[patientId] = json;
@@ -798,11 +804,15 @@ Object.assign(SchemaEditor.prototype, {
                     continue;
                 }
 
-                const mName = file.name;
-                const patientId = mName.split('-')[0];
+                const patientId = json.Patient ? (Array.isArray(json.Patient) ? json.Patient[0] : json.Patient) : file.name.split('-')[0];
+                const recordId = json.record_id ? (Array.isArray(json.record_id) ? json.record_id[0] : json.record_id) : '0000';
+                const idStr = String(recordId).padStart(8, '0');
+                const projectPart = this.currentProject?.name?.replace(/[-_]project$/, '') || 'project';
+                const mName = `${patientId}-${idStr}-${projectPart}-medixtract_output.json`;
 
                 if (!this.medixtractOutputData) this.medixtractOutputData = {};
-                this.medixtractOutputData[patientId] = json;
+                if (!this.medixtractOutputData[patientId]) this.medixtractOutputData[patientId] = [];
+                this.medixtractOutputData[patientId].push(json);
 
                 if (this.currentProject && this.currentProject.handle) {
                     try {

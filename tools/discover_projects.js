@@ -40,19 +40,13 @@ function discoverProjects() {
         try {
             const vFiles = fs.readdirSync(validationDir).filter(f => f.endsWith('.json'));
 
-            if (vFiles.length === 0) {
-                console.warn(`Skipping '${folder}': No JSON files in validation_data.`);
-                continue;
-            }
-
             for (const vFile of vFiles) {
                 const vFilePath = path.join(validationDir, vFile);
                 try {
                     const content = fs.readFileSync(vFilePath, 'utf8');
-                    JSON.parse(content); // Test if valid JSON
+                    JSON.parse(content);
 
-                    const patientMatch = vFile.match(/^([^_]+)_/);
-                    const patientId = patientMatch ? patientMatch[1] : vFile.replace('.json', '');
+                    const patientId = vFile.split('-')[0];
 
                     validationFiles.push({
                         name: vFile,
@@ -73,6 +67,29 @@ function discoverProjects() {
             continue;
         }
 
+        // Validate MediXtract Output Data
+        let medixtractOutputFiles = [];
+        const medixtractDir = path.join(projectPath, 'medixtract_output');
+        if (fs.existsSync(medixtractDir)) {
+            try {
+                const mFiles = fs.readdirSync(medixtractDir).filter(f => f.endsWith('.json'));
+                for (const mFile of mFiles) {
+                    const mFilePath = path.join(medixtractDir, mFile);
+                    try {
+                        const content = fs.readFileSync(mFilePath, 'utf8');
+                        JSON.parse(content);
+
+                        const patientId = mFile.split('-')[0];
+
+                        medixtractOutputFiles.push({
+                            name: mFile,
+                            patientId: patientId
+                        });
+                    } catch (e) { }
+                }
+            } catch (e) { }
+        }
+
         // Validate Analysis Data (at least one valid JSON)
         let hasValidAnalysis = false;
         try {
@@ -85,9 +102,7 @@ function discoverProjects() {
                         hasValidAnalysis = true;
                         break;
                     }
-                } catch (e) {
-                    // Ignore invalid individual files, as long as one is good
-                }
+                } catch (e) { }
             }
         } catch (e) {
             console.warn(`Error reading analysis_data for '${folder}':`, e);
@@ -103,7 +118,8 @@ function discoverProjects() {
         projects.push({
             name: folder,
             path: `projects/${folder}`,
-            validationFiles
+            validationFiles,
+            medixtractOutputFiles
         });
     }
 

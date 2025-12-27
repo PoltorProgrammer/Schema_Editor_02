@@ -41,13 +41,27 @@ Object.assign(SchemaEditor.prototype, {
                 if (!perf.output) perf.output = [];
 
                 // Pre-populate output from MediXtract output files if empty
-                if (perf.output.length === 0 && this.medixtractOutputData?.[patientId]?.[id]) {
-                    const mOutput = this.medixtractOutputData[patientId][id];
-                    const values = Array.isArray(mOutput) ? mOutput : [mOutput];
-                    values.forEach(val => {
-                        if (val !== null && val !== undefined) {
-                            perf.output.push({ value: String(val), count: 1 });
+                if (perf.output.length === 0 && this.medixtractOutputData?.[patientId]) {
+                    const outputs = Array.isArray(this.medixtractOutputData[patientId])
+                        ? this.medixtractOutputData[patientId]
+                        : [this.medixtractOutputData[patientId]];
+
+                    const valueCounts = {};
+                    outputs.forEach(outputJson => {
+                        const mOutput = outputJson[id];
+                        if (mOutput !== undefined) {
+                            const values = Array.isArray(mOutput) ? mOutput : [mOutput];
+                            values.forEach(val => {
+                                if (val !== null && val !== undefined) {
+                                    const strVal = String(val);
+                                    valueCounts[strVal] = (valueCounts[strVal] || 0) + 1;
+                                }
+                            });
                         }
+                    });
+
+                    Object.entries(valueCounts).forEach(([value, count]) => {
+                        perf.output.push({ value, count });
                     });
                 }
 
