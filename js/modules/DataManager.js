@@ -407,11 +407,13 @@ Object.assign(SchemaEditor.prototype, {
 
         if (status === 'pending') {
             perf.pending = true;
+            perf.reviewed = false;
         } else if (status === 'matched') {
             perf.matched = true;
             perf.reviewed = true; // Auto-review matched records
         } else if (status === 'dismissed') {
             perf.dismissed = true;
+            perf.reviewed = false;
         } else if (status === 'unmatched') {
             // For unmatched, we expect a reason, but support generic if needed (though UI prevents it)
             perf.unmatched = unmatchedReason ? { [unmatchedReason]: true } : { structural: true };

@@ -360,7 +360,9 @@ Object.assign(SchemaEditor.prototype, {
             await writable.write(content);
             await writable.close();
         } catch (e) {
-            // console.warn("Failed to update config file:", e);
+            // This error is expected in some environments (e.g. GitHub Pages) or if external tools modify the file.
+            // It affects only the pre-population of the project list for new users/sessions.
+            console.debug("Non-critical: Failed to update projects-config.js:", e);
         }
     },
 

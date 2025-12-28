@@ -77,7 +77,7 @@ Object.assign(SchemaEditor.prototype, {
                     const opt = options.find(o => String(o.value) === String(humanValue));
                     if (opt && opt.label) displayVal = `${opt.label} (${opt.value})`;
                 }
-                return `<input type="text" readonly value="${displayVal}" data-patient="${patientId}" data-perf-prop="human_val">`;
+                return `<textarea readonly rows="1" data-patient="${patientId}" data-perf-prop="human_val" style="resize: none; min-height: 2.5rem; overflow-y: hidden;">${displayVal}</textarea>`;
             })()}
                     </div>
                 </div>
@@ -166,6 +166,9 @@ Object.assign(SchemaEditor.prototype, {
         const header = e.currentTarget;
         const content = header.nextElementSibling;
         const isOpen = content.classList.toggle('open');
+        if (isOpen) {
+            content.querySelectorAll('textarea').forEach(t => AppUI.autoResizeTextarea(t));
+        }
         this.capturePanelState();
     },
 
@@ -285,7 +288,8 @@ Object.assign(SchemaEditor.prototype, {
         let humanValStr = '';
 
         // Try getting from DOM first (for live edits)
-        const humanInput = document.querySelector(`input[data-patient="${patientId}"][data-perf-prop="human_val"]`) ||
+        const humanInput = document.querySelector(`textarea[data-patient="${patientId}"][data-perf-prop="human_val"]`) ||
+            document.querySelector(`input[data-patient="${patientId}"][data-perf-prop="human_val"]`) ||
             document.querySelector(`select[data-patient="${patientId}"][data-perf-prop="human_val"]`);
 
         if (humanInput) {

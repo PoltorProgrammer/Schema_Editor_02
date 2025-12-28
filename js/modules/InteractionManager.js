@@ -77,10 +77,25 @@ Object.assign(SchemaEditor.prototype, {
                 this.saveChanges();
             } else if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
                 e.preventDefault();
-                const searchInput = document.getElementById('searchInput');
                 if (searchInput) {
-                    searchInput.focus();
-                    searchInput.select();
+                    const panel = document.getElementById('fieldDetailsPanel');
+                    // Check if panel is visible (open), regardless of current focus
+                    // The user wants "if ctrl+f when having a detailed view side panel opened"
+                    if (panel && getComputedStyle(panel).transform !== 'none' && panel.classList.contains('open')) {
+                        // Note: My previous check for display:flex might be misleading if CSS handles visibility via transform/class
+                        // Let's rely on the class 'open' which we use in PanelStateManager/Renderer
+                        this.togglePanelSearch();
+                    } else if (panel && panel.style.display === 'flex' && panel.classList.contains('open')) {
+                        this.togglePanelSearch();
+                    } else {
+                        // Fallback: Check if it simply has the 'open' class which is our primary toggle
+                        if (panel && panel.classList.contains('open')) {
+                            this.togglePanelSearch();
+                        } else {
+                            searchInput.focus();
+                            searchInput.select();
+                        }
+                    }
                 }
             } else if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'))) {
                 if (this.hasUnsavedChanges) {
@@ -421,6 +436,178 @@ Object.assign(SchemaEditor.prototype, {
                 e.preventDefault();
                 options[currentIndex].click();
             }
+        }
+    },
+
+    togglePanelSearch() {
+        const panel = document.getElementById('fieldDetailsPanel');
+        if (!panel) return;
+
+        let searchBar = document.getElementById('panelSearchBar');
+        if (!searchBar) {
+            searchBar = document.createElement('div');
+            searchBar.id = 'panelSearchBar';
+            searchBar.className = 'panel-search-bar';
+
+            searchBar.style.cssText = `
+                position: absolute;
+                top: 70px;
+                right: 24px;
+                background: var(--white);
+                border: 1px solid var(--gray-200);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-xl);
+                padding: 10px 14px;
+                display: flex;
+                gap: 12px;
+                z-index: 1000;
+                align-items: center;
+                animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            `;
+
+            searchBar.innerHTML = `
+                <div style="position: relative; display: flex; align-items: center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2.5" style="position: absolute; left: 10px;">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                    </svg>
+                    <input type="text" id="panelSearchInput" placeholder="Find in panel..." 
+                        style="border: 1px solid var(--gray-200); padding: 7px 12px 7px 32px; border-radius: 6px; font-size: 13px; width: 220px; outline: none; transition: border-color 0.2s; background: var(--gray-50);">
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px; border-left: 1px solid var(--gray-100); padding-left: 8px;">
+                    <span id="panelSearchCount" style="font-size: 12px; font-weight: 600; color: var(--gray-500); min-width: 45px; text-align: center; font-variant-numeric: tabular-nums;"></span>
+                    <button id="panelSearchPrev" class="btn btn-ghost btn-sm" style="padding: 4px; height: 28px; width: 28px; display: flex; align-items: center; justify-content: center; color: var(--primary);" title="Previous match">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+                    </button>
+                    <button id="panelSearchNext" class="btn btn-ghost btn-sm" style="padding: 4px; height: 28px; width: 28px; display: flex; align-items: center; justify-content: center; color: var(--primary);" title="Next match">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <button id="panelSearchClose" class="btn btn-ghost btn-sm" style="padding: 4px; height: 28px; width: 28px; display: flex; align-items: center; justify-content: center; color: var(--gray-400);" title="Close search (Esc)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            `;
+            panel.appendChild(searchBar);
+
+            const input = searchBar.querySelector('#panelSearchInput');
+            const prev = searchBar.querySelector('#panelSearchPrev');
+            const next = searchBar.querySelector('#panelSearchNext');
+            const close = searchBar.querySelector('#panelSearchClose');
+            const count = searchBar.querySelector('#panelSearchCount');
+
+            input.onfocus = () => input.style.borderColor = 'var(--primary)';
+            input.onblur = () => input.style.borderColor = 'var(--gray-200)';
+
+            let matches = [];
+            let currentIdx = -1;
+
+            const executeSearch = () => {
+                // Clear previous highlights
+                CSS.highlights.clear();
+                matches = [];
+                currentIdx = -1;
+                count.textContent = '';
+
+                const query = input.value.trim().toLowerCase();
+                if (!query) return;
+
+                const walker = document.createTreeWalker(document.getElementById('fieldDetailsContent'), NodeFilter.SHOW_TEXT, null, false);
+                const ranges = [];
+                let node;
+                while (node = walker.nextNode()) {
+                    // Removed the offsetParent check as it might hide legitimate matches in initially collapsed sections
+                    const text = node.textContent.toLowerCase();
+                    let index = text.indexOf(query);
+                    while (index !== -1) {
+                        const range = new Range();
+                        range.setStart(node, index);
+                        range.setEnd(node, index + query.length);
+                        ranges.push(range);
+                        matches.push(range); // Store range directly
+                        index = text.indexOf(query, index + 1);
+                    }
+                }
+
+                if (ranges.length > 0) {
+                    const highlight = new Highlight(...ranges);
+                    CSS.highlights.set('search-results', highlight);
+                    currentIdx = 0;
+                    updateCurrentMatch();
+                } else {
+                    count.textContent = '0/0';
+                }
+            };
+
+            const updateCurrentMatch = () => {
+                if (matches.length === 0) return;
+                count.textContent = `${currentIdx + 1}/${matches.length}`;
+
+                const range = matches[currentIdx];
+                const el = range.startContainer.parentElement;
+
+                this.ensureMatchVisibility(el);
+
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Create a "current" highlight
+                const currentHighlight = new Highlight(range);
+                CSS.highlights.set('search-current', currentHighlight);
+            };
+
+            input.addEventListener('input', executeSearch);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    if (e.shiftKey) prev.click();
+                    else next.click();
+                } else if (e.key === 'Escape') {
+                    this.clearPanelSearch();
+                }
+            });
+
+            next.addEventListener('click', () => {
+                if (matches.length === 0) return;
+                currentIdx = (currentIdx + 1) % matches.length;
+                updateCurrentMatch();
+            });
+
+            prev.addEventListener('click', () => {
+                if (matches.length === 0) return;
+                currentIdx = (currentIdx - 1 + matches.length) % matches.length;
+                updateCurrentMatch();
+            });
+
+            close.addEventListener('click', () => this.clearPanelSearch());
+        }
+
+        searchBar.style.display = 'flex';
+        const inp = searchBar.querySelector('input');
+        inp.value = '';
+        inp.focus();
+    },
+
+    ensureMatchVisibility(element) {
+        let current = element;
+        while (current && current !== document.getElementById('fieldDetailsContent')) {
+            if (current.classList.contains('patient-content') && !current.classList.contains('open')) {
+                const header = current.previousElementSibling;
+                if (header && header.classList.contains('patient-header')) {
+                    this.togglePatientSection(current.parentElement.dataset.patientId, { currentTarget: header, stopPropagation: () => { } });
+                }
+            }
+            if (current.classList.contains('form-section-content') && current.classList.contains('collapsed')) {
+                const header = current.previousElementSibling;
+                if (header && header.classList.contains('form-section-header')) {
+                    this.toggleFormSection(header.querySelector('h4')?.textContent, { currentTarget: header, stopPropagation: () => { } });
+                }
+            }
+            current = current.parentElement;
+        }
+    },
+
+    clearPanelSearch() {
+        const searchBar = document.getElementById('panelSearchBar');
+        if (searchBar) {
+            searchBar.style.display = 'none';
+            CSS.highlights.clear();
         }
     }
 });

@@ -73,3 +73,25 @@
     padding-bottom: 20rem;
     /* Give plenty of space for the last patient to expand */
 }
+
+::highlight(search-results) {
+    background-color: #f7e07c;
+    color: black;
+}
+
+::highlight(search-current) {
+    background-color: #ff9800;
+    color: white;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

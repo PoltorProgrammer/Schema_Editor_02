@@ -54,24 +54,83 @@ Object.assign(SchemaEditor.prototype, {
 
     applyFilters() {
         this.ensureFilterArrays();
-        this.filteredFields = this.allFields.filter(f => {
-            // Search filter
-            if (this.filters.search) {
-                const s = this.filters.search;
-                const matchesProps = [f.id, f.description, f.comments, f.group].some(v => v && v.toLowerCase().includes(s));
-                const matchesPatients = Object.entries(f.definition.performance || {}).some(([pid, perf]) => {
-                    const comment = perf.comment || (
-                        this.validationData &&
-                        this.validationData[pid] &&
-                        Array.isArray(this.validationData[pid][f.id]) &&
-                        this.validationData[pid][f.id][1]
-                    ) || '';
-                    return comment && comment.toLowerCase().includes(s);
-                });
 
-                if (!matchesProps && !matchesPatients) return false;
+        const s = this.filters.search;
+        let results = this.allFields.map(f => {
+            let score = 0;
+            if (s) {
+                // Normalize search string: underscores treat as spaces
+                const normSearch = s.replace(/_/g, ' ');
+
+                // ID Match (Priority 1)
+                // Normalize both ID and Search string to handle underscores/spaces
+                // We check if the ID (treated with spaces) contains the search string
+                const normId = f.id.toLowerCase().replace(/_/g, ' ');
+
+                if (normId.includes(normSearch)) {
+                    score = 100;
+                    // Boost for starting with the term
+                    if (normId.startsWith(normSearch)) score += 50;
+                    // Boost for exact match (rare but possible)
+                    if (normId === normSearch) score += 50;
+                }
+
+                // Content Match (Priority 2)
+                if (score === 0) {
+                    // Check metadata using normalized search
+                    const matchesProps = [f.description, f.comments, f.group].some(v => v && v.toLowerCase().includes(normSearch));
+                    if (matchesProps) score = 10;
+
+                    if (score === 0) {
+                        const matchesPatients = Object.entries(f.definition.performance || {}).some(([pid, perf]) => {
+                            const comment = perf.comment || (
+                                this.validationData &&
+                                this.validationData[pid] &&
+                                Array.isArray(this.validationData[pid][f.id]) &&
+                                this.validationData[pid][f.id][1]
+                            ) || '';
+                            if (comment && comment.toLowerCase().includes(normSearch)) return true;
+
+                            // Helper to check value content or label
+                            const checkValueWithLabel = (val) => {
+                                const sVal = String(val).toLowerCase();
+                                if (sVal.includes(normSearch)) return true;
+                                if (f.definition.options) {
+                                    const opt = f.definition.options.find(o => String(o.value).toLowerCase() === sVal);
+                                    if (opt && opt.label && opt.label.toLowerCase().includes(normSearch)) return true;
+                                }
+                                return false;
+                            };
+
+                            // Search in MediXtract outputs
+                            if (perf.output && Array.isArray(perf.output)) {
+                                if (perf.output.some(o => checkValueWithLabel(o.value))) return true;
+                            }
+
+                            // Search in Human inputs
+                            const valRaw = this.validationData && this.validationData[pid] ? this.validationData[pid][f.id] : null;
+                            if (valRaw !== undefined && valRaw !== null) {
+                                const humanVal = (Array.isArray(valRaw) ? valRaw[0] : valRaw);
+                                if (humanVal !== null && humanVal !== undefined && checkValueWithLabel(humanVal)) return true;
+                            }
+
+                            return false;
+                        });
+                        if (matchesPatients) score = 10;
+                    }
+                }
+            } else {
+                score = 1; // Pass all if no search
             }
 
+            return { field: f, score };
+        });
+
+        // Filter out non-matches (score 0), unless search is empty (where score is 1)
+        results = results.filter(r => r.score > 0);
+
+        // Filter by Facets
+        results = results.filter(({ field: f }) => {
             // Categories
             if (this.filters.types.length && !this.filters.types.includes(f.type)) return false;
             if (this.filters.groups.length && !this.filters.groups.includes(f.group)) return false;
@@ -120,9 +179,23 @@ Object.assign(SchemaEditor.prototype, {
             }
 
             return true;
-
-            return true;
         });
+
+        // Sort based on score if searching
+        if (s) {
+            results.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score; // Higher score first
+                }
+                // Tie-breaker: Shorter ID length is better (more specific match)
+                if (a.field.id.length !== b.field.id.length) {
+                    return a.field.id.length - b.field.id.length;
+                }
+                return a.field.id.localeCompare(b.field.id);
+            });
+        }
+
+        this.filteredFields = results.map(r => r.field);
         this.renderFieldsTable();
         this.updateResultsCount();
     },

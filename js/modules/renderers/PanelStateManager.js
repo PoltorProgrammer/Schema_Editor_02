@@ -61,6 +61,9 @@ Object.assign(SchemaEditor.prototype, {
             }
         });
 
+        // Resize textareas in newly opened sections
+        panel.querySelectorAll('textarea').forEach(t => AppUI.autoResizeTextarea(t));
+
         // Restore focus and selection
         if (state.activeFieldId) {
             const el = document.getElementById(state.activeFieldId);
