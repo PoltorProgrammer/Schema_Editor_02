@@ -46,9 +46,9 @@ class SchemaEditor {
 
         // Initialization - Note: All inherited methods from modules/mixins 
         // will be available as they are attached to SchemaEditor.prototype.
+        this.loadSettings();
         this.initializeEventListeners();
         this.checkBrowserSupport();
-        this.loadSettings();
         this.initializeTheme();
         this.applyFilterVisibility();
         this.initializeUnsavedChangesHandler();

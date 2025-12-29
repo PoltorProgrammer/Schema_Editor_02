@@ -186,6 +186,21 @@ Object.assign(SchemaEditor.prototype, {
         const resizer = document.getElementById('panelResizer');
         if (!panel || !resizer) return;
 
+        // Apply saved width
+        if (this.settings && this.settings.panelWidth) {
+            let savedWidth = this.settings.panelWidth;
+            if (savedWidth.endsWith('px')) {
+                let widthPx = parseFloat(savedWidth);
+                const minWidth = window.innerWidth / 3;
+                const maxWidth = (window.innerWidth * 4) / 5;
+                if (widthPx < minWidth) widthPx = minWidth;
+                if (widthPx > maxWidth) widthPx = maxWidth;
+                panel.style.width = `${widthPx}px`;
+            } else {
+                panel.style.width = savedWidth;
+            }
+        }
+
         let isResizing = false;
 
         resizer.addEventListener('mousedown', (e) => {
@@ -219,6 +234,12 @@ Object.assign(SchemaEditor.prototype, {
                 panel.classList.remove('is-resizing');
                 resizer.classList.remove('active');
                 document.body.style.cursor = '';
+
+                // Save width
+                if (this.settings) {
+                    this.settings.panelWidth = panel.style.width;
+                    this.saveSettingsToStorage();
+                }
             }
         });
     },

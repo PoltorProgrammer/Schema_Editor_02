@@ -32,7 +32,8 @@ const DEFAULT_SETTINGS = {
         status: true,
         reviewed: true,
         severity: true
-    }
+    },
+    panelWidth: '60vw'
 };
 
 const FILTER_STATES = ['all', 'true', 'false'];
