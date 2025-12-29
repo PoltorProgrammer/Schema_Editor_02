@@ -135,6 +135,92 @@ Object.assign(SchemaEditor.prototype, {
                 this.cancelSettings();
             }
         });
+
+        // Scroll to Top functionality
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+        if (scrollToTopBtn) {
+            scrollToTopBtn.addEventListener('click', () => {
+                const tableBody = document.getElementById('fieldsTableBody');
+                if (tableBody) {
+                    tableBody.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            const handleScroll = () => {
+                const tableBody = document.getElementById('fieldsTableBody');
+                const schemaEditor = document.getElementById('schemaEditor');
+                const panel = document.getElementById('fieldDetailsPanel');
+
+                // Hide if not in schema editor or if the details panel is open
+                if (!schemaEditor || schemaEditor.style.display === 'none' || (panel && panel.classList.contains('open'))) {
+                    scrollToTopBtn.classList.remove('visible');
+                    return;
+                }
+
+                const tableScrolled = tableBody && tableBody.scrollTop > 300;
+                const windowScrolled = window.scrollY > 300;
+
+                if (tableScrolled || windowScrolled) {
+                    scrollToTopBtn.classList.add('visible');
+                } else {
+                    scrollToTopBtn.classList.remove('visible');
+                }
+            };
+
+            window.addEventListener('scroll', handleScroll);
+            // We need to wait for the table body to be available or just delegate
+            document.addEventListener('scroll', (e) => {
+                if (e.target && e.target.id === 'fieldsTableBody') handleScroll();
+            }, true);
+
+            // Also check on theme or filter changes which might affect scroll
+            this.updateScrollTopVisibility = handleScroll;
+        }
+
+        this.setupPanelResizer();
+    },
+
+    setupPanelResizer() {
+        const panel = document.getElementById('fieldDetailsPanel');
+        const resizer = document.getElementById('panelResizer');
+        if (!panel || !resizer) return;
+
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            panel.classList.add('is-resizing');
+            resizer.classList.add('active');
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            // Calculate new width: viewport width - mouse X position
+            // Since the panel is fixed to the right (right: 0), width = screenWidth - mouseX
+            let newWidth = window.innerWidth - e.clientX;
+
+            // Constraints: 1/3 (33.3vw) to 4/5 (80vw)
+            const minWidth = window.innerWidth / 3;
+            const maxWidth = (window.innerWidth * 4) / 5;
+
+            if (newWidth < minWidth) newWidth = minWidth;
+            if (newWidth > maxWidth) newWidth = maxWidth;
+
+            panel.style.width = `${newWidth}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                panel.classList.remove('is-resizing');
+                resizer.classList.remove('active');
+                document.body.style.cursor = '';
+            }
+        });
     },
 
     toggleDropdown(type) {
@@ -609,5 +695,32 @@ Object.assign(SchemaEditor.prototype, {
             searchBar.style.display = 'none';
             CSS.highlights.clear();
         }
+    },
+
+    openPatientDetails(fieldId, patientId, event) {
+        if (event) event.stopPropagation();
+        this.selectField(fieldId);
+
+        // Use a slight delay to ensure the DOM is rendered before we try to expand the patient section
+        requestAnimationFrame(() => {
+            const targetCollapsible = document.querySelector(`.patient-collapsible[data-patient-id="${patientId}"]`);
+            if (targetCollapsible) {
+                const content = targetCollapsible.querySelector('.patient-content');
+                const header = targetCollapsible.querySelector('.patient-header');
+
+                if (content) {
+                    // This will recursively expand all parent sections (like "Per Patient Analysis")
+                    // if they are currently collapsed/hidden.
+                    this.ensureMatchVisibility(content);
+                }
+
+                // Allow a moment for the reflow to happen before scrolling
+                setTimeout(() => {
+                    // Scroll specifically to the header to match user request
+                    const scrollTarget = header || targetCollapsible;
+                    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            }
+        });
     }
 });

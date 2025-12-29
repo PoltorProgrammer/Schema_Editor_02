@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="css/layouts/table.css">
     <link rel="stylesheet" href="css/layouts/panel.css">
     <link rel="stylesheet" href="css/layouts/patient-analysis.css">
+    <link rel="stylesheet" href="css/components/scroll-top.css">
     <!-- Other -->
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/themes.css">
@@ -360,6 +361,7 @@
 
                 <!-- Field Details Panel -->
                 <div id="fieldDetailsPanel" class="field-details-panel" style="display: none;">
+                    <div id="panelResizer" class="panel-resizer"></div>
                     <div class="panel-header">
                         <div class="panel-title">
                             <h3 id="selectedFieldName">Field Details</h3>
@@ -567,6 +569,14 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Actions -->
+    <button id="scrollToTopBtn" class="scroll-to-top" title="Scroll to Top">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="m18 15-6-6-6 6" />
+        </svg>
+    </button>
 
     <script src="js/projects-config.js"></script>
     <script src="js/modules/defaults.js"></script>

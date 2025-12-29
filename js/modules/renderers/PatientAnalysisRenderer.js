@@ -77,7 +77,7 @@ Object.assign(SchemaEditor.prototype, {
                     const opt = options.find(o => String(o.value) === String(humanValue));
                     if (opt && opt.label) displayVal = `${opt.label} (${opt.value})`;
                 }
-                return `<textarea readonly rows="1" data-patient="${patientId}" data-perf-prop="human_val" style="resize: none; min-height: 2.5rem; overflow-y: hidden;">${displayVal}</textarea>`;
+                return `<textarea readonly rows="1" data-patient="${patientId}" data-perf-prop="human_val" style="resize: none; min-height: unset; overflow-y: hidden; font-family: inherit;">${displayVal}</textarea>`;
             })()}
                     </div>
                 </div>
@@ -274,7 +274,7 @@ Object.assign(SchemaEditor.prototype, {
             }
         }
 
-        let baseStyle = "white-space: pre-wrap; overflow-wrap: break-word; width: 100%; padding: 0.75rem; border-radius: var(--radius); font-size: 0.875rem; line-height: 1.5; box-sizing: border-box; display: block;";
+        let baseStyle = "white-space: pre-wrap; overflow-wrap: break-word; width: 100%; padding: 0.75rem; border-radius: var(--radius); font-size: 0.875rem; line-height: 1.5; box-sizing: border-box; display: block; font-family: inherit; min-height: unset;";
         if (bgColor) {
             baseStyle += `background-color: ${bgColor}; border: 1px solid ${borderColor}; color: var(--gray-900); font-weight: 500;`;
         } else {

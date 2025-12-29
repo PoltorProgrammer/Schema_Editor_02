@@ -7,6 +7,10 @@ Object.assign(SchemaEditor.prototype, {
         if (!tbody) return;
         tbody.innerHTML = '';
         this.filteredFields.forEach(f => tbody.appendChild(this.createFieldRow(f)));
+
+        if (this.updateScrollTopVisibility) {
+            this.updateScrollTopVisibility();
+        }
     },
 
     createFieldRow(f) {
@@ -50,8 +54,22 @@ Object.assign(SchemaEditor.prototype, {
             match: `<div class="th-match" style="display:flex; justify-content:center;">${statusHtml}</div>`,
             name: `<div class="field-name"><strong>${f.id}</strong></div>`,
             group: `<div class="field-group" style="background:${groupColor.bg};color:${groupColor.text};border-color:${groupColor.border}">${AppUtils.formatGroupName(f.group)}</div>`,
-            ai_value: `<div class="field-value ai-value">${(f.aiValue || '--').split('\n').map(line => `<div>${line}</div>`).join('')}</div>`,
-            human_value: `<div class="field-value human-value">${(f.humanValue || '--').split('\n').map(line => `<div>${line}</div>`).join('')}</div>`,
+            ai_value: `<div class="field-value ai-value" style="gap: 6px;">${f.aiValue.length > 0 ? f.aiValue.map(v => `
+                <div class="patient-answer-row" style="display: flex; align-items: center; gap: 4px;">
+                    ${!v.reviewed ? `<span class="review-warning-chip" title="Patient ${v.pid}: Not Reviewed" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">!</span>` : ''}
+                    <div class="value-chip ${v.status}" title="Patient ${v.pid}: ${v.status}" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">
+                        ${v.label ? `<span class="chip-label">${v.label}:</span>` : ''}
+                        <span class="chip-value">${v.value}</span>
+                    </div>
+                </div>`).join('') : '<div>--</div>'}</div>`,
+            human_value: `<div class="field-value human-value" style="gap: 6px;">${f.humanValue.length > 0 ? f.humanValue.map(v => `
+                <div class="patient-answer-row" style="display: flex; align-items: center; gap: 4px;">
+                    ${!v.reviewed ? `<span class="review-warning-chip" title="Patient ${v.pid}: Not Reviewed" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">!</span>` : ''}
+                    <div class="value-chip ${v.status}" title="Patient ${v.pid}: ${v.status}" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">
+                        ${v.label ? `<span class="chip-label">${v.label}:</span>` : ''}
+                        <span class="chip-value">${v.value}</span>
+                    </div>
+                </div>`).join('') : '<div>--</div>'}</div>`,
             description: `<div class="field-description">${f.description}</div>`,
             comments: `<div class="field-comments">${f.comments}</div>`,
             type: `<div class="field-type">${f.type}</div>`,

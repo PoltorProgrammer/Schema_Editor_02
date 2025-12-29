@@ -103,3 +103,132 @@
     gap: 0.375rem;
     justify-content: flex-end;
 }
+
+/* Value Chips */
+.field-value .value-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+    width: fit-content;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.field-value .value-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    filter: brightness(0.95);
+}
+
+.field-value .value-chip .chip-label {
+    font-weight: 700;
+    opacity: 0.8;
+    margin-right: 2px;
+}
+
+.field-value .value-chip .chip-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.review-warning-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #FFF7ED;
+    /* Lightest pastel orange / cream */
+    color: #F97316;
+    /* Clean vibrant orange */
+    border: 1px solid #FFEDD5;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 850;
+    flex-shrink: 0;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(249, 115, 22, 0.1);
+    transition: all 0.2s ease;
+}
+
+.review-warning-chip:hover {
+    background: #FFEDD5;
+    color: #EA580C;
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
+}
+
+/* Status Colors for Value Chips */
+.value-chip.matched {
+    background: #F8FAFC;
+    color: #475569;
+    border-color: #E2E8F0;
+}
+
+.value-chip.unmatched {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-color: #FCA5A5;
+}
+
+.value-chip.improved {
+    background: #DCFCE7;
+    color: #166534;
+    border-color: #86EFAC;
+}
+
+.value-chip.pending {
+    background: #F5F3FF;
+    color: #5B21B6;
+    border-color: #C4B5FD;
+}
+
+.value-chip.dismissed {
+    background: #F1F5F9;
+    color: #475569;
+    border-color: #CBD5E1;
+}
+
+/* Dark Theme Overrides for Value Chips */
+[data-theme="dark"] .value-chip.matched,
+[data-theme="joan"] .value-chip.matched {
+    background: #1E293B;
+    color: #CBD5E1;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .value-chip.unmatched,
+[data-theme="joan"] .value-chip.unmatched {
+    background: #450A0A;
+    color: #FCA5A5;
+    border-color: #991B1B;
+}
+
+[data-theme="dark"] .value-chip.improved,
+[data-theme="joan"] .value-chip.improved {
+    background: #064E3B;
+    color: #A7F3D0;
+    border-color: #065F46;
+}
+
+[data-theme="dark"] .value-chip.pending,
+[data-theme="joan"] .value-chip.pending {
+    background: #2E1065;
+    color: #DDD6FE;
+    border-color: #4C1D95;
+}
+
+[data-theme="dark"] .value-chip.dismissed,
+[data-theme="joan"] .value-chip.dismissed {
+    background: #0F172A;
+    color: #94A3B8;
+    border-color: #1E293B;
+}

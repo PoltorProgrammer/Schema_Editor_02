@@ -75,6 +75,10 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('addOutputBtn').style.display = 'none';
         document.getElementById('downloadFilteredBtn').style.display = 'none';
 
+        if (this.updateScrollTopVisibility) {
+            this.updateScrollTopVisibility();
+        }
+
         const isUserAction = forceDashboard && (typeof forceDashboard === 'object' || forceDashboard === true);
 
         // Try to auto-connect if we have a stored handle and it's not a user logout/dashboard action

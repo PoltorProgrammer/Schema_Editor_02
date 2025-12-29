@@ -142,16 +142,28 @@ Object.assign(SchemaEditor.prototype, {
                 description,
                 comments: def.notes || def.comment || '',
                 aiValue: patients.map(pid => {
-                    const val = AppUtils.getMostCommonValue(def.performance[pid]?.output) || '--';
-                    const displayVal = AppUtils.formatValueWithLabel(val, def);
-                    return patients.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
-                }).join('\n'),
+                    const perf = def.performance[pid];
+                    const val = AppUtils.getMostCommonValue(perf?.output) || '--';
+                    return {
+                        pid,
+                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        value: AppUtils.formatValueWithLabel(val, def),
+                        status: this.getPatientPerformanceStatus(perf),
+                        reviewed: perf?.reviewed ?? false
+                    };
+                }),
                 humanValue: patients.map(pid => {
+                    const perf = def.performance[pid];
                     const valRaw = this.validationData[pid]?.[id];
                     const val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
-                    const displayVal = AppUtils.formatValueWithLabel(val, def);
-                    return patients.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
-                }).join('\n'),
+                    return {
+                        pid,
+                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        value: AppUtils.formatValueWithLabel(val, def),
+                        status: this.getPatientPerformanceStatus(perf),
+                        reviewed: perf?.reviewed ?? false
+                    };
+                }),
                 matchStatus: overallMatch,
                 labels: def.labels || []
             };
@@ -228,17 +240,28 @@ Object.assign(SchemaEditor.prototype, {
 
             const pidList = Object.keys(this.validationData || {}).sort();
             const aiVal = pidList.map(pid => {
-                const outputs = def.performance?.[pid]?.output || [];
-                const val = AppUtils.getMostCommonValue(outputs) || '--';
-                const displayVal = AppUtils.formatValueWithLabel(val, def);
-                return pidList.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
-            }).join('\n');
+                const perf = def.performance?.[pid];
+                const val = AppUtils.getMostCommonValue(perf?.output) || '--';
+                return {
+                    pid,
+                    label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,
+                    value: AppUtils.formatValueWithLabel(val, def),
+                    status: this.getPatientPerformanceStatus(perf),
+                    reviewed: perf?.reviewed ?? false
+                };
+            });
             const humanVal = pidList.map(pid => {
+                const perf = def.performance?.[pid];
                 const valRaw = this.validationData[pid]?.[id];
                 const val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
-                const displayVal = AppUtils.formatValueWithLabel(val, def);
-                return pidList.length > 1 ? `${pid.replace('patient_', 'P')} - ${displayVal}` : displayVal;
-            }).join('\n');
+                return {
+                    pid,
+                    label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,
+                    value: AppUtils.formatValueWithLabel(val, def),
+                    status: this.getPatientPerformanceStatus(perf),
+                    reviewed: perf?.reviewed ?? false
+                };
+            });
 
             this.allFields[idx] = {
                 id,
@@ -482,6 +505,7 @@ Object.assign(SchemaEditor.prototype, {
 
             this.renderLabels(def.labels);
             this.markAsUnsaved();
+            this.refreshFieldData(this.selectedField);
         }
     },
 
@@ -493,6 +517,7 @@ Object.assign(SchemaEditor.prototype, {
             def.labels = def.labels.filter(l => l !== label);
             this.renderLabels(def.labels);
             this.markAsUnsaved();
+            this.refreshFieldData(this.selectedField);
         }
     },
 
@@ -503,5 +528,17 @@ Object.assign(SchemaEditor.prototype, {
         if (!this.filters.groups || !Array.isArray(this.filters.groups)) this.filters.groups = [];
         if (!this.filters.labels || !Array.isArray(this.filters.labels)) this.filters.labels = [];
         if (!this.filters.statuses || !Array.isArray(this.filters.statuses)) this.filters.statuses = [];
+    },
+
+    getPatientPerformanceStatus(p) {
+        if (!p) return 'pending';
+        if (p.pending) return 'pending';
+        if (p.unmatched) {
+            const isImprovement = p.unmatched.filled_blank || p.unmatched.correction || p.unmatched.standardized || p.unmatched.improved_comment;
+            return isImprovement ? 'improved' : 'unmatched';
+        }
+        if (p.matched) return 'matched';
+        if (p.dismissed) return 'dismissed';
+        return 'pending';
     }
 });

@@ -92,6 +92,7 @@ Object.assign(SchemaEditor.prototype, {
         document.querySelectorAll('.field-row').forEach(r => r.classList.toggle('selected', r.dataset.fieldId === id));
         this.selectedField = id;
         this.showFieldDetails(id);
+        if (this.updateScrollTopVisibility) this.updateScrollTopVisibility();
     },
 
     closeFieldDetails() {
@@ -100,6 +101,7 @@ Object.assign(SchemaEditor.prototype, {
         if (panel) panel.classList.remove('open');
         document.querySelectorAll('.field-row').forEach(r => r.classList.remove('selected'));
         this.selectedField = null;
+        if (this.updateScrollTopVisibility) this.updateScrollTopVisibility();
     },
 
     updatePanelHeader(id) {
@@ -125,5 +127,9 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('projectDashboardBtn').style.display = 'flex';
         document.getElementById('loadingIndicator').style.display = 'none';
         this.applyColumnOrder();
+
+        if (this.updateScrollTopVisibility) {
+            this.updateScrollTopVisibility();
+        }
     }
 });
