@@ -13,7 +13,27 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('addOutputBtn').addEventListener('click', this.handleAddOutputClick.bind(this));
         document.getElementById('outputFileInput').addEventListener('change', (e) => this.handleAddOutputFile(e));
         document.getElementById('saveBtn').addEventListener('click', this.saveChanges.bind(this));
+        document.getElementById('downloadProgressBtn').addEventListener('click', this.downloadProgress.bind(this));
         document.getElementById('downloadFilteredBtn').addEventListener('click', this.downloadFilteredFields.bind(this));
+
+        // Header More Menu interactions
+        document.getElementById('headerMoreBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleDropdown('headerMore');
+        });
+
+        document.getElementById('menuAddPatient').addEventListener('click', () => {
+            this.closeDropdown('headerMore');
+            this.handleAddPatientClick();
+        });
+        document.getElementById('menuAddOutput').addEventListener('click', () => {
+            this.closeDropdown('headerMore');
+            this.handleAddOutputClick();
+        });
+        document.getElementById('menuDownloadFiltered').addEventListener('click', () => {
+            this.closeDropdown('headerMore');
+            this.downloadFilteredFields();
+        });
 
         // Zip upload listeners
         const zipFileInput = document.getElementById('zipFileInput');
@@ -61,13 +81,17 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('clearSearch').addEventListener('click', this.clearSearch.bind(this));
 
         // Custom dropdowns
-        ['type', 'group', 'label', 'status', 'reviewed', 'severity'].forEach(t => {
+        ['type', 'group', 'label', 'status', 'reviewed', 'severity', 'headerMore'].forEach(t => {
             const el = document.getElementById(`${t}Filter`);
             if (el) {
-                el.querySelector('.dropdown-trigger').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleDropdown(t);
-                });
+                // If it's a filter, it has a .dropdown-trigger, otherwise we might just have a btn
+                const trigger = el.querySelector('.dropdown-trigger') || document.getElementById('headerMoreBtn');
+                if (trigger && t !== 'headerMore') { // headerMore handled above specifically
+                    trigger.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.toggleDropdown(t);
+                    });
+                }
             }
         });
 

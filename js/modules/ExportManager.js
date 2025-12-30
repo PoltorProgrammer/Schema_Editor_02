@@ -54,6 +54,51 @@ Object.assign(SchemaEditor.prototype, {
         AppUI.showSaveSuccess('Downloaded!');
     },
 
+    async downloadProgress() {
+        if (!this.currentProject) return;
+
+        AppUI.showProcessing('Processing...');
+
+        // 1. Try to save locally if the project folder is connected
+        if (!this.currentProject.isPreDiscovered) {
+            try {
+                const project = this.currentProject;
+                const analysisHandle = await project.handle.getDirectoryHandle('analysis_data');
+
+                const baseName = project.name.replace('_project', '');
+                let fileName = `${baseName}_analysis_data.json`;
+                for await (const [name, handle] of analysisHandle.entries()) {
+                    if (name.endsWith('.json')) {
+                        fileName = name;
+                        break;
+                    }
+                }
+
+                const fileHandle = await analysisHandle.getFileHandle(fileName, { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(JSON.stringify(this.currentSchema, null, 2));
+                await writable.close();
+
+                this.hasUnsavedChanges = false;
+                this.updateSaveButtonUI();
+            } catch (error) {
+                console.warn("Auto-save failed during download progress, proceeding to browser download:", error);
+            }
+        }
+
+        // 2. Trigger Browser Download
+        const timestamp = AppUtils.getTimestamp();
+        const baseName = this.currentProject.name.replace(/[-_]project$/, '');
+        const fileName = `${timestamp}-${baseName}-analysis_data.json`;
+
+        const b = new Blob([JSON.stringify(this.currentSchema, null, 2)], { type: 'application/json' });
+        const u = URL.createObjectURL(b);
+        const a = document.createElement('a'); a.href = u; a.download = fileName; a.click(); URL.revokeObjectURL(u);
+
+        AppUI.hideProcessing();
+        AppUI.showDownloadProgressSuccess();
+    },
+
     async downloadFilteredFields() {
         const filtered = { type: "object", properties: {}, required: [], additionalProperties: true };
         this.filteredFields.forEach(f => {

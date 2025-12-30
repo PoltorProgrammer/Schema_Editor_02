@@ -20,6 +20,10 @@ Object.assign(SchemaEditor.prototype, {
         if (loading) loading.style.display = 'none';
 
         document.getElementById('saveBtn').style.display = 'none';
+        document.getElementById('downloadProgressBtn').style.display = 'none';
+        if (document.getElementById('headerMoreFilter')) {
+            document.getElementById('headerMoreFilter').style.display = 'none';
+        }
         document.getElementById('addPatientBtn').style.display = 'none';
         document.getElementById('addOutputBtn').style.display = 'none';
         document.getElementById('downloadFilteredBtn').style.display = 'none';

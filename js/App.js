@@ -40,7 +40,8 @@ class SchemaEditor {
             label: { isOpen: false, selected: [] },
             status: { isOpen: false, selected: [] },
             reviewed: { isOpen: false, selected: [] },
-            severity: { isOpen: false, selected: [] }
+            severity: { isOpen: false, selected: [] },
+            headerMore: { isOpen: false, selected: [] }
         };
 
         this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
