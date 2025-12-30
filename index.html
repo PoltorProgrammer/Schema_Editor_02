@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="css/layouts/table.css">
     <link rel="stylesheet" href="css/layouts/panel.css">
     <link rel="stylesheet" href="css/layouts/patient-analysis.css">
+    <link rel="stylesheet" href="css/layouts/project-upload.css">
     <link rel="stylesheet" href="css/components/scroll-top.css">
     <!-- Other -->
     <link rel="stylesheet" href="css/modals.css">
@@ -525,7 +526,7 @@
             <div class="settings-overlay"></div>
             <div class="settings-content">
                 <div class="settings-header">
-                    <h3>Create New Project</h3>
+                    <h3>Add New Project</h3>
                     <button class="settings-close"
                         onclick="document.getElementById('createProjectModal').style.display='none'">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -534,9 +535,47 @@
                         </svg>
                     </button>
                 </div>
-                <div class="settings-body">
-                    <div class="form-section">
-                        <h4>Project Details</h4>
+                <div class="settings-body project-upload-split">
+                    <div class="upload-side upload-zip-side">
+                        <h4>Upload Project Zip</h4>
+                        <div id="zipDropZone" class="zip-drop-zone">
+                            <div class="drop-zone-content" id="dropZonePrompt">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L16,16H13V20H11V16H8L12,12Z" />
+                                </svg>
+                                <p>Drag files here</p>
+                                <span>- or -</span>
+                                <button class="btn btn-ghost"
+                                    onclick="event.stopPropagation(); document.getElementById('zipFileInput').click()">click
+                                    to upload files</button>
+                            </div>
+
+                            <div id="zipPreview" class="zip-preview" style="display: none;">
+                                <div class="zip-preview-header">
+                                    <svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+                                        <path
+                                            d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20" />
+                                    </svg>
+                                    <div class="zip-info">
+                                        <strong id="previewFileName">filename.zip</strong>
+                                        <span id="previewFileSize">0 MB</span>
+                                    </div>
+                                </div>
+                                <div id="zipFileList" class="zip-file-list">
+                                    <!-- Zip contents preview -->
+                                </div>
+                            </div>
+                            <input type="file" id="zipFileInput" style="display: none;" accept=".zip">
+                        </div>
+                        <div id="zipActions" class="zip-actions" style="display: none;">
+                            <button class="btn btn-primary" onclick="app.uploadPendingZip()">Proceed to Upload</button>
+                            <button class="btn btn-ghost" onclick="app.clearZipPreview()">Change File</button>
+                        </div>
+                    </div>
+
+                    <div class="upload-side upload-scratch-side">
+                        <h4>Upload projects from scratch</h4>
                         <div class="form-grid">
                             <div class="form-field full-width">
                                 <label>Project Name</label>
@@ -550,11 +589,14 @@
                                 <label>Validation Data (.json)</label>
                                 <input type="file" id="validationDataFile" accept=".json">
                             </div>
+                            <div style="margin-top: auto; padding-top: 1rem;">
+                                <button class="btn btn-primary full-width" onclick="app.finalizeCreateProject()">Create
+                                    Project</button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="settings-footer">
-                    <button class="btn btn-primary" onclick="app.finalizeCreateProject()">Create Project</button>
                     <button class="btn btn-secondary"
                         onclick="document.getElementById('createProjectModal').style.display='none'">Cancel</button>
                 </div>
@@ -585,12 +627,20 @@
         </svg>
     </button>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="js/projects-config.js"></script>
     <script src="js/modules/defaults.js"></script>
     <script src="js/modules/utils.js"></script>
     <script src="js/modules/ui-utils.js"></script>
     <script src="js/App.js"></script>
+    <!-- Project Management Modules -->
+    <script src="js/modules/ProjectStorage.js"></script>
     <script src="js/modules/ProjectManager.js"></script>
+    <script src="js/modules/ProjectDashboard.js"></script>
+    <script src="js/modules/ProjectCreation.js"></script>
+    <script src="js/modules/ProjectZipHandler.js"></script>
+    <script src="js/modules/ProjectFileProcessor.js"></script>
+
     <script src="js/modules/DataManager.js"></script>
     <script src="js/modules/FilterManager.js"></script>
     <script src="js/modules/renderers/PanelStateManager.js"></script>

@@ -18,6 +18,7 @@ class SchemaEditor {
         this.validationData = {};
         this.medixtractOutputData = {};
         this.hasUnsavedChanges = false;
+        this.pendingZipFile = null;
 
         this.filters = {
             search: '',

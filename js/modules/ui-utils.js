@@ -189,6 +189,72 @@ const AppUI = {
         });
     },
 
+    showProjectConflictDialog(projectName) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            const titleEl = document.getElementById('customModalTitle');
+            const messageEl = document.getElementById('customModalMessage');
+            const footerEl = document.getElementById('customModalFooter');
+
+            if (!modal) {
+                // Simplified fallback
+                const res = prompt(`Project "${projectName}" already exists.\nType 'update' to overwrite, 'copy' to create new, or 'cancel'.`, 'copy');
+                resolve(res || 'cancel');
+                return;
+            }
+
+            titleEl.textContent = 'Project Already Exists';
+            messageEl.textContent = `A project named "${projectName}" already exists. What would you like to do?`;
+            footerEl.innerHTML = '';
+
+            const updateBtn = document.createElement('button');
+            const copyBtn = document.createElement('button');
+            const cancelBtn = document.createElement('button');
+
+            updateBtn.className = 'btn btn-secondary';
+            updateBtn.textContent = 'Update Existing';
+            updateBtn.style.marginRight = '8px';
+
+            copyBtn.className = 'btn btn-primary';
+            copyBtn.textContent = 'Create Copy';
+            copyBtn.style.marginRight = '8px';
+
+            cancelBtn.className = 'btn btn-ghost';
+            cancelBtn.textContent = 'Cancel';
+
+            const cleanup = () => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 200);
+            };
+
+            updateBtn.onclick = () => { cleanup(); resolve('update'); };
+            copyBtn.onclick = () => { cleanup(); resolve('copy'); };
+            cancelBtn.onclick = () => { cleanup(); resolve('cancel'); };
+
+            // ESC to cancel
+            const handleKey = (e) => {
+                if (e.key === 'Escape') {
+                    cleanup();
+                    document.removeEventListener('keydown', handleKey);
+                    resolve('cancel');
+                }
+            };
+            document.addEventListener('keydown', handleKey);
+
+            footerEl.appendChild(cancelBtn);
+            footerEl.appendChild(updateBtn);
+            footerEl.appendChild(copyBtn);
+
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.add('active');
+                copyBtn.focus();
+            });
+        });
+    },
+
     autoResizeTextarea(textarea) {
         if (textarea.offsetHeight === 0) return;
         const scrollTop = textarea.scrollTop;

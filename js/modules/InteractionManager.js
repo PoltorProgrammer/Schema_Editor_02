@@ -15,6 +15,39 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('saveBtn').addEventListener('click', this.saveChanges.bind(this));
         document.getElementById('downloadFilteredBtn').addEventListener('click', this.downloadFilteredFields.bind(this));
 
+        // Zip upload listeners
+        const zipFileInput = document.getElementById('zipFileInput');
+        if (zipFileInput) {
+            zipFileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    this.prepareZipPreview(e.target.files[0]);
+                    e.target.value = ''; // Reset
+                }
+            });
+        }
+
+        const zipDropZone = document.getElementById('zipDropZone');
+        if (zipDropZone) {
+            zipDropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zipDropZone.classList.add('drag-over');
+            });
+            zipDropZone.addEventListener('dragleave', () => zipDropZone.classList.remove('drag-over'));
+            zipDropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zipDropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    this.prepareZipPreview(e.dataTransfer.files[0]);
+                }
+            });
+            zipDropZone.addEventListener('click', (e) => {
+                // Only trigger if click wasn't on the button (which already triggers it via label/onclick)
+                if (e.target !== zipDropZone.querySelector('button') && e.target !== document.getElementById('zipFileInput')) {
+                    document.getElementById('zipFileInput').click();
+                }
+            });
+        }
+
         // Filtering
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('input', this.handleSearchInput.bind(this));
@@ -130,6 +163,9 @@ Object.assign(SchemaEditor.prototype, {
             if (!e.target.closest('.custom-dropdown') && !e.target.closest('.combobox-container')) {
                 this.closeAllDropdowns();
                 document.querySelectorAll('.combobox-container').forEach(c => c.classList.remove('open'));
+            }
+            if (!e.target.closest('.project-card-more') && !e.target.closest('.project-options-menu')) {
+                document.querySelectorAll('.project-options-menu.active').forEach(m => m.classList.remove('active'));
             }
             if (e.target.classList.contains('settings-overlay')) {
                 this.cancelSettings();
