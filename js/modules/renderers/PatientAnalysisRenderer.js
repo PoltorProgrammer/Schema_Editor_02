@@ -35,7 +35,7 @@ Object.assign(SchemaEditor.prototype, {
             <div class="patient-header" onclick="app.togglePatientSection('${patientId}', event)">
                 <h5>Patient: ${patientId}</h5>
                 <div style="display: flex; align-items: center; gap: 0.625rem;">
-                    ${!perf.reviewed ? '<span style="color: var(--warning); font-weight: 900; font-size: 1.1rem; line-height: 1;">!</span>' : ''}
+                    ${(!perf.reviewed && !perf.pending) ? '<span style="color: var(--warning); font-weight: 900; font-size: 1.1rem; line-height: 1;">!</span>' : ''}
                     <span class="analysis-indicator ${statusClass}">
                         ${statusLabel}
                     </span>
@@ -85,7 +85,7 @@ Object.assign(SchemaEditor.prototype, {
                 <div class="status-section-container" style="margin-bottom: 1.5rem;">
                     <div class="status-section-header" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
                         <label style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">Review Status</label>
-                        <div style="display: ${perf.matched ? 'none' : 'flex'}; align-items: center; gap: 0.5rem; opacity: ${perf.pending ? '0.5' : '1'}; pointer-events: ${perf.pending ? 'none' : 'auto'}; cursor: ${perf.pending ? 'not-allowed' : 'default'};">
+                        <div style="display: ${(perf.matched || perf.pending) ? 'none' : 'flex'}; align-items: center; gap: 0.5rem; opacity: ${perf.pending ? '0.5' : '1'}; pointer-events: ${perf.pending ? 'none' : 'auto'}; cursor: ${perf.pending ? 'not-allowed' : 'default'};">
                             <span style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">Reviewed</span>
                             <label class="switch">
                                 <input type="checkbox" 

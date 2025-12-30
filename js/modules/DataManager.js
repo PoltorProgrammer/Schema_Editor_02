@@ -106,6 +106,7 @@ Object.assign(SchemaEditor.prototype, {
                         perf.matched = true;
                         perf.unmatched = null;
                         perf.pending = false;
+                        perf.reviewed = true; // Auto-matched records are considered reviewed
                     }
                 } else if (isAutoStandardized) {
                     // Auto-standardize if pending or if it was previously an auto-discrepancy state

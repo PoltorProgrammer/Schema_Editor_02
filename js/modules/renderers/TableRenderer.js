@@ -60,7 +60,7 @@ Object.assign(SchemaEditor.prototype, {
             group: `<div class="field-group" style="background:${groupColor.bg};color:${groupColor.text};border-color:${groupColor.border}">${AppUtils.formatGroupName(f.group)}</div>`,
             ai_value: `<div class="field-value ai-value" style="gap: 6px;">${f.aiValue.length > 0 ? f.aiValue.map(v => `
                 <div class="patient-answer-row" style="display: flex; align-items: center; gap: 4px;">
-                    ${!v.reviewed ? `<span class="review-warning-chip" title="Patient ${v.pid}: Not Reviewed" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">!</span>` : ''}
+                    ${(!v.reviewed && v.status !== 'pending') ? `<span class="review-warning-chip" title="Patient ${v.pid}: Not Reviewed" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">!</span>` : ''}
                     <div class="value-chip ${v.status}" title="Patient ${v.pid}: ${v.status}" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">
                         ${v.label ? `<span class="chip-label">${v.label}:</span>` : ''}
                         <span class="chip-value">${v.value}</span>
@@ -68,7 +68,7 @@ Object.assign(SchemaEditor.prototype, {
                 </div>`).join('') : '<div>--</div>'}</div>`,
             human_value: `<div class="field-value human-value" style="gap: 6px;">${f.humanValue.length > 0 ? f.humanValue.map(v => `
                 <div class="patient-answer-row" style="display: flex; align-items: center; gap: 4px;">
-                    ${!v.reviewed ? `<span class="review-warning-chip" title="Patient ${v.pid}: Not Reviewed" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">!</span>` : ''}
+                    ${(!v.reviewed && v.status !== 'pending') ? `<span class="review-warning-chip" title="Patient ${v.pid}: Not Reviewed" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">!</span>` : ''}
                     <div class="value-chip ${v.status}" title="Patient ${v.pid}: ${v.status}" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">
                         ${v.label ? `<span class="chip-label">${v.label}:</span>` : ''}
                         <span class="chip-value">${v.value}</span>

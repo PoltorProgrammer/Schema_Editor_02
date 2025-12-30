@@ -162,8 +162,8 @@ Object.assign(SchemaEditor.prototype, {
             if (this.filters.reviewed.length) {
                 const hasMatch = this.filters.reviewed.some(r => {
                     const perfs = Object.values(f.definition.performance || {});
-                    if (r === 'reviewed') return perfs.every(p => p.reviewed);
-                    if (r === 'not_reviewed') return perfs.some(p => !p.reviewed);
+                    if (r === 'reviewed') return perfs.every(p => p.reviewed || p.pending || p.matched);
+                    if (r === 'not_reviewed') return perfs.some(p => !p.reviewed && !p.pending && !p.matched);
                     return false;
                 });
                 if (!hasMatch) return false;
