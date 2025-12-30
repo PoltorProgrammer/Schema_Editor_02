@@ -66,12 +66,13 @@
 .field-row .field-group {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.5rem;
+    padding: 2px 10px;
     border: 1px solid;
-    border-radius: var(--radius);
+    border-radius: 99px;
     font-size: 0.75rem;
     font-weight: 500;
     width: fit-content;
+    white-space: nowrap;
 }
 
 .field-row .field-description,

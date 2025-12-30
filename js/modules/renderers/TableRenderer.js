@@ -57,7 +57,7 @@ Object.assign(SchemaEditor.prototype, {
         const cols = {
             match: `<div class="th-match" style="display:flex; justify-content:center;">${statusHtml}</div>`,
             name: `<div class="field-name"><strong>${f.id}</strong></div>`,
-            group: `<div class="field-group" style="background:${groupColor.bg};color:${groupColor.text};border-color:${groupColor.border}">${AppUtils.formatGroupName(f.group)}</div>`,
+            group: `<div><div class="field-group" style="background:${groupColor.bg};color:${groupColor.text};border-color:${groupColor.border}">${AppUtils.formatGroupName(f.group)}</div></div>`,
             ai_value: `<div class="field-value ai-value" style="gap: 6px;">${f.aiValue.length > 0 ? f.aiValue.map(v => `
                 <div class="patient-answer-row" style="display: flex; align-items: center; gap: 4px;">
                     ${(!v.reviewed && v.status !== 'pending') ? `<span class="review-warning-chip" title="Patient ${v.pid}: Not Reviewed" onclick="app.openPatientDetails('${f.id}', '${v.pid}', event)">!</span>` : ''}
@@ -76,7 +76,7 @@ Object.assign(SchemaEditor.prototype, {
                 </div>`).join('') : '<div>--</div>'}</div>`,
             description: `<div class="field-description"><div class="text-truncate-container">${f.description}</div></div>`,
             comments: `<div class="field-notes"><div class="text-truncate-container">${f.comments}</div></div>`,
-            type: `<div class="field-type">${f.type}</div>`,
+            type: `<div><div class="field-type">${f.type}</div></div>`,
             options: `<div class="field-options">${(f.definition.options || f.definition.enum || []).map(o => typeof o === 'object' ? o.label : o).join(' | ')}</div>`,
             indicators: `<div class="field-indicators" style="display:flex; flex-wrap:wrap; gap:4px;">
                 ${(f.labels || []).map(l => `<span class="chip" style="font-size:0.75rem; padding:2px 6px; border-radius:12px; background:var(--gray-200); color:var(--gray-800); border:1px solid var(--gray-300);" title="Label: ${l}">${l}</span>`).join('')}
