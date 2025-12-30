@@ -102,7 +102,7 @@ Object.assign(SchemaEditor.prototype, {
                 if (isMatch) {
                     // Auto-match if pending or if it was previously an auto-unmatched/discrepancy state
                     const noManualUnmatched = !perf.unmatched || typeof perf.unmatched !== 'object' || Object.values(perf.unmatched).every(v => v === false);
-                    if (perf.pending || (noManualUnmatched && !perf.dismissed && !perf.matched)) {
+                    if (perf.pending || (noManualUnmatched && !perf.dismissed && !perf.uncertain && !perf.matched)) {
                         perf.matched = true;
                         perf.unmatched = null;
                         perf.pending = false;
@@ -110,7 +110,7 @@ Object.assign(SchemaEditor.prototype, {
                 } else if (isAutoStandardized) {
                     // Auto-standardize if pending or if it was previously an auto-discrepancy state
                     const noManualUnmatched = !perf.unmatched || typeof perf.unmatched !== 'object' || Object.values(perf.unmatched).every(v => v === false);
-                    if (perf.pending || (noManualUnmatched && !perf.dismissed && (!perf.unmatched || !perf.unmatched.standardized))) {
+                    if (perf.pending || (noManualUnmatched && !perf.dismissed && !perf.uncertain && (!perf.unmatched || !perf.unmatched.standardized))) {
                         perf.matched = false;
                         perf.unmatched = { standardized: true };
                         perf.pending = false;
@@ -120,7 +120,7 @@ Object.assign(SchemaEditor.prototype, {
                     // It's a discrepancy or doesn't meet the 90% threshold. 
                     // If it was auto-marked as matched or unmatched before, reset to pending.
                     const noManualUnmatched = !perf.unmatched || typeof perf.unmatched !== 'object' || Object.values(perf.unmatched).every(v => v === false);
-                    if (perf.matched || (noManualUnmatched && !perf.dismissed)) {
+                    if (perf.matched || (noManualUnmatched && !perf.dismissed && !perf.uncertain)) {
                         perf.matched = false;
                         perf.unmatched = null;
                         perf.pending = true;
