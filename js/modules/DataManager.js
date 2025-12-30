@@ -84,14 +84,20 @@ Object.assign(SchemaEditor.prototype, {
                 const matchingCount = matchingOutput ? Number(matchingOutput.count) : 0;
                 const matchPercentage = totalCount > 0 ? (matchingCount / totalCount) * 100 : 0;
 
-                const aiValue = AppUtils.getMostCommonValue(perf.output);
+                const aiOutput = perf.output.reduce((prev, current) => {
+                    return (Number(prev.count || 0) >= Number(current.count || 0)) ? prev : current;
+                }, { value: null, count: 0 });
+
+                const aiValue = aiOutput.value;
+                const aiCount = Number(aiOutput.count) || 0;
+                const aiFrequency = totalCount > 0 ? (aiCount / totalCount) * 100 : 0;
                 const normalizedAi = aiValue !== null ? AppUtils.normalizeValue(aiValue) : null;
 
                 // A match is only automatic if the most common value matches AND it meets the 90% threshold
                 const isMatch = (normalizedAi !== null && normalizedAi === humanValue && matchPercentage >= 90);
 
-                // SPECIFIC RULE: if AI is "null" (>90%) and human is "empty", it's automatically "Standardized"
-                const isAutoStandardized = (normalizedAi === 'null' && humanValue === 'empty' && matchPercentage >= 90);
+                // SPECIFIC RULE: if AI is "null" (>90% frequency) and human is "empty", it's automatically "Standardized"
+                const isAutoStandardized = (normalizedAi === 'null' && humanValue === 'empty' && aiFrequency >= 90);
 
                 if (isMatch) {
                     // Auto-match if pending or if it was previously an auto-unmatched/discrepancy state
@@ -108,6 +114,7 @@ Object.assign(SchemaEditor.prototype, {
                         perf.matched = false;
                         perf.unmatched = { standardized: true };
                         perf.pending = false;
+                        perf.reviewed = false;
                     }
                 } else if (aiValue !== null) {
                     // It's a discrepancy or doesn't meet the 90% threshold. 
