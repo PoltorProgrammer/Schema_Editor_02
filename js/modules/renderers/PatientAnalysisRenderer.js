@@ -4,7 +4,7 @@
 Object.assign(SchemaEditor.prototype, {
     createPatientCollapsible(patientId, def) {
         const valRaw = this.validationData[patientId]?.[this.selectedField];
-        const humanValue = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
+        const humanValue = AppUtils.normalizeValue((Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? null);
         const perf = def.performance?.[patientId] || { pending: true, output: [] };
         const outputs = perf.output || [];
 
@@ -63,21 +63,16 @@ Object.assign(SchemaEditor.prototype, {
                     <div class="form-field">
                         <label>MediXtract Output</label>
                         ${(() => {
-                const summary = this.calculatePatientSummaryState(patientId, outputs, humanValue === '--' ? '' : humanValue);
-                return `<div class="medixtract-output" id="summaryOutput-${patientId}" style="${summary.style}">${summary.displayVal}</div>
-                                    <div id="validationMsg-${patientId}" style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem; display: ${summary.msgDisplay};">No human validation value introduced</div>`;
+                const summary = this.calculatePatientSummaryState(patientId, outputs, humanValue);
+                return `<div class="${summary.className}" id="summaryOutput-${patientId}" style="${summary.style}">${summary.displayVal}</div>
+                                     <div id="validationMsg-${patientId}" style="font-size: 0.75rem; color: var(--gray-500); margin-top: 0.25rem; display: ${summary.msgDisplay};">No human validation value introduced</div>`;
             })()}
                     </div>
                     <div class="form-field">
                         <label>Human Output</label>
                         ${(() => {
-                let displayVal = humanValue === '--' ? '' : humanValue;
-                if (AppUtils.hasEnumValues(def)) {
-                    const options = (def.options || []).concat(def.enum ? def.enum.map(e => ({ value: e, label: '' })) : []);
-                    const opt = options.find(o => String(o.value) === String(humanValue));
-                    if (opt && opt.label) displayVal = `${opt.label} (${opt.value})`;
-                }
-                return `<textarea readonly rows="1" data-patient="${patientId}" data-perf-prop="human_val" style="resize: none; min-height: unset; overflow-y: hidden; font-family: inherit;">${displayVal}</textarea>`;
+                const displayVal = AppUtils.formatValueWithLabel(humanValue, def);
+                return `<div class="output-display-box human-output" data-patient="${patientId}" data-perf-prop="human_val">${displayVal}</div>`;
             })()}
                     </div>
                 </div>
@@ -87,12 +82,13 @@ Object.assign(SchemaEditor.prototype, {
                 <div class="status-section-container" style="margin-bottom: 1.5rem;">
                     <div class="status-section-header" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
                         <label style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">Review Status</label>
-                        <div style="display: ${perf.matched ? 'none' : 'flex'}; align-items: center; gap: 0.5rem;">
+                        <div style="display: ${perf.matched ? 'none' : 'flex'}; align-items: center; gap: 0.5rem; opacity: ${perf.pending ? '0.5' : '1'}; pointer-events: ${perf.pending ? 'none' : 'auto'}; cursor: ${perf.pending ? 'not-allowed' : 'default'};">
                             <span style="font-size: 0.75rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase;">Reviewed</span>
                             <label class="switch">
                                 <input type="checkbox" 
                                     id="rev-check-${patientId}"
-                                    ${perf.reviewed ? 'checked' : ''} 
+                                    ${(perf.reviewed && !perf.pending) ? 'checked' : ''} 
+                                    ${perf.pending ? 'disabled' : ''}
                                     onclick="event.stopPropagation(); app.setReviewedStatus('${patientId}', this.checked)">
                                 <span class="slider"></span>
                             </label>
@@ -211,7 +207,7 @@ Object.assign(SchemaEditor.prototype, {
 
         const seenValues = new Set();
         const displayVal = outputStats.map(s => {
-            const valStr = String(s.value).trim();
+            const valStr = AppUtils.normalizeValue(s.value);
             // Basic HTML escape to prevent injection and layout issues
             const safeVal = valStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
@@ -255,7 +251,7 @@ Object.assign(SchemaEditor.prototype, {
                 const match = humanValStr.match(/\(([^)]+)\)$/);
                 if (match) cleanHumanVal = match[1];
 
-                const matchingStat = outputStats.find(s => String(s.value).trim() === String(cleanHumanVal).trim());
+                const matchingStat = outputStats.find(s => AppUtils.normalizeValue(s.value) === AppUtils.normalizeValue(cleanHumanVal));
                 const matchPercentage = matchingStat ? matchingStat.percentage : 0;
 
                 if (matchPercentage >= 90) {
@@ -274,14 +270,15 @@ Object.assign(SchemaEditor.prototype, {
             }
         }
 
-        let baseStyle = "white-space: pre-wrap; overflow-wrap: break-word; width: 100%; padding: 0.75rem; border-radius: var(--radius); font-size: 0.875rem; line-height: 1.5; box-sizing: border-box; display: block; font-family: inherit; min-height: unset;";
+        let baseStyle = "";
         if (bgColor) {
-            baseStyle += `background-color: ${bgColor}; border: 1px solid ${borderColor}; color: var(--gray-900); font-weight: 500;`;
+            baseStyle += `background-color: ${bgColor}; border-color: ${borderColor}; color: var(--gray-900);`;
         } else {
-            baseStyle += `background-color: var(--white); border: 1px solid var(--gray-300); color: var(--gray-700);`;
+            baseStyle += `background-color: var(--white); border-color: var(--gray-300); color: var(--gray-700);`;
         }
+        const className = `output-display-box medixtract-output ${isComment ? 'is-comment' : ''}`;
 
-        return { displayVal, bgColor, borderColor, msgDisplay, style: baseStyle };
+        return { displayVal, bgColor, borderColor, msgDisplay, style: baseStyle, className };
     },
 
     updatePatientSummary(patientId, outputs) {
@@ -311,6 +308,7 @@ Object.assign(SchemaEditor.prototype, {
 
         if (input) {
             input.innerHTML = summary.displayVal;
+            input.className = summary.className;
             if (summary.style) input.style.cssText = summary.style;
         }
         if (msgEl) msgEl.style.display = summary.msgDisplay;

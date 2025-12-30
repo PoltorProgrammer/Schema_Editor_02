@@ -141,6 +141,13 @@ const AppUtils = {
         return colors[hash % colors.length];
     },
 
+    normalizeValue(val) {
+        if (val === null || val === undefined) return 'null';
+        const strVal = String(val).trim();
+        if (strVal === '') return 'empty';
+        return strVal;
+    },
+
     getMostCommonValue(outputs) {
         if (!outputs || !Array.isArray(outputs) || outputs.length === 0) return null;
         return outputs.reduce((prev, current) => {
@@ -149,7 +156,11 @@ const AppUtils = {
     },
 
     formatValueWithLabel(value, fieldDef) {
-        if (value === null || value === undefined || value === '--' || value === '') return value || '--';
+        if (value === '--') return '--';
+
+        const normalized = this.normalizeValue(value);
+        if (normalized === 'null') return 'null';
+        if (normalized === 'empty') return 'empty';
 
         let label = null;
         if (fieldDef.options && Array.isArray(fieldDef.options)) {
@@ -157,6 +168,6 @@ const AppUtils = {
             if (opt) label = opt.label;
         }
 
-        return label ? `${label} (${value})` : value;
+        return label ? `(${value}) ${label}` : value;
     }
 };

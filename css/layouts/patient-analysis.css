@@ -265,3 +265,37 @@
 .reason-btn.active.issue .reason-dot {
     background: #EF4444;
 }
+
+/* Shared styles for output display boxes */
+.output-display-box {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    box-sizing: border-box;
+    display: block;
+    font-family: inherit;
+    min-height: unset;
+    border: 1px solid var(--gray-300);
+    background-color: var(--white);
+    color: var(--gray-700);
+    transition: all 0.2s ease;
+}
+
+.medixtract-output {
+    font-weight: 500;
+}
+
+.human-output {
+    background-color: var(--white);
+    border-color: var(--gray-300);
+    color: var(--gray-700);
+}
+
+.medixtract-output:empty::before {
+    content: '--';
+    opacity: 0.5;
+}

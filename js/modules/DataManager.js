@@ -58,10 +58,8 @@ Object.assign(SchemaEditor.prototype, {
                             // Normalize to array for uniform processing, but handle non-array values gracefully
                             const values = Array.isArray(mOutput) ? mOutput : [mOutput];
                             values.forEach(val => {
-                                if (val !== null && val !== undefined) {
-                                    const strVal = String(val);
-                                    valueCounts[strVal] = (valueCounts[strVal] || 0) + 1;
-                                }
+                                const strVal = AppUtils.normalizeValue(val);
+                                valueCounts[strVal] = (valueCounts[strVal] || 0) + 1;
                             });
                         }
                     });
@@ -76,18 +74,24 @@ Object.assign(SchemaEditor.prototype, {
 
                 const valRaw = patientData[id];
                 // Handle both array format [value, ...] and direct value format
-                const humanValue = Array.isArray(valRaw)
+                let humanValue = Array.isArray(valRaw)
                     ? (valRaw.length > 0 ? valRaw[0] : null)
                     : (valRaw !== undefined ? valRaw : null);
+                humanValue = AppUtils.normalizeValue(humanValue);
 
                 const totalCount = perf.output.reduce((sum, o) => sum + (Number(o.count) || 0), 0);
-                const matchingOutput = perf.output.find(o => String(o.value) === String(humanValue));
+                const matchingOutput = perf.output.find(o => AppUtils.normalizeValue(o.value) === humanValue);
                 const matchingCount = matchingOutput ? Number(matchingOutput.count) : 0;
                 const matchPercentage = totalCount > 0 ? (matchingCount / totalCount) * 100 : 0;
 
                 const aiValue = AppUtils.getMostCommonValue(perf.output);
+                const normalizedAi = aiValue !== null ? AppUtils.normalizeValue(aiValue) : null;
+
                 // A match is only automatic if the most common value matches AND it meets the 90% threshold
-                const isMatch = (aiValue !== null && humanValue !== null && String(aiValue) === String(humanValue) && matchPercentage >= 90);
+                const isMatch = (normalizedAi !== null && normalizedAi === humanValue && matchPercentage >= 90);
+
+                // SPECIFIC RULE: if AI is "null" (>90%) and human is "empty", it's automatically "Standardized"
+                const isAutoStandardized = (normalizedAi === 'null' && humanValue === 'empty' && matchPercentage >= 90);
 
                 if (isMatch) {
                     // Auto-match if pending or if it was previously an auto-unmatched/discrepancy state
@@ -97,7 +101,15 @@ Object.assign(SchemaEditor.prototype, {
                         perf.unmatched = null;
                         perf.pending = false;
                     }
-                } else if (aiValue !== null && humanValue !== null) {
+                } else if (isAutoStandardized) {
+                    // Auto-standardize if pending or if it was previously an auto-discrepancy state
+                    const noManualUnmatched = !perf.unmatched || typeof perf.unmatched !== 'object' || Object.values(perf.unmatched).every(v => v === false);
+                    if (perf.pending || (noManualUnmatched && !perf.dismissed && (!perf.unmatched || !perf.unmatched.standardized))) {
+                        perf.matched = false;
+                        perf.unmatched = { standardized: true };
+                        perf.pending = false;
+                    }
+                } else if (aiValue !== null) {
                     // It's a discrepancy or doesn't meet the 90% threshold. 
                     // If it was auto-marked as matched or unmatched before, reset to pending.
                     const noManualUnmatched = !perf.unmatched || typeof perf.unmatched !== 'object' || Object.values(perf.unmatched).every(v => v === false);
@@ -105,6 +117,7 @@ Object.assign(SchemaEditor.prototype, {
                         perf.matched = false;
                         perf.unmatched = null;
                         perf.pending = true;
+                        perf.reviewed = false; // Reset review status when discrepancy occurs
                     }
                 }
             });
@@ -143,7 +156,8 @@ Object.assign(SchemaEditor.prototype, {
                 comments: def.notes || def.comment || '',
                 aiValue: patients.map(pid => {
                     const perf = def.performance[pid];
-                    const val = AppUtils.getMostCommonValue(perf?.output) || '--';
+                    let val = AppUtils.getMostCommonValue(perf?.output);
+                    if (val === null || val === undefined) val = '--';
                     return {
                         pid,
                         label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
@@ -154,8 +168,10 @@ Object.assign(SchemaEditor.prototype, {
                 }),
                 humanValue: patients.map(pid => {
                     const perf = def.performance[pid];
-                    const valRaw = this.validationData[pid]?.[id];
-                    const val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
+                    let valRaw = this.validationData[pid]?.[id];
+                    let val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? null;
+                    if (val !== null) val = AppUtils.normalizeValue(val);
+                    else val = '--';
                     return {
                         pid,
                         label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
@@ -252,8 +268,9 @@ Object.assign(SchemaEditor.prototype, {
             });
             const humanVal = pidList.map(pid => {
                 const perf = def.performance?.[pid];
-                const valRaw = this.validationData[pid]?.[id];
-                const val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? '--';
+                let valRaw = this.validationData[pid]?.[id];
+                let val = (Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? null;
+                val = AppUtils.normalizeValue(val);
                 return {
                     pid,
                     label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,

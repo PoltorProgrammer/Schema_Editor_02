@@ -93,10 +93,10 @@ Object.assign(SchemaEditor.prototype, {
 
                             // Helper to check value content or label
                             const checkValueWithLabel = (val) => {
-                                const sVal = String(val).toLowerCase();
-                                if (sVal.includes(normSearch)) return true;
+                                const normalized = AppUtils.normalizeValue(val).toLowerCase();
+                                if (normalized.includes(normSearch)) return true;
                                 if (f.definition.options) {
-                                    const opt = f.definition.options.find(o => String(o.value).toLowerCase() === sVal);
+                                    const opt = f.definition.options.find(o => AppUtils.normalizeValue(o.value).toLowerCase() === normalized);
                                     if (opt && opt.label && opt.label.toLowerCase().includes(normSearch)) return true;
                                 }
                                 return false;
