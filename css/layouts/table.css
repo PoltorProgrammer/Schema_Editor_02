@@ -37,6 +37,12 @@
     border-bottom: 1px solid var(--gray-100);
     cursor: pointer;
     transition: all 0.15s ease;
+    align-items: stretch;
+}
+
+/* Ensure other columns still align contents to center */
+.field-row>div:not(.field-description):not(.field-notes) {
+    display: flex;
     align-items: center;
 }
 
@@ -69,16 +75,31 @@
 }
 
 .field-row .field-description,
-.field-row .field-comments {
+.field-row .field-notes {
     color: var(--gray-600);
     font-size: 0.875rem;
     line-height: 1.4;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    position: relative;
+    min-height: 1.4rem;
+    /* Ensure at least one line is visible */
 }
 
-.field-row .field-comments {
+.text-truncate-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: calc(var(--patient-count, 1) * 1.4);
+    line-clamp: calc(var(--patient-count, 1) * 1.4);
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
+.field-row .field-notes .text-truncate-container {
     font-style: italic;
 }
 
@@ -197,6 +218,12 @@
     border-color: #CBD5E1;
 }
 
+.value-chip.uncertain {
+    background: #FEFCBF;
+    color: #744210;
+    border-color: #FAF089;
+}
+
 /* Dark Theme Overrides for Value Chips */
 [data-theme="dark"] .value-chip.matched,
 [data-theme="joan"] .value-chip.matched {
@@ -231,4 +258,11 @@
     background: #0F172A;
     color: #94A3B8;
     border-color: #1E293B;
+}
+
+[data-theme="dark"] .value-chip.uncertain,
+[data-theme="joan"] .value-chip.uncertain {
+    background: #422006;
+    color: #FEF08A;
+    border-color: #744210;
 }

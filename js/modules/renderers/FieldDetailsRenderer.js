@@ -37,7 +37,7 @@ Object.assign(SchemaEditor.prototype, {
         const basicFieldsTop = `
             <div class="form-grid">
                 <div class="form-field full-width"><label>Description</label><textarea id="input-description" data-property="description" onchange="app.handleFieldPropertyChange(event)">${def.description || ''}</textarea></div>
-                <div class="form-field full-width"><label>Notes (Markdown supported)</label><textarea id="input-notes" data-property="notes" onchange="app.handleFieldPropertyChange(event)">${def.notes || def.comment || ''}</textarea></div>
+                <div class="form-field full-width"><label>Notes</label><textarea id="input-notes" data-property="notes" onchange="app.handleFieldPropertyChange(event)">${def.notes || def.comment || ''}</textarea></div>
             </div>
         `;
         this.appendToFormSection(propertiesSec, basicFieldsTop);

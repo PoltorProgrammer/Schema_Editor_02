@@ -16,6 +16,9 @@ Object.assign(SchemaEditor.prototype, {
         if (perf.matched) {
             statusClass = 'matched';
             statusLabel = 'Matched';
+        } else if (perf.uncertain) {
+            statusClass = 'uncertain';
+            statusLabel = 'Uncertain';
         } else if (perf.dismissed) {
             statusClass = 'dismissed';
             statusLabel = 'Dismissed';
@@ -95,7 +98,7 @@ Object.assign(SchemaEditor.prototype, {
                         </div>
                     </div>
                     <div class="status-section">
-                        <div class="status-main-row" style="display: flex; gap: 0.5rem;">
+                        <div class="status-main-row">
                             <button class="status-btn ${perf.pending ? 'active pending' : ''}" onclick="app.setReviewStatus('${patientId}', 'pending')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/></svg>
                                 Pending
@@ -103,6 +106,12 @@ Object.assign(SchemaEditor.prototype, {
                             <button class="status-btn ${perf.matched ? 'active matched' : ''}" onclick="app.setReviewStatus('${patientId}', 'matched')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
                                 Matched
+                            </button>
+                            <button class="status-btn ${perf.uncertain ? 'active uncertain' : ''}" onclick="app.setReviewStatus('${patientId}', 'uncertain')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M10,19H13V22H10V19M12,2C17.35,2.22 19.68,7.62 16.5,11.67C15.67,12.67 14.33,13.33 13.67,14.17C13,15 13,16 13,17H10C10,15.33 10,13.9 10.67,12.91C11.34,11.91 12.67,11.33 13.5,10.67C15.92,8.43 15.32,5.26 12,5A3,3 0 0,0 9,8H6A6,6 0 0,1 12,2Z"/>
+                                </svg>
+                                Uncertain
                             </button>
                             <button class="status-btn ${perf.dismissed ? 'active dismissed' : ''}" onclick="app.setReviewStatus('${patientId}', 'dismissed')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>

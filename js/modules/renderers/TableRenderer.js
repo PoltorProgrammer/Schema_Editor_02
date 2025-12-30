@@ -28,6 +28,10 @@ Object.assign(SchemaEditor.prototype, {
             statusHtml = `<span class="analysis-indicator matched indicator-only" title="Matched">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19,13H5V11H19V13M19,9H5V7H19V9Z"/></svg>
             </span>`;
+        } else if (f.matchStatus === 'uncertain') {
+            statusHtml = `<span class="analysis-indicator uncertain indicator-only" title="Uncertain">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10,19H13V22H10V19M12,2C17.35,2.22 19.68,7.62 16.5,11.67C15.67,12.67 14.33,13.33 13.67,14.17C13,15 13,16 13,17H10C10,15.33 10,13.9 10.67,12.91C11.34,11.91 12.67,11.33 13.5,10.67C15.92,8.43 15.32,5.26 12,5A3,3 0 0,0 9,8H6A6,6 0 0,1 12,2Z"/></svg>
+            </span>`;
         } else if (f.matchStatus === 'improved') {
             statusHtml = `<span class="analysis-indicator improved indicator-only" title="Matched (Improved)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
@@ -70,8 +74,8 @@ Object.assign(SchemaEditor.prototype, {
                         <span class="chip-value">${v.value}</span>
                     </div>
                 </div>`).join('') : '<div>--</div>'}</div>`,
-            description: `<div class="field-description">${f.description}</div>`,
-            comments: `<div class="field-comments">${f.comments}</div>`,
+            description: `<div class="field-description"><div class="text-truncate-container">${f.description}</div></div>`,
+            comments: `<div class="field-notes"><div class="text-truncate-container">${f.comments}</div></div>`,
             type: `<div class="field-type">${f.type}</div>`,
             options: `<div class="field-options">${(f.definition.options || f.definition.enum || []).map(o => typeof o === 'object' ? o.label : o).join(' | ')}</div>`,
             indicators: `<div class="field-indicators" style="display:flex; flex-wrap:wrap; gap:4px;">
@@ -89,6 +93,9 @@ Object.assign(SchemaEditor.prototype, {
         }).join(' ');
 
         row.style.gridTemplateColumns = gridTemplate;
+        const patientCount = Math.max(f.aiValue?.length || 0, f.humanValue?.length || 0, 1);
+        row.style.setProperty('--patient-count', patientCount);
+
         if (this.selectedField === f.id) row.classList.add('selected');
         return row;
     },

@@ -250,6 +250,16 @@
     background: #94A3B8;
 }
 
+.analysis-indicator.uncertain {
+    background: #FEFCBF;
+    color: #744210;
+    border-color: #FAF089;
+}
+
+.analysis-indicator.uncertain::before {
+    background: #ECC94B;
+}
+
 .analysis-indicator.mixed {
     background: #FEFCBF;
     color: #744210;

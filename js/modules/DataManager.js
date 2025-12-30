@@ -136,12 +136,15 @@ Object.assign(SchemaEditor.prototype, {
             if (perfs.length === 0 || perfs.some(p => p.pending)) {
                 overallMatch = 'pending';
             } else {
+                const hasUncertain = perfs.some(p => p.uncertain);
                 const hasIssue = perfs.some(p => p.unmatched && !(p.unmatched.filled_blank || p.unmatched.correction || p.unmatched.standardized || p.unmatched.improved_comment));
                 const hasImprovement = perfs.some(p => p.unmatched && (p.unmatched.filled_blank || p.unmatched.correction || p.unmatched.standardized || p.unmatched.improved_comment));
                 const hasMatch = perfs.some(p => p.matched);
                 const allDismissed = perfs.every(p => p.dismissed);
 
-                if (hasIssue) {
+                if (hasUncertain) {
+                    overallMatch = 'uncertain';
+                } else if (hasIssue) {
                     overallMatch = 'unmatched';
                 } else if (hasImprovement) {
                     overallMatch = 'improved';
@@ -243,12 +246,15 @@ Object.assign(SchemaEditor.prototype, {
             if (perfs.length === 0 || perfs.some(p => p.pending)) {
                 overallMatch = 'pending';
             } else {
+                const hasUncertain = perfs.some(p => p.uncertain);
                 const hasIssue = perfs.some(p => p.unmatched && !(p.unmatched.filled_blank || p.unmatched.correction || p.unmatched.standardized || p.unmatched.improved_comment));
                 const hasImprovement = perfs.some(p => p.unmatched && (p.unmatched.filled_blank || p.unmatched.correction || p.unmatched.standardized || p.unmatched.improved_comment));
                 const hasMatch = perfs.some(p => p.matched);
                 const allDismissed = perfs.every(p => p.dismissed);
 
-                if (hasIssue) {
+                if (hasUncertain) {
+                    overallMatch = 'uncertain';
+                } else if (hasIssue) {
                     overallMatch = 'unmatched';
                 } else if (hasImprovement) {
                     overallMatch = 'improved';
@@ -303,7 +309,17 @@ Object.assign(SchemaEditor.prototype, {
         this.updateTableRow(id);
         if (this.selectedField === id) {
             this.updatePanelHeader(id);
-            this.renderFieldDetailsForm(def);
+
+            // Optimization: If the user is currently typing in a field in the details panel,
+            // we skip the full rerender to prevent focus loss glitches and flickering.
+            // The DOM is already up-to-date with the user's input.
+            const active = document.activeElement;
+            const isTypingInPanel = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') &&
+                document.getElementById('fieldDetailsContent')?.contains(active);
+
+            if (!isTypingInPanel) {
+                this.renderFieldDetailsForm(def);
+            }
         }
         this.applyFilters();
     },
@@ -326,13 +342,17 @@ Object.assign(SchemaEditor.prototype, {
 
     handleFieldPropertyChange(e) {
         if (!this.selectedField) return;
+        let val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
         const prop = e.target.dataset.property;
         const solvedProp = e.target.dataset.solved;
         const patientId = e.target.dataset.patient;
         const perfProp = e.target.dataset.perfProp;
         const unmatchedProp = e.target.dataset.unmatched;
 
-        let val = e.target.type === 'checkbox' ? e.target.checked : e.target.value.trim();
+        // Avoid trimming description and notes to prevent cursor jumps and disappearing spaces while typing
+        if (typeof val === 'string' && !['description', 'notes'].includes(prop)) {
+            val = val.trim();
+        }
         const variables = this.currentSchema.properties || this.currentSchema;
         const def = variables[this.selectedField];
 
@@ -346,11 +366,12 @@ Object.assign(SchemaEditor.prototype, {
             const perf = def.performance[patientId];
 
             if (perfProp === 'status') {
-                const standardStatuses = ['matched', 'pending', 'dismissed'];
+                const standardStatuses = ['matched', 'pending', 'dismissed', 'uncertain'];
                 if (standardStatuses.includes(val)) {
                     perf.matched = (val === 'matched');
                     perf.pending = (val === 'pending');
                     perf.dismissed = (val === 'dismissed');
+                    perf.uncertain = (val === 'uncertain');
                     perf.unmatched = false;
                 } else {
                     // Value is an unmatched reason (e.g. 'filled_blank', 'missing_docs')
@@ -449,6 +470,7 @@ Object.assign(SchemaEditor.prototype, {
         // Reset all states
         perf.pending = false;
         perf.matched = false;
+        perf.uncertain = false;
         perf.dismissed = false;
         perf.unmatched = false;
 
@@ -458,6 +480,9 @@ Object.assign(SchemaEditor.prototype, {
         } else if (status === 'matched') {
             perf.matched = true;
             perf.reviewed = true; // Auto-review matched records
+        } else if (status === 'uncertain') {
+            perf.uncertain = true;
+            perf.reviewed = false;
         } else if (status === 'dismissed') {
             perf.dismissed = true;
             perf.reviewed = false;
@@ -557,6 +582,7 @@ Object.assign(SchemaEditor.prototype, {
     getPatientPerformanceStatus(p) {
         if (!p) return 'pending';
         if (p.pending) return 'pending';
+        if (p.uncertain) return 'uncertain';
         if (p.unmatched) {
             const isImprovement = p.unmatched.filled_blank || p.unmatched.correction || p.unmatched.standardized || p.unmatched.improved_comment;
             return isImprovement ? 'improved' : 'unmatched';

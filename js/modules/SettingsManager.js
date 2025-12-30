@@ -57,7 +57,7 @@ Object.assign(SchemaEditor.prototype, {
         const container = document.getElementById('columnOrderList');
         if (!container) return;
         container.innerHTML = '';
-        const labels = { name: 'Field Name', type: 'Type', group: 'Group', description: 'Description', comments: 'Comments', options: 'Options', indicators: 'Labels', match: 'Status', ai_value: 'MediXtract', human_value: 'Human' };
+        const labels = { name: 'Field Name', type: 'Type', group: 'Group', description: 'Description', comments: 'Notes', options: 'Options', indicators: 'Labels', match: 'Status', ai_value: 'MediXtract', human_value: 'Human' };
 
         this.settings.columnOrder.forEach(id => {
             const item = document.createElement('div');
@@ -203,7 +203,7 @@ Object.assign(SchemaEditor.prototype, {
     reorderHeaderColumns(vis) {
         const h = document.querySelector('.table-header');
         if (!h) return;
-        const labs = { match: 'Status', name: 'Field Name', group: 'Group', ai_value: 'MediXtract', human_value: 'Human', description: 'Description', comments: 'Comments', type: 'Type', indicators: 'Labels', options: 'Options' };
+        const labs = { match: 'Status', name: 'Field Name', group: 'Group', ai_value: 'MediXtract', human_value: 'Human', description: 'Description', comments: 'Notes', type: 'Type', indicators: 'Labels', options: 'Options' };
         h.innerHTML = vis.map(id => `<div class="th field-${id}">${labs[id] || id}</div>`).join('');
     }
 });
