@@ -514,48 +514,48 @@ Object.assign(SchemaEditor.prototype, {
     },
 
     // Nickname Combobox Handlers
-    handleNicknameComboboxFocus() {
-        const input = document.getElementById('settingsNickname');
+    handleNicknameComboboxFocus(idSuffix = 'settingsNickname') {
+        const input = document.getElementById(idSuffix);
         if (input) {
             input.select();
         }
-        const container = document.getElementById('combobox-nickname');
+        const container = document.getElementById(idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`);
         if (container) {
             container.classList.add('open');
-            this.renderNicknameComboboxOptions(input ? input.value : '');
+            this.renderNicknameComboboxOptions(input ? input.value : '', idSuffix);
         }
     },
 
-    handleNicknameComboboxBlur() {
+    handleNicknameComboboxBlur(idSuffix = 'settingsNickname') {
         setTimeout(() => {
-            const input = document.getElementById('settingsNickname');
+            const input = document.getElementById(idSuffix);
             if (document.activeElement !== input) {
-                const container = document.getElementById('combobox-nickname');
+                const container = document.getElementById(idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`);
                 if (container) container.classList.remove('open');
             }
         }, 200);
     },
 
-    handleNicknameComboboxInput(value) {
-        this.renderNicknameComboboxOptions(value);
+    handleNicknameComboboxInput(idSuffix = 'settingsNickname', value) {
+        this.renderNicknameComboboxOptions(value, idSuffix);
     },
 
-    selectNicknameOption(value, e) {
+    selectNicknameOption(value, idSuffix = 'settingsNickname', e) {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
-        const input = document.getElementById('settingsNickname');
+        const input = document.getElementById(idSuffix);
         if (input) {
             input.value = value;
-            const container = document.getElementById('combobox-nickname');
+            const container = document.getElementById(idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`);
             if (container) container.classList.remove('open');
         }
     },
 
-    handleNicknameComboboxKey(e) {
-        const container = document.getElementById('combobox-nickname');
-        const list = document.getElementById('comboboxList-nickname');
+    handleNicknameComboboxKey(idSuffix = 'settingsNickname', e) {
+        const container = document.getElementById(idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`);
+        const list = document.getElementById(idSuffix === 'settingsNickname' ? 'comboboxList-nickname' : `comboboxList-${idSuffix}`);
         if (!container || !list) return;
 
         const options = Array.from(list.querySelectorAll('.combobox-option:not(.no-results)'));
@@ -564,7 +564,7 @@ Object.assign(SchemaEditor.prototype, {
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             if (!container.classList.contains('open')) {
-                this.handleNicknameComboboxFocus();
+                this.handleNicknameComboboxFocus(idSuffix);
                 return;
             }
             if (currentIndex < options.length - 1) {
@@ -586,12 +586,13 @@ Object.assign(SchemaEditor.prototype, {
                 const target = currentIndex >= 0 ? options[currentIndex] : options[0];
                 if (target) {
                     e.preventDefault();
-                    this.selectNicknameOption(target.dataset.value);
+                    this.selectNicknameOption(target.dataset.value, idSuffix);
                 } else {
-                    const val = document.getElementById('settingsNickname').value.trim();
+                    const inp = document.getElementById(idSuffix);
+                    const val = inp ? inp.value.trim() : '';
                     if (val) {
                         e.preventDefault();
-                        this.selectNicknameOption(val);
+                        this.selectNicknameOption(val, idSuffix);
                     }
                 }
             }

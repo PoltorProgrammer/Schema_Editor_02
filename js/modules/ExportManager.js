@@ -21,7 +21,10 @@ Object.assign(SchemaEditor.prototype, {
         try {
             // Check for Username (required for backups)
             if (!this.settings.username) {
-                const name = prompt("Please enter a nickname for version tracking (e.g., 'Joan'):");
+                const name = await AppUI.showNicknamePrompt(
+                    "Nickname Required",
+                    "Please enter a nickname for version tracking (e.g., 'Joan'):"
+                );
                 if (name && name.trim()) {
                     this.settings.username = name.trim();
                     this.saveSettingsToStorage();

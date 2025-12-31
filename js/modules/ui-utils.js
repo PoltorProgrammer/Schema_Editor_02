@@ -176,6 +176,85 @@ const AppUI = {
         });
     },
 
+    showNicknamePrompt(title, message, options = ["Milan", "Joan", "Tomás"]) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            const titleEl = document.getElementById('customModalTitle');
+            const messageEl = document.getElementById('customModalMessage');
+            const footerEl = document.getElementById('customModalFooter');
+
+            if (!modal) {
+                resolve(prompt(`${title}\n\n${message}`));
+                return;
+            }
+
+            titleEl.textContent = title;
+            messageEl.innerHTML = `
+                <p style="margin-bottom: 1rem;">${message}</p>
+                <div class="combobox-container" id="combobox-promptNickname" style="max-width: 100%;">
+                    <input type="text" id="promptNickname" class="combobox-input" placeholder="e.g. Joan"
+                        autocomplete="off" 
+                        onfocus="app.handleNicknameComboboxFocus('promptNickname')"
+                        onblur="app.handleNicknameComboboxBlur('promptNickname')"
+                        oninput="app.handleNicknameComboboxInput('promptNickname', this.value)"
+                        onkeydown="app.handleNicknameComboboxKey('promptNickname', event)">
+                    <div class="combobox-dropdown" id="comboboxList-promptNickname"></div>
+                </div>
+            `;
+
+            footerEl.innerHTML = '';
+
+            const cancelBtn = document.createElement('button');
+            const confirmBtn = document.createElement('button');
+
+            cancelBtn.textContent = 'Cancel';
+            confirmBtn.textContent = 'Set Nickname';
+
+            cancelBtn.className = 'btn btn-ghost';
+            confirmBtn.className = 'btn btn-primary';
+
+            const cleanup = () => {
+                modal.classList.remove('active');
+                document.removeEventListener('keydown', handleKeyEsc);
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    messageEl.innerHTML = ''; // Clear the input
+                }, 200);
+            };
+
+            const handleKeyEsc = (e) => {
+                if (e.key === 'Escape') {
+                    cleanup();
+                    resolve(null);
+                }
+            };
+            document.addEventListener('keydown', handleKeyEsc);
+
+            cancelBtn.onclick = () => {
+                cleanup();
+                resolve(null);
+            };
+
+            confirmBtn.onclick = () => {
+                const val = document.getElementById('promptNickname').value.trim();
+                if (val) {
+                    cleanup();
+                    resolve(val);
+                }
+            };
+
+            footerEl.appendChild(cancelBtn);
+            footerEl.appendChild(confirmBtn);
+
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.add('active');
+                const input = document.getElementById('promptNickname');
+                if (input) input.focus();
+            });
+        });
+    },
+
     showProjectConflictDialog(projectName) {
         return new Promise((resolve) => {
             const modal = document.getElementById('customModal');

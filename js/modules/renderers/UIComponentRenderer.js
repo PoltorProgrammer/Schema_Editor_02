@@ -243,12 +243,14 @@ Object.assign(SchemaEditor.prototype, {
         }
     },
 
-    renderNicknameComboboxOptions(filter = '') {
-        const container = document.getElementById('comboboxList-nickname');
+    renderNicknameComboboxOptions(filter = '', idSuffix = 'settingsNickname') {
+        const listId = idSuffix === 'settingsNickname' ? 'comboboxList-nickname' : `comboboxList-${idSuffix}`;
+        const container = document.getElementById(listId);
         if (!container) return;
 
         const options = ["Milan", "Joan", "Tomás"];
-        const containerWrap = document.getElementById('combobox-nickname');
+        const containerId = idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`;
+        const containerWrap = document.getElementById(containerId);
 
         const filtered = options.filter(o =>
             o.toLowerCase().includes(filter.toLowerCase())
@@ -259,14 +261,14 @@ Object.assign(SchemaEditor.prototype, {
         } else {
             if (containerWrap) containerWrap.classList.add('open');
             let html = filtered.map(o => `
-                <div class="combobox-option" data-value="${String(o).replace(/'/g, "\\'")}" onmousedown="app.selectNicknameOption('${String(o).replace(/'/g, "\\'")}', event)">
+                <div class="combobox-option" data-value="${String(o).replace(/'/g, "\\'")}" onmousedown="app.selectNicknameOption('${String(o).replace(/'/g, "\\'")}', '${idSuffix}', event)">
                     <span class="option-label">${o}</span>
                 </div>
             `).join('');
 
             if (filter && !options.some(o => o.toLowerCase() === filter.toLowerCase())) {
                 html += `
-                    <div class="combobox-option create-new" data-value="${String(filter).replace(/'/g, "\\'")}" onmousedown="app.selectNicknameOption('${String(filter).replace(/'/g, "\\'")}', event)">
+                    <div class="combobox-option create-new" data-value="${String(filter).replace(/'/g, "\\'")}" onmousedown="app.selectNicknameOption('${String(filter).replace(/'/g, "\\'")}', '${idSuffix}', event)">
                         <div class="option-content" style="display: flex; flex-direction: column;">
                             <span class="option-label">Use: <strong>${filter}</strong></span>
                             <span class="option-hint">Press Enter to use this nickname</span>
