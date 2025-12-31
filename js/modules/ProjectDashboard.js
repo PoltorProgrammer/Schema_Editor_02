@@ -75,7 +75,7 @@ Object.assign(SchemaEditor.prototype, {
         let isDriveStyle = true;
         let iconSvg = `
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21,12H3V18A2,2 0 0,0 5,20H19A2,2 0 0,0 21,18V12M6,17A1,1 0 1,1 7,16A1,1 0 0,1 6,17M10,17A1,1 0 1,1 11,16A1,1 0 0,1 10,17M21,7.24V11H3V7.24A2,2 0 0,1 4,5.53L6.5,4H17.5L20,5.53A2,2 0 0,1 21,7.24Z" />
+                <path d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04Z" />
             </svg>`;
 
         if (this.appRootHandle) {
