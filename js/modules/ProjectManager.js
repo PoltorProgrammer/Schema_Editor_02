@@ -13,9 +13,13 @@ Object.assign(SchemaEditor.prototype, {
             // 1. Acquire Handle if needed or forced
             if (!rootHandle || forcePicker) {
                 try {
+                    // Use a specific ID for Google Drive connection so the browser "remembers" G:\
+                    // after the first time you select it.
+                    const isFirstDriveConnect = !this.projectsDirectoryHandle && !this.appRootHandle;
+
                     const pickerOpts = {
                         mode: 'readwrite',
-                        id: 'schema-editor-main'
+                        id: isFirstDriveConnect ? 'google-drive-connect' : 'schema-editor-main'
                     };
 
                     // Prioritize current known handles for startIn to make "Enter" confirmation easy
@@ -26,6 +30,7 @@ Object.assign(SchemaEditor.prototype, {
                     } else if (this.pendingHandle) {
                         pickerOpts.startIn = this.pendingHandle;
                     } else {
+                        // Fallback for the very first time if no handles are known
                         pickerOpts.startIn = 'documents';
                     }
 
