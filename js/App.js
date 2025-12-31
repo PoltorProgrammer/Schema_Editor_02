@@ -78,11 +78,13 @@ class SchemaEditor {
 
         if (this.hasUnsavedChanges) {
             saveBtn.classList.add('unsaved');
+            saveBtn.disabled = false;
             if (!saveBtn.innerHTML.includes('*')) {
                 saveBtn.innerHTML = saveBtn.innerHTML.replace('Save Changes', 'Save Changes *');
             }
         } else {
             saveBtn.classList.remove('unsaved');
+            saveBtn.disabled = true;
             saveBtn.innerHTML = saveBtn.innerHTML.replace(' *', '');
         }
     }

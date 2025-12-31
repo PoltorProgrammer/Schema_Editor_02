@@ -120,7 +120,7 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('projectSelection').style.display = 'none';
         document.getElementById('schemaEditor').style.display = 'flex';
         document.getElementById('saveBtn').style.display = 'inline-flex';
-        document.getElementById('saveBtn').disabled = false;
+        this.updateSaveButtonUI();
         document.getElementById('downloadProgressBtn').style.display = 'none';
         document.getElementById('headerMoreFilter').style.display = 'inline-flex';
         document.getElementById('projectDashboardBtn').style.display = 'flex';

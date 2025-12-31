@@ -3,6 +3,8 @@
  */
 Object.assign(SchemaEditor.prototype, {
     async saveChanges() {
+        if (!this.hasUnsavedChanges) return;
+
         if (!this.currentProject || this.currentProject.isPreDiscovered) {
             const confirmed = await AppUI.showConfirm(
                 'Folder Not Connected',

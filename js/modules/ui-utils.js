@@ -39,13 +39,7 @@ const AppUI = {
     },
 
     showSaveSuccess(message) {
-        // Removed text/HTML changes as per user request
-        // We only clear the unsaved status from the button if it exists
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) {
-            saveBtn.classList.remove('unsaved');
-            saveBtn.innerHTML = saveBtn.innerHTML.replace(' *', '');
-        }
+        // Redundant status management removed. Controlled by updateSaveButtonUI()
     },
 
     showProcessing(message = 'Processing...') {

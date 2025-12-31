@@ -230,6 +230,7 @@ Object.assign(SchemaEditor.prototype, {
             localStorage.setItem('lastActiveProject', projectName);
             this.validationData = {};
             this.medixtractOutputData = {};
+            this.hasUnsavedChanges = false;
 
             let analysisData;
 

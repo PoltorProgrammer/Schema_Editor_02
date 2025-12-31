@@ -79,6 +79,7 @@ Object.assign(SchemaEditor.prototype, {
                 if (t) { if (vals.length) t.enum = vals; else delete t.enum; }
             } else { if (vals.length) def.enum = vals; else delete def.enum; }
         }
+        this.markAsUnsaved();
         this.refreshFieldData(this.selectedField);
     },
 
@@ -102,6 +103,7 @@ Object.assign(SchemaEditor.prototype, {
         if (this.validateJson(txt)) {
             const newDef = JSON.parse(txt.value)[this.selectedField];
             this.currentSchema.properties[this.selectedField] = newDef;
+            this.markAsUnsaved();
             this.refreshFieldData(this.selectedField);
             this.renderFieldDetailsForm(newDef);
         }
