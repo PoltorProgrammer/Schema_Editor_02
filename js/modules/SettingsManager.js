@@ -29,6 +29,12 @@ Object.assign(SchemaEditor.prototype, {
         this.updateColumnOrderDisplay();
         this.initializeColumnDragDrop();
         this.closeAllDropdowns();
+
+        // Populate Nickname
+        const nicknameInput = document.getElementById('settingsNickname');
+        if (nicknameInput) {
+            nicknameInput.value = this.settings.username || '';
+        }
     },
 
     cancelSettings() {
@@ -143,6 +149,14 @@ Object.assign(SchemaEditor.prototype, {
         this.applyColumnOrder();
         this.saveSettingsToStorage();
         if (this.currentSchema) this.renderFieldsTable();
+
+        // Save Nickname
+        const nicknameInput = document.getElementById('settingsNickname');
+        if (nicknameInput) {
+            this.settings.username = nicknameInput.value.trim();
+        }
+        this.saveSettingsToStorage();
+
         document.getElementById('settingsModal').style.display = 'none';
     },
 

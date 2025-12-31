@@ -34,6 +34,10 @@ Object.assign(SchemaEditor.prototype, {
             this.closeDropdown('headerMore');
             this.downloadFilteredFields();
         });
+        document.getElementById('menuDownloadProgress').addEventListener('click', () => {
+            this.closeDropdown('headerMore');
+            this.downloadProgress();
+        });
 
         // Zip upload listeners
         const zipFileInput = document.getElementById('zipFileInput');
@@ -501,6 +505,93 @@ Object.assign(SchemaEditor.prototype, {
                     if (val) {
                         e.preventDefault();
                         this.selectLabelComboboxOption(val);
+                    }
+                }
+            }
+        } else if (e.key === 'Escape') {
+            container.classList.remove('open');
+        }
+    },
+
+    // Nickname Combobox Handlers
+    handleNicknameComboboxFocus() {
+        const input = document.getElementById('settingsNickname');
+        if (input) {
+            input.select();
+        }
+        const container = document.getElementById('combobox-nickname');
+        if (container) {
+            container.classList.add('open');
+            this.renderNicknameComboboxOptions(input ? input.value : '');
+        }
+    },
+
+    handleNicknameComboboxBlur() {
+        setTimeout(() => {
+            const input = document.getElementById('settingsNickname');
+            if (document.activeElement !== input) {
+                const container = document.getElementById('combobox-nickname');
+                if (container) container.classList.remove('open');
+            }
+        }, 200);
+    },
+
+    handleNicknameComboboxInput(value) {
+        this.renderNicknameComboboxOptions(value);
+    },
+
+    selectNicknameOption(value, e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const input = document.getElementById('settingsNickname');
+        if (input) {
+            input.value = value;
+            const container = document.getElementById('combobox-nickname');
+            if (container) container.classList.remove('open');
+        }
+    },
+
+    handleNicknameComboboxKey(e) {
+        const container = document.getElementById('combobox-nickname');
+        const list = document.getElementById('comboboxList-nickname');
+        if (!container || !list) return;
+
+        const options = Array.from(list.querySelectorAll('.combobox-option:not(.no-results)'));
+        let currentIndex = options.findIndex(opt => opt.classList.contains('highlighted'));
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!container.classList.contains('open')) {
+                this.handleNicknameComboboxFocus();
+                return;
+            }
+            if (currentIndex < options.length - 1) {
+                if (currentIndex >= 0) options[currentIndex].classList.remove('highlighted');
+                options[currentIndex + 1].classList.add('highlighted');
+                options[currentIndex + 1].scrollIntoView({ block: 'nearest' });
+            } else if (currentIndex === -1 && options.length > 0) {
+                options[0].classList.add('highlighted');
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (currentIndex > 0) {
+                options[currentIndex].classList.remove('highlighted');
+                options[currentIndex - 1].classList.add('highlighted');
+                options[currentIndex - 1].scrollIntoView({ block: 'nearest' });
+            }
+        } else if (e.key === 'Enter') {
+            if (container.classList.contains('open')) {
+                const target = currentIndex >= 0 ? options[currentIndex] : options[0];
+                if (target) {
+                    e.preventDefault();
+                    this.selectNicknameOption(target.dataset.value);
+                } else {
+                    const val = document.getElementById('settingsNickname').value.trim();
+                    if (val) {
+                        e.preventDefault();
+                        this.selectNicknameOption(val);
                     }
                 }
             }

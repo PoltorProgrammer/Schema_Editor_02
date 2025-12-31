@@ -241,5 +241,40 @@ Object.assign(SchemaEditor.prototype, {
             }
             container.innerHTML = html;
         }
+    },
+
+    renderNicknameComboboxOptions(filter = '') {
+        const container = document.getElementById('comboboxList-nickname');
+        if (!container) return;
+
+        const options = ["Milan", "Joan", "Tomás"];
+        const containerWrap = document.getElementById('combobox-nickname');
+
+        const filtered = options.filter(o =>
+            o.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        if (filtered.length === 0 && filter === '') {
+            container.innerHTML = '<div class="combobox-option no-results">No existing names</div>';
+        } else {
+            if (containerWrap) containerWrap.classList.add('open');
+            let html = filtered.map(o => `
+                <div class="combobox-option" data-value="${String(o).replace(/'/g, "\\'")}" onmousedown="app.selectNicknameOption('${String(o).replace(/'/g, "\\'")}', event)">
+                    <span class="option-label">${o}</span>
+                </div>
+            `).join('');
+
+            if (filter && !options.some(o => o.toLowerCase() === filter.toLowerCase())) {
+                html += `
+                    <div class="combobox-option create-new" data-value="${String(filter).replace(/'/g, "\\'")}" onmousedown="app.selectNicknameOption('${String(filter).replace(/'/g, "\\'")}', event)">
+                        <div class="option-content" style="display: flex; flex-direction: column;">
+                            <span class="option-label">Use: <strong>${filter}</strong></span>
+                            <span class="option-hint">Press Enter to use this nickname</span>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
     }
 });

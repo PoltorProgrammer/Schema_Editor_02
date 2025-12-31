@@ -24,6 +24,10 @@ Object.assign(SchemaEditor.prototype, {
         if (document.getElementById('headerMoreFilter')) {
             document.getElementById('headerMoreFilter').style.display = 'none';
         }
+
+        // Hide schema info (Project name, stats) in dashboard
+        const schemaInfo = document.querySelector('.schema-info');
+        if (schemaInfo) schemaInfo.style.display = 'none';
         document.getElementById('addPatientBtn').style.display = 'none';
         document.getElementById('addOutputBtn').style.display = 'none';
         document.getElementById('downloadFilteredBtn').style.display = 'none';
@@ -52,30 +56,7 @@ Object.assign(SchemaEditor.prototype, {
             }
         }
 
-        // If we have projects (from PRE_DISCOVERED or scanning), show them
-        if (this.projects.length > 0) {
-            this.renderProjectList();
-        } else {
-            // Check config fallback
-            if (typeof PRE_DISCOVERED_PROJECTS !== 'undefined' && PRE_DISCOVERED_PROJECTS.length > 0) {
-                this.projects = PRE_DISCOVERED_PROJECTS.map(p => ({
-                    name: p.name,
-                    path: p.path,
-                    validationFiles: p.validationFiles,
-                    isPreDiscovered: true
-                }));
-                this.renderProjectList();
-
-                // If auto-load logic applies
-                const lastActiveProjectName = localStorage.getItem('lastActiveProject');
-                const lastActiveProject = lastActiveProjectName ? this.projects.find(p => p.name === lastActiveProjectName) : null;
-                if (!isUserAction && lastActiveProject) {
-                    await this.loadProject(lastActiveProject.name);
-                }
-            } else {
-                this.renderProjectList();
-            }
-        }
+        this.renderProjectList();
     },
 
     renderProjectList() {
@@ -87,29 +68,58 @@ Object.assign(SchemaEditor.prototype, {
         const dashboardBtn = document.getElementById('projectDashboardBtn');
         if (dashboardBtn) dashboardBtn.style.display = 'none';
 
-        // 1. "Rescan" Card (First)
-        let headerText = "Pick Projects Folder";
-        let subText = "Select the 'projects' directory";
+        // 1. "Connect/Rescan" Card (Unified)
+        let headerText = "Connect Google Drive";
+        let subText = "Select your 'projects' folder (G:)";
         let showChangeOption = false;
+        let isDriveStyle = true;
+        let iconSvg = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2,6L12,20L22,6H2M5,7H19L12,17L5,7M12,17L7,7H17L12,17Z" />
+                <path d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04M19,18H6A4,4 0 0,1 2,14C2,11.83 3.73,10.07 5.9,10H6.5C6.7,7.5 8.9,5.5 11.5,5.5C14.5,5.5 16.9,7.69 17.1,10.5H19A3,3 0 0,1 22,13C22,15.76 19.76,18 17,18H19Z"/>
+            </svg>`;
 
         if (this.appRootHandle) {
             headerText = "Rescan System";
             subText = "Scan 'SchemaEditor2' root for updates";
             showChangeOption = true;
+            isDriveStyle = false;
+            iconSvg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" /></svg>`;
         } else if (this.projectsDirectoryHandle) {
             headerText = "Rescan Projects";
-            subText = "Rescan currently selected projects folder";
+            subText = "Rescan currently selected projects";
+            showChangeOption = true;
+        } else if (this.pendingHandle) {
+            headerText = `Reconnect "${this.pendingHandle.name}"`;
+            subText = "Restore access to previous folder";
             showChangeOption = true;
         }
 
         const scanCard = document.createElement('div');
         scanCard.className = 'project-card add-project-card';
-        scanCard.onclick = () => this.scanProjects(false, false);
+        if (isDriveStyle) {
+            scanCard.style.borderColor = '#4285F4';
+        }
+
+        scanCard.onclick = async () => {
+            // If completely disconnected (Google Drive mode), show the helpful prompt first
+            if (!this.appRootHandle && !this.projectsDirectoryHandle && !this.pendingHandle) {
+                const confirm = await AppUI.showConfirm(
+                    'Connect Google Drive',
+                    'To connect Google Drive, please select your "Google Drive (G:)" folder in the next window.\n\nThen navigate to your "projects" folder.'
+                );
+                if (confirm) {
+                    this.scanProjects(false, true);
+                }
+            } else {
+                // Standard Rescan
+                this.scanProjects(false, false);
+            }
+        };
+
         scanCard.innerHTML = `
-            <div class="project-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" />
-                </svg>
+            <div class="project-icon" ${isDriveStyle ? 'style="color: #4285F4;"' : ''}>
+                ${iconSvg}
             </div>
             <div class="project-details" style="position: relative;">
                 <h3>${headerText}</h3>
@@ -220,7 +230,7 @@ Object.assign(SchemaEditor.prototype, {
             </div>
             <div class="project-details">
                 <h3 style="text-transform: capitalize;">${displayName}</h3>
-                <p>${isRecent ? 'Recently Edited' : (project.isPreDiscovered ? 'Auto-discovered' : 'Local folder')}</p>
+                <p>${isRecent ? 'Recently Edited' : 'Local folder'}</p>
                 <div style="font-size: 0.8em; color: var(--text-secondary); margin-top: 4px;">
                    ${patientCount} Patient${patientCount !== 1 ? 's' : ''} | ${project.medixtractOutputFiles?.length || 0} Outputs
                 </div>

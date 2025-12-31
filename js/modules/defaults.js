@@ -33,7 +33,8 @@ const DEFAULT_SETTINGS = {
         reviewed: true,
         severity: true
     },
-    panelWidth: '60vw'
+    panelWidth: '60vw',
+    username: ''
 };
 
 const FILTER_STATES = ['all', 'true', 'false'];

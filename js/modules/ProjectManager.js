@@ -186,10 +186,6 @@ Object.assign(SchemaEditor.prototype, {
 
             this.projects = newProjects;
 
-            // 4. Update Config File (if we have Root access)
-            if (this.appRootHandle) {
-                await this.updateConfigFile(newProjects);
-            }
 
             // Handle transition
             if (this.currentProject) {
@@ -223,27 +219,6 @@ Object.assign(SchemaEditor.prototype, {
         }
     },
 
-    async updateConfigFile(projects) {
-        try {
-            const jsDir = await this.appRootHandle.getDirectoryHandle('js');
-            const fileHandle = await jsDir.getFileHandle('projects-config.js', { create: true });
-            const writable = await fileHandle.createWritable();
-
-            const configData = projects.map(p => ({
-                name: p.name,
-                path: `projects/${p.name}`,
-                validationFiles: p.validationFiles || [],
-                medixtractOutputFiles: p.medixtractOutputFiles || []
-            }));
-
-            const content = `const PRE_DISCOVERED_PROJECTS = ${JSON.stringify(configData, null, 2)};`;
-
-            await writable.write(content);
-            await writable.close();
-        } catch (e) {
-            console.debug("Non-critical: Failed to update projects-config.js:", e);
-        }
-    },
 
     async loadProject(projectName) {
         AppUI.showLoading(`Loading ${projectName}...`);
@@ -302,50 +277,17 @@ Object.assign(SchemaEditor.prototype, {
                     } catch (e) { console.warn("MediXtract output folder not found or skipped"); }
                 }
 
-            } else if (project.isPreDiscovered) {
-                const baseName = projectName.replace(/[-_]project/, '');
-                const variants = [
-                    `${baseName}-analysis_data.json`,
-                    `${baseName}_analysis_data.json`,
-                    'analysis_data.json',
-                    `patient01-${baseName}-analysis_data.json`,
-                    `patient01_${baseName}_analysis_data.json`
-                ];
-
-                let analysisRes;
-                for (const v of variants) {
-                    analysisRes = await fetch(`${project.path}/analysis_data/${v}`);
-                    if (analysisRes.ok) break;
-                }
-
-                if (!analysisRes || !analysisRes.ok) throw new Error('Could not fetch analysis data (404)');
-                analysisData = await analysisRes.json();
-
-                if (project.validationFiles) {
-                    for (const v of project.validationFiles) {
-                        try {
-                            const vRes = await fetch(`${project.path}/validation_data/${v.name}`);
-                            if (vRes.ok) this.validationData[v.patientId] = await vRes.json();
-                        } catch (e) { }
-                    }
-                }
-
-                if (project.medixtractOutputFiles) {
-                    for (const m of project.medixtractOutputFiles) {
-                        try {
-                            const mRes = await fetch(`${project.path}/medixtract_output/${m.name}`);
-                            if (mRes.ok) {
-                                const mData = await mRes.json();
-                                if (!this.medixtractOutputData[m.patientId]) this.medixtractOutputData[m.patientId] = [];
-                                this.medixtractOutputData[m.patientId].push(mData);
-                            }
-                        } catch (e) { }
-                    }
-                }
             }
 
             this.currentSchema = analysisData;
-            document.getElementById('currentVersion').textContent = `Project: ${projectName.replace(/[-_]project$/, '')}`;
+
+            // Format project name: Remove suffix, replace underscores with spaces, and Capitalize Each Word
+            const cleanName = projectName.replace(/[-_]project$/, '').replace(/_/g, ' ');
+            const capitalizedName = cleanName.split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+
+            document.getElementById('currentVersion').innerHTML = `Project: <span class="project-name-vibrant">${capitalizedName}</span>`;
 
             try {
                 this.processProjectData();

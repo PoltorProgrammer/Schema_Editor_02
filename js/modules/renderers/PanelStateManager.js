@@ -121,10 +121,14 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('schemaEditor').style.display = 'flex';
         document.getElementById('saveBtn').style.display = 'inline-flex';
         document.getElementById('saveBtn').disabled = false;
-        document.getElementById('downloadProgressBtn').style.display = 'inline-flex';
+        document.getElementById('downloadProgressBtn').style.display = 'none';
         document.getElementById('headerMoreFilter').style.display = 'inline-flex';
         document.getElementById('projectDashboardBtn').style.display = 'flex';
         document.getElementById('loadingIndicator').style.display = 'none';
+
+        // Show schema info in editor
+        const schemaInfo = document.querySelector('.schema-info');
+        if (schemaInfo) schemaInfo.style.display = 'flex';
 
         // Original individual buttons are now hidden (as part of the grouped menu)
         document.getElementById('addPatientBtn').style.display = 'none';

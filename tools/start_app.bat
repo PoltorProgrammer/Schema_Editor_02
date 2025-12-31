@@ -12,7 +12,7 @@ echo ---------------------------------------------------
 start "" "http://localhost:2512"
 
 :: Run discovery and start server from root
-node tools\discover_projects.js && npx serve -l 2512 .
+npx serve -l 2512 .
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

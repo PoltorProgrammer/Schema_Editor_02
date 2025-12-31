@@ -31,62 +31,21 @@ const AppUI = {
     },
 
     showDownloadSuccess() {
-        const downloadBtn = document.getElementById('downloadFilteredBtn');
-        const moreBtn = document.getElementById('headerMoreBtn');
-
-        // If the real button is hidden, show feedback on the 'More' button
-        const targetBtn = (downloadBtn && downloadBtn.style.display !== 'none') ? downloadBtn : moreBtn;
-        if (!targetBtn) return;
-
-        const originalHTML = targetBtn.innerHTML;
-        const originalBg = targetBtn.style.background;
-
-        targetBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
-        </svg> Downloaded!`;
-        targetBtn.style.background = 'var(--success)';
-
-        setTimeout(() => {
-            targetBtn.innerHTML = originalHTML;
-            targetBtn.style.background = originalBg;
-        }, 2000);
+        // Removed text/HTML changes as per user request
     },
 
     showDownloadProgressSuccess() {
-        const progressBtn = document.getElementById('downloadProgressBtn');
-        const moreBtn = document.getElementById('headerMoreBtn');
-
-        const targetBtn = (progressBtn && progressBtn.style.display !== 'none') ? progressBtn : moreBtn;
-        if (!targetBtn) return;
-
-        const originalHTML = targetBtn.innerHTML;
-        const originalBg = targetBtn.style.background;
-
-        targetBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
-        </svg> Saved & Downloaded!`;
-        targetBtn.style.background = 'var(--success)';
-
-        setTimeout(() => {
-            targetBtn.innerHTML = originalHTML;
-            targetBtn.style.background = originalBg;
-        }, 2000);
+        // Removed text/HTML changes as per user request
     },
 
     showSaveSuccess(message) {
+        // Removed text/HTML changes as per user request
+        // We only clear the unsaved status from the button if it exists
         const saveBtn = document.getElementById('saveBtn');
-        if (!saveBtn) return;
-        const originalHTML = saveBtn.innerHTML;
-        saveBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
-        </svg> ${message}`;
-        const originalBg = saveBtn.style.background;
-        saveBtn.style.background = 'var(--success)';
-
-        setTimeout(() => {
-            saveBtn.innerHTML = originalHTML;
-            saveBtn.style.background = originalBg;
-        }, 2000);
+        if (saveBtn) {
+            saveBtn.classList.remove('unsaved');
+            saveBtn.innerHTML = saveBtn.innerHTML.replace(' *', '');
+        }
     },
 
     showProcessing(message = 'Processing...') {
