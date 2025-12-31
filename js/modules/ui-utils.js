@@ -190,7 +190,7 @@ const AppUI = {
 
             titleEl.textContent = title;
             messageEl.innerHTML = `
-                <p style="margin-bottom: 1rem;">${message}</p>
+                <div style="margin-bottom: 1.25rem; color: var(--gray-600);">${message}</div>
                 <div class="combobox-container" id="combobox-promptNickname" style="max-width: 100%;">
                     <input type="text" id="promptNickname" class="combobox-input" placeholder="e.g. Joan"
                         autocomplete="off" 
@@ -200,6 +200,7 @@ const AppUI = {
                         onkeydown="app.handleNicknameComboboxKey('promptNickname', event)">
                     <div class="combobox-dropdown" id="comboboxList-promptNickname"></div>
                 </div>
+                <div style="height: 0.5rem;"></div>
             `;
 
             footerEl.innerHTML = '';
