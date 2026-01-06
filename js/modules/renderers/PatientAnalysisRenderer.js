@@ -99,21 +99,21 @@ Object.assign(SchemaEditor.prototype, {
                     </div>
                     <div class="status-section">
                         <div class="status-main-row">
-                            <button class="status-btn ${perf.pending ? 'active pending' : ''}" onclick="app.setReviewStatus('${patientId}', 'pending')">
+                            <button type="button" class="status-btn ${perf.pending ? 'active pending' : ''}" onclick="app.setReviewStatus('${patientId}', 'pending')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.9L16.2,16.2Z"/></svg>
                                 Pending
                             </button>
-                            <button class="status-btn ${perf.matched ? 'active matched' : ''}" onclick="app.setReviewStatus('${patientId}', 'matched')">
+                            <button type="button" class="status-btn ${perf.matched ? 'active matched' : ''}" onclick="app.setReviewStatus('${patientId}', 'matched')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"/></svg>
                                 Matched
                             </button>
-                            <button class="status-btn ${perf.uncertain ? 'active uncertain' : ''}" onclick="app.setReviewStatus('${patientId}', 'uncertain')">
+                            <button type="button" class="status-btn ${perf.uncertain ? 'active uncertain' : ''}" onclick="app.setReviewStatus('${patientId}', 'uncertain')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M10,19H13V22H10V19M12,2C17.35,2.22 19.68,7.62 16.5,11.67C15.67,12.67 14.33,13.33 13.67,14.17C13,15 13,16 13,17H10C10,15.33 10,13.9 10.67,12.91C11.34,11.91 12.67,11.33 13.5,10.67C15.92,8.43 15.32,5.26 12,5A3,3 0 0,0 9,8H6A6,6 0 0,1 12,2Z"/>
                                 </svg>
                                 Uncertain
                             </button>
-                            <button class="status-btn ${perf.dismissed ? 'active dismissed' : ''}" onclick="app.setReviewStatus('${patientId}', 'dismissed')">
+                            <button type="button" class="status-btn ${perf.dismissed ? 'active dismissed' : ''}" onclick="app.setReviewStatus('${patientId}', 'dismissed')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
                                 Dismissed
                             </button>
@@ -138,8 +138,8 @@ Object.assign(SchemaEditor.prototype, {
 
                 <div class="bottom-section" style="display: flex; flex-direction: column; gap: 1.25rem;">
                     <div class="form-field full-width">
-                        <label>Explanation / Comment</label>
-                        <textarea class="no-dropdown-icon" data-patient="${patientId}" data-perf-prop="comment" placeholder="Explain the discrepancy or result...">${perf.comment || (Array.isArray(valRaw) ? valRaw[1] : '') || ''}</textarea>
+                        <label for="comment-${patientId}">Explanation / Comment</label>
+                        <textarea class="no-dropdown-icon" id="comment-${patientId}" name="comment-${patientId}" data-patient="${patientId}" data-perf-prop="comment" placeholder="Explain the discrepancy or result...">${perf.comment || (Array.isArray(valRaw) ? valRaw[1] : '') || ''}</textarea>
                     </div>
                     <div class="form-field full-width">
                         <label>Severity (1-5)</label>
@@ -169,12 +169,62 @@ Object.assign(SchemaEditor.prototype, {
     togglePatientSection(patientId, e) {
         if (e) e.stopPropagation();
         const header = e.currentTarget;
+        const container = header.parentElement;
         const content = header.nextElementSibling;
+        const panelContent = header.closest('.panel-content');
+
+        // [Debug] Calculate Active Patient
+        let activePatient = "None";
+        if (this.panelStates && this.selectedField && this.panelStates[this.selectedField]) {
+            const openSections = Array.from(this.panelStates[this.selectedField].openSections);
+            const activeP = openSections.find(s => s.startsWith('Patient: '));
+            if (activeP) activePatient = activeP.replace('Patient: ', '');
+        }
+
+        const isClosing = content.classList.contains('open'); // currently open means we are closing
+        const actionType = isClosing ? "CLOSE" : "OPEN";
+        const currentScroll = panelContent ? panelContent.scrollTop : 0;
+
+        console.log(`[Debug] Action: ${actionType} (Header Toggle) | Target: ${patientId} | Currently Active: ${activePatient} | Source: Panel_Header | ScrollTop Start: ${currentScroll}px`);
+
+        // Logic to handle scroll anchoring when closing a sticky section
+        // If we are deep inside the content and close it, the container shrinks effectively pulling the content 
+        // above the viewport. We need to snap back to the container's top to prevent a visual "jump".
+        let targetScroll = null;
+
+
+        if (isClosing && panelContent) {
+            const pRect = panelContent.getBoundingClientRect();
+            const cRect = container.getBoundingClientRect();
+
+            // Calculate where the container's top edge is relative to the scrollable content start
+            const absoluteContainerTop = panelContent.scrollTop + (cRect.top - pRect.top);
+
+            // If the current scroll position is deeper than the container's start (meaning we scrolled down inside it)
+            // Use a small epsilon for float precision, though > usually suffices
+            if (panelContent.scrollTop > absoluteContainerTop + 5) {
+                targetScroll = absoluteContainerTop;
+            }
+        }
+
         const isOpen = content.classList.toggle('open');
+        container.classList.toggle('expanded', isOpen);
+
+        if (targetScroll !== null) {
+            panelContent.scrollTop = targetScroll;
+            console.log(`[Debug] Scroll Anchoring Applied: Snapped from ${currentScroll}px to ${targetScroll}px`);
+        }
+
         if (isOpen) {
             content.querySelectorAll('textarea').forEach(t => AppUI.autoResizeTextarea(t));
         }
         this.capturePanelState();
+
+        // Log after state change
+        setTimeout(() => {
+            const newScroll = panelContent ? panelContent.scrollTop : 0;
+            console.log(`[Debug] Post-Action State | Target: ${patientId} is ${isOpen ? 'OPEN' : 'CLOSED'} | ScrollTop End: ${newScroll}px`);
+        }, 50);
     },
 
     createUnmatchedButton(patientId, reason, perf) {
@@ -186,6 +236,7 @@ Object.assign(SchemaEditor.prototype, {
         const isImprovement = ['filled_blank', 'correction', 'standardized', 'improved_comment'].includes(reason);
 
         return `<button 
+            type="button"
             onclick="app.setReviewStatus('${patientId}', 'unmatched', '${reason}')"
             class="reason-btn ${isActive ? 'active' : ''} ${isImprovement ? 'improvement' : 'issue'}"
             title="${labels[reason]}">

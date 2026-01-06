@@ -38,7 +38,7 @@ Object.assign(SchemaEditor.prototype, {
         });
     },
 
-    restorePanelState() {
+    restorePanelState(restoreScroll = true) {
         if (!this.selectedField || !this.panelStates[this.selectedField]) return;
         const panel = document.getElementById('fieldDetailsContent');
         if (!panel) return;
@@ -50,6 +50,7 @@ Object.assign(SchemaEditor.prototype, {
             const name = header.querySelector('h5')?.textContent.trim();
             if (name && state.openSections.has(name)) {
                 header.nextElementSibling.classList.add('open');
+                header.parentElement.classList.add('expanded');
             }
         });
         panel.querySelectorAll('.form-section.collapsible').forEach(sec => {
@@ -77,15 +78,17 @@ Object.assign(SchemaEditor.prototype, {
             }
         }
 
-        // Restore scroll position immediately to prevent jumping
-        panel.scrollTop = state.scroll;
+        if (restoreScroll) {
+            // Restore scroll position immediately to prevent jumping
+            panel.scrollTop = state.scroll;
 
-        // Secondary safety check in next frame for dynamic content
-        requestAnimationFrame(() => {
-            if (panel.scrollTop !== state.scroll) {
-                panel.scrollTop = state.scroll;
-            }
-        });
+            // Secondary safety check in next frame for dynamic content
+            requestAnimationFrame(() => {
+                if (panel.scrollTop !== state.scroll) {
+                    panel.scrollTop = state.scroll;
+                }
+            });
+        }
     },
 
     selectField(id) {

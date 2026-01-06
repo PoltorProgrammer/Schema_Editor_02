@@ -16,6 +16,7 @@ Object.assign(SchemaEditor.prototype, {
         }
 
         const add = document.createElement('button');
+        add.type = 'button';
         add.className = 'btn btn-ghost btn-sm';
         add.style.marginTop = '0.5rem';
         add.textContent = '+ Add Option';
@@ -35,6 +36,8 @@ Object.assign(SchemaEditor.prototype, {
 
         const valInp = document.createElement('input');
         valInp.type = 'text';
+        valInp.name = `enum_val_${Math.random().toString(36).substr(2, 9)}`;
+        valInp.setAttribute('aria-label', 'Enum Option Value');
         valInp.value = val;
         valInp.className = 'enum-input';
         valInp.placeholder = 'Value';
@@ -45,6 +48,8 @@ Object.assign(SchemaEditor.prototype, {
         if (label !== undefined) {
             const labInp = document.createElement('input');
             labInp.type = 'text';
+            labInp.name = `enum_lbl_${Math.random().toString(36).substr(2, 9)}`;
+            labInp.setAttribute('aria-label', 'Enum Option Label');
             labInp.value = label;
             labInp.className = 'enum-label-input';
             labInp.placeholder = 'Label';
@@ -54,6 +59,7 @@ Object.assign(SchemaEditor.prototype, {
         }
 
         const rem = document.createElement('button');
+        rem.type = 'button';
         rem.className = 'btn-remove-sm';
         rem.innerHTML = '&times;';
         rem.onclick = () => { div.remove(); this.updateEnumValues(); };

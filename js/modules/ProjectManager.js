@@ -300,6 +300,8 @@ Object.assign(SchemaEditor.prototype, {
             }
 
             this.currentSchema = analysisData;
+            this.baseSchema = JSON.parse(JSON.stringify(analysisData)); // Set initial snapshot for 3-way merge
+            this.lastCheckedConflictTime = Date.now(); // Start tracking conflicts from this moment
             if (this.currentSchema.last_updated_by) {
                 this.projectNicknames.add(this.currentSchema.last_updated_by);
             }

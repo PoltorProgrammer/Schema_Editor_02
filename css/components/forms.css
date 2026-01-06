@@ -318,13 +318,21 @@ input:checked+.slider:before {
     transition: all 0.3s ease;
     max-height: 0;
     opacity: 0;
+    visibility: hidden;
 }
 
 .form-section-content:not(.collapsed) {
     max-height: 50000px;
     opacity: 1;
+    visibility: visible;
     padding: 1rem;
     padding-bottom: 2.5rem;
+}
+
+/* Allow sticky headers to work by removing overflow constraints */
+.form-section.allow-sticky-header,
+.form-section.allow-sticky-header .form-section-content {
+    overflow: visible !important;
 }
 
 /* Output Count Input */

@@ -2,19 +2,21 @@
  * Export and Save Mixin for SchemaEditor
  */
 Object.assign(SchemaEditor.prototype, {
-    async saveChanges() {
-        if (!this.hasUnsavedChanges) return;
+    async saveChanges(options = {}) {
+        const { isBackground = false, forceRemoteWin = false } = options;
+
+        if (!this.hasUnsavedChanges && !isBackground) return;
 
         if (!this.currentProject || this.currentProject.isPreDiscovered) {
+            if (isBackground) return; // Silent skip
             const confirmed = await AppUI.showConfirm(
                 'Folder Not Connected',
                 'This project is currently in read-only mode. Would you like to select the "projects" folder on your computer to enable saving?'
             );
             if (confirmed) {
                 await this.scanProjects();
-                // After scanning, if the project is now connected, retry saving
                 if (this.currentProject && !this.currentProject.isPreDiscovered) {
-                    return this.saveChanges();
+                    return this.saveChanges(options);
                 }
             }
             return;
@@ -22,7 +24,7 @@ Object.assign(SchemaEditor.prototype, {
 
         try {
             // Check for Username (required for backups)
-            if (!this.settings.username) {
+            if (!this.settings.username && !isBackground) {
                 const name = await AppUI.showNicknamePrompt(
                     "Nickname Required",
                     "Please enter a nickname for version tracking (e.g., 'Joan'):"
@@ -33,15 +35,13 @@ Object.assign(SchemaEditor.prototype, {
                 }
             }
 
-            AppUI.showProcessing('Saving changes...');
+            if (!isBackground) AppUI.showProcessing('Saving changes...');
             const project = this.currentProject;
             const analysisHandle = await project.handle.getDirectoryHandle('analysis_data');
 
-            // 1. Save Main File
+            // 1. Identify Main File
             const baseName = project.name.replace(/[-_]project$/, '');
-            let fileName = `${baseName}-analysis_data.json`; // Default modern name
-
-            // Try to respect existing file name
+            let fileName = `${baseName}-analysis_data.json`;
             for await (const [name, handle] of analysisHandle.entries()) {
                 if (name.endsWith('.json')) {
                     fileName = name;
@@ -49,21 +49,73 @@ Object.assign(SchemaEditor.prototype, {
                 }
             }
 
+            // 2. Read-Merge-Write Cycle
             const fileHandle = await analysisHandle.getFileHandle(fileName, { create: true });
-            const writable = await fileHandle.createWritable();
+            const file = await fileHandle.getFile();
+            const remoteText = await file.text();
+            let remoteSchema;
+            try {
+                remoteSchema = JSON.parse(remoteText);
+            } catch (e) {
+                console.warn("Could not parse remote file, assuming empty or corrupt. Overwriting.", e);
+                remoteSchema = this.baseSchema || this.currentSchema;
+            }
 
-            // Update Global Metadata
+            // 3. Perform 3-Way Merge
+            if (!this.baseSchema) this.baseSchema = JSON.parse(JSON.stringify(remoteSchema));
+
+            const mergeResult = MergeManager.merge(
+                this.baseSchema,
+                this.currentSchema,
+                remoteSchema,
+                this.settings.username,
+                forceRemoteWin
+            );
+
+            this.currentSchema = mergeResult.merged;
+
+            // 4. Handle Conflicts (Logs)
+            if (mergeResult.conflicts.length > 0) {
+                console.log("Merge Conflicts Detected:", mergeResult.conflicts);
+                try {
+                    const conflictsDir = await this.currentProject.handle.getDirectoryHandle('conflicts', { create: true });
+                    const logName = `conflict-${AppUtils.getTimestamp()}-${this.settings.username}.json`;
+                    const logHandle = await conflictsDir.getFileHandle(logName, { create: true });
+                    const logWritable = await logHandle.createWritable();
+                    const logData = MergeManager.generateConflictLog(this.currentProject, mergeResult.conflicts);
+                    await logWritable.write(JSON.stringify(logData, null, 2));
+                    await logWritable.close();
+                } catch (logErr) {
+                    console.error("Failed to write conflict log:", logErr);
+                }
+            }
+
+            // 5. Notify if we won (Overwrote others) - Suppress in background
+            if (!isBackground && mergeResult.overrodeOthers.length > 0) {
+                const conflictDetails = mergeResult.overrodeOthers.map(c => {
+                    return c.patient_id ? `${c.variable_id} (Patient: ${c.patient_id})` : c.variable_id;
+                }).join(', ');
+
+                const losers = [...new Set(mergeResult.overrodeOthers.map(c => c.remote_user))].join(', ');
+
+                AppUI.showToast(`Conflict Warning: Your version of ${conflictDetails} was kept, overriding changes by: ${losers}`, 'warning', 6000);
+            }
+
+            // 6. Write Final Merged Content
+            const writable = await fileHandle.createWritable();
             this.currentSchema.last_updated_at = new Date().toISOString();
-            this.currentSchema.last_updated_by = this.settings.username;
+            this.currentSchema.last_updated_by = this.settings.username || 'System';
 
             const content = JSON.stringify(this.currentSchema, null, 2);
             await writable.write(content);
             await writable.close();
 
-            // Store modification time to avoid redundant polling sync
+            // 7. Update Class State
+            this.baseSchema = JSON.parse(content);
             this.lastKnownModificationTime = (await fileHandle.getFile()).lastModified;
+            this.hasUnsavedChanges = false;
 
-            // 2. Create Security Copy (Backup)
+            // 8. Security Copy (Backup)
             if (this.settings.username) {
                 try {
                     await this.createSecurityCopy(project, baseName, content, this.settings.username);
@@ -72,14 +124,23 @@ Object.assign(SchemaEditor.prototype, {
                 }
             }
 
-            AppUI.hideProcessing();
-            this.hasUnsavedChanges = false;
-            this.updateHeaderMetadata();
-            this.updateSaveButtonUI();
-            AppUI.showSaveSuccess('Project saved!');
+            if (!isBackground) {
+                AppUI.hideProcessing();
+                this.updateHeaderMetadata();
+                this.updateSaveButtonUI();
+                AppUI.showSaveSuccess('Project saved!');
+            } else {
+                // Background sync also needs to update UI metadata but silently
+                this.updateHeaderMetadata();
+                this.updateSaveButtonUI();
+            }
         } catch (error) {
-            AppUI.hideProcessing();
-            AppUI.showError(`Error saving project: ${error.message}`);
+            if (!isBackground) {
+                AppUI.hideProcessing();
+                AppUI.showError(`Error saving project: ${error.message}`);
+            } else {
+                console.error("Background save failed:", error);
+            }
         }
     },
 
@@ -205,5 +266,133 @@ Object.assign(SchemaEditor.prototype, {
         const u = URL.createObjectURL(b);
         const a = document.createElement('a'); a.href = u; a.download = name; a.click(); URL.revokeObjectURL(u);
         AppUI.showDownloadSuccess();
+    },
+
+    async checkForExternalUpdates() {
+        if (!this.currentProject || !this.currentAnalysisFileHandle) return;
+
+        try {
+            // 1. Check Main File
+            const file = await this.currentAnalysisFileHandle.getFile();
+            if (file.lastModified > this.lastKnownModificationTime) {
+                console.log("External change detected. Processing...");
+
+                const text = await file.text();
+                const remoteSchema = JSON.parse(text);
+
+                if (!this.baseSchema) this.baseSchema = this.currentSchema;
+
+                if (!this.hasUnsavedChanges) {
+                    // SILENT AUTO-SYNC: No local edits to protect
+                    this.currentSchema = remoteSchema;
+                    this.baseSchema = JSON.parse(JSON.stringify(remoteSchema));
+                    this.lastKnownModificationTime = file.lastModified;
+                    if (typeof this.processProjectData === 'function') {
+                        this.processProjectData();
+                        this.updateHeaderMetadata();
+                    }
+                } else {
+                    // PROACTIVE CONFLICT DETECTION: User is currently editing
+                    // Use a 3-way merge to detect if remote changes overlap with unsaved local changes
+                    // Pass forceRemoteWin=true because the Remote save is "Last"
+                    const mergeResult = MergeManager.merge(
+                        this.baseSchema,
+                        this.currentSchema,
+                        remoteSchema,
+                        this.settings.username,
+                        true
+                    );
+
+                    if (mergeResult.conflicts.length > 0) {
+                        // OVERLAP DETECTED: Someone else saved changes to a variable we are currently editing
+                        const winner = remoteSchema.last_updated_by || 'Another user';
+                        // Pass full conflict info so the modal can show variable + patient
+                        const conflicts = mergeResult.conflicts;
+                        console.warn("Proactive partial merge detected. Conflict on:", conflicts);
+
+                        // Refresh UI to show adoption of non-conflicting remote changes
+                        if (typeof this.processProjectData === 'function') {
+                            this.processProjectData();
+                        }
+
+                        // Trigger background save to officialize non-conflicting edits
+                        if (typeof this.saveChanges === 'function') {
+                            try {
+                                // IMPORTANT: pass forceRemoteWin=true so Remote wins the conflict we just detected
+                                await this.saveChanges({ isBackground: true, forceRemoteWin: true });
+                                console.log("Non-conflicting local edits successfully committed to disk.");
+                            } catch (err) {
+                                console.error("Failed to commit safe edits during proactive merge:", err);
+                            }
+                        }
+
+                        await AppUI.showLoserModal(winner, conflicts);
+                        return;
+                    } else {
+                        // CLEAN MERGE: Someone else saved changes to variables we AREN'T editing
+                        if (typeof this.saveChanges === 'function') {
+                            try {
+                                // Background sync will adopt remote and keep non-conflicting local changes
+                                await this.saveChanges({ isBackground: true, forceRemoteWin: true });
+                                console.log("Silent clean merge and safe-save completed.");
+                            } catch (err) {
+                                console.error("Failed to save during clean merge:", err);
+                            }
+                        }
+
+                        if (typeof this.processProjectData === 'function') {
+                            this.processProjectData();
+                        }
+                    }
+                }
+            }
+
+            // 2. Check for "Loser" Notifications (Conflict Logs)
+            await this.checkConflictLogs();
+
+        } catch (error) {
+            console.warn("Polling error:", error);
+        }
+    },
+
+    async checkConflictLogs() {
+        if (!this.currentProject || !this.settings.username) return;
+
+        try {
+            const conflictsDir = await this.currentProject.handle.getDirectoryHandle('conflicts', { create: false });
+
+            // We only care about logs created AFTER we last checked (or last loaded)
+            if (!this.lastCheckedConflictTime) this.lastCheckedConflictTime = Date.now();
+
+            let latestFound = this.lastCheckedConflictTime;
+            for await (const [name, handle] of conflictsDir.entries()) {
+                if (name.endsWith('.json')) {
+                    const file = await handle.getFile();
+                    if (file.lastModified > this.lastCheckedConflictTime) {
+                        if (file.lastModified > latestFound) latestFound = file.lastModified;
+
+                        // New log! Read it.
+                        const text = await file.text();
+                        const log = JSON.parse(text);
+
+                        // Check if we are the "Remote User" (the one who was overwritten)
+                        const myLosses = (log.details || []).filter(d => d.remote_user === this.settings.username);
+
+                        if (myLosses.length > 0) {
+                            // Usage: Show Modal
+                            const winner = myLosses[0].winner || (log.details && log.details[0] ? log.details[0].winner : 'Another user');
+                            const vars = myLosses.map(d => d.variable_id);
+                            AppUI.showLoserModal(winner, vars);
+                            this.lastCheckedConflictTime = Date.now();
+                            return;
+                        }
+                    }
+                }
+            }
+            this.lastCheckedConflictTime = latestFound;
+
+        } catch (e) {
+            // No conflicts folder or error reading
+        }
     }
 });

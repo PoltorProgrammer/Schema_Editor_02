@@ -36,8 +36,8 @@ Object.assign(SchemaEditor.prototype, {
 
         const basicFieldsTop = `
             <div class="form-grid">
-                <div class="form-field full-width"><label>Description</label><textarea id="input-description" data-property="description" onchange="app.handleFieldPropertyChange(event)">${def.description || ''}</textarea></div>
-                <div class="form-field full-width"><label>Notes</label><textarea id="input-notes" data-property="notes" onchange="app.handleFieldPropertyChange(event)">${def.notes || def.comment || ''}</textarea></div>
+                <div class="form-field full-width"><label for="input-description">Description</label><textarea id="input-description" data-property="description" onchange="app.handleFieldPropertyChange(event)">${def.description || ''}</textarea></div>
+                <div class="form-field full-width"><label for="input-notes">Notes</label><textarea id="input-notes" data-property="notes" onchange="app.handleFieldPropertyChange(event)">${def.notes || def.comment || ''}</textarea></div>
             </div>
         `;
         this.appendToFormSection(propertiesSec, basicFieldsTop);
@@ -52,10 +52,10 @@ Object.assign(SchemaEditor.prototype, {
 
         const basicFieldsBottom = `
             <div class="form-grid" style="margin-top: 1rem;">
-                <div class="form-field"><label>Type</label><select id="input-type" data-property="type" onchange="app.handleFieldPropertyChange(event)">${this.generateTypeOptions(AppUtils.extractTypeValue(def))}</select></div>
-                <div class="form-field"><label>Default</label><input id="input-default" type="text" value="${AppUtils.escapeAttr(AppUtils.extractDefaultValue(def))}" data-property="default" onchange="app.handleFieldPropertyChange(event)"></div>
+                <div class="form-field"><label for="input-type">Type</label><select id="input-type" data-property="type" onchange="app.handleFieldPropertyChange(event)">${this.generateTypeOptions(AppUtils.extractTypeValue(def))}</select></div>
+                <div class="form-field"><label for="input-default">Default</label><input id="input-default" type="text" value="${AppUtils.escapeAttr(AppUtils.extractDefaultValue(def))}" data-property="default" onchange="app.handleFieldPropertyChange(event)"></div>
                 <div class="form-field">
-                    <label>Group ID</label>
+                    <label for="input-group_id">Group ID</label>
                     ${this.renderPropertyCombobox('group_id', def.group_id || 'ungrouped', Array.from(this.groupOptions))}
                 </div>
         `;
@@ -68,21 +68,21 @@ Object.assign(SchemaEditor.prototype, {
         if (hasSub01) {
             subgroupFields += `
                 <div class="form-field">
-                    <label>Subgroup 01</label>
+                    <label for="input-subgroup_01">Subgroup 01</label>
                     ${this.renderPropertyCombobox('subgroup_01', def.subgroup_01 || '', this.getSubgroupOptions(1, def))}
                 </div>`;
         }
         if (hasSub02) {
             subgroupFields += `
                 <div class="form-field">
-                    <label>Subgroup 02</label>
+                    <label for="input-subgroup_02">Subgroup 02</label>
                     ${this.renderPropertyCombobox('subgroup_02', def.subgroup_02 || '', this.getSubgroupOptions(2, def))}
                 </div>`;
         }
         if (hasSub03) {
             subgroupFields += `
                 <div class="form-field">
-                    <label>Subgroup 03</label>
+                    <label for="input-subgroup_03">Subgroup 03</label>
                     ${this.renderPropertyCombobox('subgroup_03', def.subgroup_03 || '', this.getSubgroupOptions(3, def))}
                 </div>`;
         }
@@ -94,7 +94,7 @@ Object.assign(SchemaEditor.prototype, {
         if (hasLabels) {
             const labelsHtml = `
                 <div class="form-field full-width" style="margin-top: 1.5rem; border-top: 1px solid var(--gray-100); padding-top: 1rem;">
-                    <label>Labels (Characteristics of the variable)</label>
+                    <label for="input-labels">Labels (Characteristics of the variable)</label>
                     <div class="chips-container" id="labelsContainer" style="margin-bottom: 0.75rem; border: none; padding: 0; background: transparent;"></div>
                     ${this.renderLabelCombobox()}
                 </div>
@@ -110,13 +110,13 @@ Object.assign(SchemaEditor.prototype, {
                 <div class="was-solved-container" style="margin-top: 1.5rem; border-top: 1px solid var(--gray-100); padding-top: 1rem;">
                     <label class="form-sublabel" style="border:none; padding: 0; margin-top: 0;">Resolution Status (was_solved)</label>
                     <div class="checkbox-group grid-2">
-                        <div class="checkbox-item"><input type="checkbox" ${ws.was_missing_docs ? 'checked' : ''} data-solved="was_missing_docs"><label>Was Missing Docs</label></div>
-                        <div class="checkbox-item"><input type="checkbox" ${ws.was_questioned ? 'checked' : ''} data-solved="was_questioned"><label>Was Questioned</label></div>
-                        <div class="checkbox-item"><input type="checkbox" ${ws.was_personal_data ? 'checked' : ''} data-solved="was_personal_data"><label>Was Personal Data</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="check-missing-docs" ${ws.was_missing_docs ? 'checked' : ''} data-solved="was_missing_docs"><label for="check-missing-docs">Was Missing Docs</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="check-was-questioned" ${ws.was_questioned ? 'checked' : ''} data-solved="was_questioned"><label for="check-was-questioned">Was Questioned</label></div>
+                        <div class="checkbox-item"><input type="checkbox" id="check-was-personal" ${ws.was_personal_data ? 'checked' : ''} data-solved="was_personal_data"><label for="check-was-personal">Was Personal Data</label></div>
                     </div>
                     <div class="form-field full-width" style="margin-top: 0.5rem;">
-                        <label>Resolution Comment</label>
-                        <textarea data-solved="comment" placeholder="Describe what was solved...">${ws.comment || ''}</textarea>
+                        <label for="solved-comment">Resolution Comment</label>
+                        <textarea id="solved-comment" data-solved="comment" placeholder="Describe what was solved...">${ws.comment || ''}</textarea>
                     </div>
                 </div>
             `;
@@ -132,6 +132,7 @@ Object.assign(SchemaEditor.prototype, {
         // Sequential Subgroup Buttons
         if (!hasSub01) {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'btn btn-ghost btn-sm';
             btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M12 5v14M5 12h14"/></svg> Add Subgroup';
             btn.onclick = () => { state.showSub01 = true; this.renderFieldDetailsForm(def); };
@@ -139,6 +140,7 @@ Object.assign(SchemaEditor.prototype, {
             hasAnyBtn = true;
         } else if (!hasSub02) {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'btn btn-ghost btn-sm';
             btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M12 5v14M5 12h14"/></svg> Add Subgroup 2';
             btn.onclick = () => { state.showSub02 = true; this.renderFieldDetailsForm(def); };
@@ -146,6 +148,7 @@ Object.assign(SchemaEditor.prototype, {
             hasAnyBtn = true;
         } else if (!hasSub03) {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'btn btn-ghost btn-sm';
             btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M12 5v14M5 12h14"/></svg> Add Subgroup 3';
             btn.onclick = () => { state.showSub03 = true; this.renderFieldDetailsForm(def); };
@@ -155,6 +158,7 @@ Object.assign(SchemaEditor.prototype, {
 
         if (!hasLabels) {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'btn btn-ghost btn-sm';
             btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M12 5v14M5 12h14"/></svg> Add Label';
             btn.onclick = () => { state.showLabels = true; this.renderFieldDetailsForm(def); };
@@ -163,6 +167,7 @@ Object.assign(SchemaEditor.prototype, {
         }
         if (!hasOptions) {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'btn btn-ghost btn-sm';
             btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M12 5v14M5 12h14"/></svg> Add Options';
             btn.onclick = () => { state.showOptions = true; this.renderFieldDetailsForm(def); };
@@ -171,6 +176,7 @@ Object.assign(SchemaEditor.prototype, {
         }
         if (!hasResolution) {
             const btn = document.createElement('button');
+            btn.type = 'button';
             btn.className = 'btn btn-ghost btn-sm';
             btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M12 5v14M5 12h14"/></svg> Was Solved?';
             btn.onclick = () => { state.showResolution = true; this.renderFieldDetailsForm(def); };
@@ -182,6 +188,7 @@ Object.assign(SchemaEditor.prototype, {
         fragment.appendChild(propertiesSec);
 
         const performanceSec = this.createFormSection('Per Patient Analysis', true, state.openSections.has('Per Patient Analysis'));
+        performanceSec.classList.add('allow-sticky-header');
         const patients = Object.keys(this.validationData || {}).sort();
 
         patients.forEach(pid => {

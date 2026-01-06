@@ -159,7 +159,7 @@ Object.assign(SchemaEditor.prototype, {
                     }
                 }
             } else if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'))) {
-                if (this.hasUnsavedChanges) {
+                if (this.hasUnsavedChanges && !this.bypassUnsavedChangesWarning) {
                     e.preventDefault();
                     // Pass true as last argument to focus Cancel button by default
                     AppUI.showConfirm(
@@ -878,26 +878,55 @@ Object.assign(SchemaEditor.prototype, {
         if (event) event.stopPropagation();
         this.selectField(fieldId);
 
-        // Use a slight delay to ensure the DOM is rendered before we try to expand the patient section
-        requestAnimationFrame(() => {
-            const targetCollapsible = document.querySelector(`.patient-collapsible[data-patient-id="${patientId}"]`);
-            if (targetCollapsible) {
-                const content = targetCollapsible.querySelector('.patient-content');
-                const header = targetCollapsible.querySelector('.patient-header');
+        if (this.panelStates && this.panelStates[fieldId]) {
+            const state = this.panelStates[fieldId];
 
-                if (content) {
-                    // This will recursively expand all parent sections (like "Per Patient Analysis")
-                    // if they are currently collapsed/hidden.
-                    this.ensureMatchVisibility(content);
+            // 1. Update Internal State
+            state.openSections.add('Per Patient Analysis');
+
+            // Exclusive expansion: Close other patients in state
+            const toRemove = [];
+            state.openSections.forEach(section => {
+                if (section.startsWith('Patient: ') && section !== `Patient: ${patientId}`) {
+                    toRemove.push(section);
                 }
+            });
+            toRemove.forEach(s => state.openSections.delete(s));
 
-                // Allow a moment for the reflow to happen before scrolling
-                setTimeout(() => {
-                    // Scroll specifically to the header to match user request
-                    const scrollTarget = header || targetCollapsible;
-                    scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 150);
-            }
-        });
+            // Add target patient to state
+            state.openSections.add(`Patient: ${patientId}`);
+
+            // 2. Trigger standard state restoration (handles parents, etc.)
+            // Pass false to skip auto-restore scrolling
+            this.restorePanelState(false);
+
+            // 3. Force Visual Expansion & Scroll (The "Hammer" fix)
+            // We delay slightly to ensure 'restorePanelState' has finished its DOM touches
+            setTimeout(() => {
+                const panel = document.getElementById('fieldDetailsContent');
+                if (!panel) return;
+
+                const targetCollapsible = panel.querySelector(`.patient-collapsible[data-patient-id="${patientId}"]`);
+                if (targetCollapsible) {
+                    // Force classes
+                    targetCollapsible.classList.add('expanded');
+                    const content = targetCollapsible.querySelector('.patient-content');
+                    if (content) {
+                        content.classList.add('open');
+                        content.querySelectorAll('textarea').forEach(t => AppUI.autoResizeTextarea(t));
+                    }
+
+                    // Manual Scroll to Top
+                    // Use the container (targetCollapsible) for coordinates because the header might be 'sticky'
+                    // and report a position at the top of the viewport even when we are deep in the content.
+                    const containerRect = targetCollapsible.getBoundingClientRect();
+                    const panelRect = panel.getBoundingClientRect();
+
+                    // Current scroll + distance from top of panel to top of container
+                    const targetScroll = panel.scrollTop + (containerRect.top - panelRect.top) - 10;
+                    panel.scrollTo({ top: targetScroll, behavior: 'smooth' });
+                }
+            }, 50);
+        }
     }
 });

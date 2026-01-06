@@ -4,6 +4,7 @@
 class SchemaEditor {
     constructor() {
         this.currentSchema = null;
+        this.baseSchema = null; // Snapshot of schema at load/last-save time for 3-way merge
         this.currentVersion = 0;
         this.allSchemas = new Map();
         this.selectedField = null;
@@ -18,6 +19,7 @@ class SchemaEditor {
         this.validationData = {};
         this.medixtractOutputData = {};
         this.hasUnsavedChanges = false;
+        this.bypassUnsavedChangesWarning = false; // Flag to allow reloads without prompt (e.g. on merge loss)
         this.lastSaveTime = Date.now();
         this.pendingZipFile = null;
         this.projectNicknames = new Set();
@@ -58,12 +60,13 @@ class SchemaEditor {
         this.applyFilterVisibility();
         this.initializeUnsavedChangesHandler();
         this.startAutoSaveCheck();
+        this.startUpdatePolling();
         this.showProjectSelection();
     }
 
     initializeUnsavedChangesHandler() {
         window.addEventListener('beforeunload', (e) => {
-            if (this.hasUnsavedChanges) {
+            if (this.hasUnsavedChanges && !this.bypassUnsavedChangesWarning) {
                 e.preventDefault();
                 e.returnValue = ''; // Standard way to show confirm dialog
             }
@@ -103,6 +106,16 @@ class SchemaEditor {
             this.checkAutoSave();
         }, 60 * 1000);
     }
+
+    startUpdatePolling() {
+        // Check every 5 seconds for external updates
+        setInterval(() => {
+            if (typeof this.checkForExternalUpdates === 'function') {
+                this.checkForExternalUpdates();
+            }
+        }, 5000);
+    }
+
 
     async checkAutoSave() {
         if (!this.hasUnsavedChanges || !this.currentProject) return;

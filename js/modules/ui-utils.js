@@ -333,6 +333,158 @@ const AppUI = {
         });
     },
 
+    showToast(message, type = 'info', duration = 5000) {
+        // Remove existing feedback if any
+        const existing = document.querySelector('.toast-feedback');
+        if (existing) existing.remove();
+
+        const feedback = document.createElement('div');
+        feedback.className = 'toast-feedback';
+
+        // Premium Toast Styling
+        let bgColor = 'var(--primary)';
+        let icon = 'ℹ️';
+
+        if (type === 'error') {
+            bgColor = 'var(--danger)';
+            icon = '🛑';
+        } else if (type === 'warning') {
+            bgColor = '#f39c12'; // Vibrant Warning Orange
+            icon = '⚠️';
+        }
+
+        Object.assign(feedback.style, {
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%) translateY(-20px)',
+            background: bgColor,
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '50px',
+            fontSize: 'var(--font-sm)',
+            fontWeight: '600',
+            zIndex: '9999',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            opacity: '0',
+            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.2)'
+        });
+
+        feedback.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+
+        document.body.appendChild(feedback);
+
+        // Animation In
+        requestAnimationFrame(() => {
+            feedback.style.opacity = '1';
+            feedback.style.transform = 'translateX(-50%) translateY(0)';
+        });
+
+        // Auto-remove
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            feedback.style.transform = 'translateX(-50%) translateY(-20px)';
+            setTimeout(() => {
+                if (feedback.parentElement) feedback.remove();
+            }, 400);
+        }, duration);
+    },
+
+    showLoserModal(winnerName, conflicts) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            const titleEl = document.getElementById('customModalTitle');
+            const messageEl = document.getElementById('customModalMessage');
+            const footerEl = document.getElementById('customModalFooter');
+
+            if (!modal) {
+                const vars = Array.isArray(conflicts) ? conflicts.map(c => c.variable_id).join(', ') : 'Unknown';
+                alert(`Conflict resolved: Your version was overwritten by ${winnerName}.\nVariables lost: ${vars}`);
+                resolve();
+                return;
+            }
+
+            titleEl.textContent = 'Update Detected - Conflict Resolved';
+
+            // Build Message
+            let varsHtml = conflicts.map(c => {
+                const label = c.patient_id ? `${c.variable_id} (Patient: ${c.patient_id})` : `${c.variable_id} (Settings)`;
+                return `<li style="margin-left: 1rem; margin-bottom: 0.25rem;">${label}</li>`;
+            }).join('');
+
+            messageEl.innerHTML = `
+                <div style="margin-bottom: 1rem; color: var(--gray-700); line-height: 1.5;">
+                    Your changes to the following records were overwritten by a newer save from <strong style="color: var(--primary);">${winnerName}</strong>:
+                </div>
+                <ul style="margin-bottom: 1.25rem; background: var(--gray-50); padding: 1rem; border-radius: var(--radius); border: 1px solid var(--gray-200); list-style-type: disc; max-height: 180px; overflow-y: auto;">
+                    ${varsHtml}
+                </ul>
+                <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: #fff8f0; border: 1px solid #ffeeba; border-radius: var(--radius); color: #856404; font-size: 0.9rem;">
+                    <strong>Note:</strong> All your non-conflicting edits for other patients were successfully merged and saved.
+                </div>
+                <div style="font-weight: 700; color: var(--danger); text-align: center; font-size: 1.1rem;">
+                    Syncing changes in <span id="loserCountdown">7</span> seconds...
+                </div>
+            `;
+
+            footerEl.innerHTML = '';
+
+            const refreshBtn = document.createElement('button');
+            refreshBtn.className = 'btn btn-primary';
+            refreshBtn.style.width = '100%';
+            refreshBtn.textContent = 'Refresh Now';
+
+            let seconds = 7;
+            let interval;
+
+            const cleanup = () => {
+                modal.classList.remove('active');
+                if (interval) clearInterval(interval);
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 200);
+            };
+
+            refreshBtn.onclick = () => {
+                cleanup();
+                location.reload();
+                resolve();
+            };
+
+            footerEl.appendChild(refreshBtn);
+
+            modal.style.display = 'flex';
+
+            // Critical: Enable bypass flag so standard "Unsaved Changes" browser prompt 
+            // doesn't block the mandatory refresh/reload.
+            if (window.app) window.app.bypassUnsavedChangesWarning = true;
+
+            requestAnimationFrame(() => {
+                modal.classList.add('active');
+                refreshBtn.focus();
+            });
+
+            // Auto-Countdown
+            const countdownEl = document.getElementById('loserCountdown');
+            interval = setInterval(() => {
+                seconds--;
+                if (countdownEl) countdownEl.textContent = seconds;
+                if (seconds <= 0) {
+                    cleanup();
+                    location.reload();
+                    resolve();
+                }
+            }, 1000);
+        });
+    },
+
     autoResizeTextarea(textarea) {
         if (textarea.offsetHeight === 0) return;
         const scrollTop = textarea.scrollTop;

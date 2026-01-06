@@ -49,7 +49,6 @@
 .patient-collapsible {
     border: 1px solid var(--gray-200);
     border-radius: var(--radius);
-    overflow: hidden;
 }
 
 .patient-collapsible.is-reviewed {
@@ -75,7 +74,16 @@
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, border-radius 0.2s;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-radius: var(--radius);
+}
+
+.patient-collapsible.expanded .patient-header {
+    border-radius: var(--radius) var(--radius) 0 0;
+    border-bottom: 1px solid var(--gray-200);
 }
 
 .patient-header:hover {
@@ -90,7 +98,6 @@
 
 .patient-content {
     padding: 1rem;
-    border-top: 1px solid var(--gray-200);
     display: none;
 }
 
