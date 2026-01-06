@@ -62,7 +62,7 @@ class SchemaEditor {
         window.addEventListener('beforeunload', (e) => {
             if (this.hasUnsavedChanges) {
                 e.preventDefault();
-                e.returnValue = ''; // Standard way to show confirm dialog
+                e.returnValue = ''; // Mandatory for the browser's safety dialog to appear
             }
         });
     }

@@ -334,3 +334,68 @@
     border-top: 1px solid var(--gray-100);
     border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
+
+/* Joan Theme Overrides for Modals */
+[data-theme="joan"] .custom-modal-overlay {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+[data-theme="joan"] .custom-modal-content {
+    background: #121212;
+    border: 1px solid #222;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    width: min(90vw, 450px);
+}
+
+[data-theme="joan"] .custom-modal-header h3 {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+[data-theme="joan"] .custom-modal-body {
+    color: #bbb;
+    font-size: 1.1rem;
+    padding-top: 0.5rem;
+}
+
+[data-theme="joan"] .custom-modal-footer {
+    background: #121212;
+    border: none;
+    padding: 1.5rem 2rem 2.5rem;
+    justify-content: flex-end;
+}
+
+[data-theme="joan"] .btn-primary {
+    background: #D1C4E9 !important;
+    /* Light lavender like screenshot */
+    color: #121212 !important;
+    border-radius: 100px !important;
+    padding: 0.8rem 2.5rem !important;
+    font-weight: 700 !important;
+    border: 3px solid #D1C4E9 !important;
+}
+
+[data-theme="joan"] .btn-ghost {
+    background: #311B92 !important;
+    /* Dark purple like screenshot */
+    color: #fff !important;
+    border: none !important;
+    border-radius: 100px !important;
+    padding: 0.8rem 2.5rem !important;
+    font-weight: 700 !important;
+}
+
+[data-theme="joan"] .btn-primary:hover {
+    background: #B39DDB !important;
+    border-color: #B39DDB !important;
+}
+
+[data-theme="joan"] .btn-ghost:hover {
+    background: #4527A0 !important;
+}
+
+/* Highlight the primary button with a glow in Joan theme */
+[data-theme="joan"] .btn-primary {
+    box-shadow: 0 0 15px rgba(209, 196, 233, 0.3);
+}

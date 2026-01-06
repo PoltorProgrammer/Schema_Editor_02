@@ -157,26 +157,25 @@ Object.assign(SchemaEditor.prototype, {
                             searchInput.select();
                         }
                     }
+                } else if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R' || e.key === 'w' || e.key === 'W'))) {
+                    if (this.hasUnsavedChanges) {
+                        e.preventDefault();
+                        // Pass true as last argument to focus Cancel button by default
+                        AppUI.showConfirm(
+                            'Reload site?',
+                            'Changes you made may not be saved.',
+                            'Reload',
+                            'Cancel',
+                            true
+                        ).then(confirm => {
+                            if (confirm) {
+                                this.hasUnsavedChanges = false;
+                                window.location.reload();
+                            }
+                        });
+                    }
                 }
-            } else if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'))) {
-                if (this.hasUnsavedChanges) {
-                    e.preventDefault();
-                    // Pass true as last argument to focus Cancel button by default
-                    AppUI.showConfirm(
-                        'Unsaved Changes',
-                        'You have unsaved changes. Reloading will discard them. Are you sure?',
-                        'Reload',
-                        'Cancel',
-                        true
-                    ).then(confirm => {
-                        if (confirm) {
-                            this.hasUnsavedChanges = false;
-                            window.location.reload();
-                        }
-                    });
-                }
-            }
-        });
+            });
 
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('fieldDetailsPanel');
