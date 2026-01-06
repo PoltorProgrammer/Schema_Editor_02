@@ -38,8 +38,25 @@ const AppUI = {
         // Removed text/HTML changes as per user request
     },
 
-    showSaveSuccess(message) {
-        // Redundant status management removed. Controlled by updateSaveButtonUI()
+    showSaveSuccess(message = 'Project saved!') {
+        const header = document.querySelector('.app-header');
+        if (!header) return;
+
+        // Remove existing feedback if any
+        const existing = header.querySelector('.save-success-feedback');
+        if (existing) existing.remove();
+
+        const feedback = document.createElement('div');
+        feedback.className = 'save-success-feedback up-to-date-feedback';
+        feedback.style.top = '100px'; // Position it below the header
+        feedback.textContent = message;
+
+        document.body.appendChild(feedback);
+
+        // Auto-remove after animation
+        setTimeout(() => {
+            if (feedback.parentElement) feedback.remove();
+        }, 2200);
     },
 
     showProcessing(message = 'Processing...') {

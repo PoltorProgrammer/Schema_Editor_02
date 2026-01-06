@@ -18,8 +18,10 @@ class SchemaEditor {
         this.validationData = {};
         this.medixtractOutputData = {};
         this.hasUnsavedChanges = false;
+        this.lastSaveTime = Date.now();
         this.pendingZipFile = null;
         this.projectNicknames = new Set();
+        this.autoSaveInterval = null;
 
         this.filters = {
             search: '',
@@ -55,6 +57,7 @@ class SchemaEditor {
         this.initializeTheme();
         this.applyFilterVisibility();
         this.initializeUnsavedChangesHandler();
+        this.startAutoSaveCheck();
         this.showProjectSelection();
     }
 
@@ -87,6 +90,39 @@ class SchemaEditor {
             saveBtn.classList.remove('unsaved');
             saveBtn.disabled = true;
             saveBtn.innerHTML = saveBtn.innerHTML.replace(' *', '');
+            // Update last save time when changes are cleared (meaning we just saved)
+            this.lastSaveTime = Date.now();
+        }
+    }
+
+    startAutoSaveCheck() {
+        if (this.autoSaveInterval) clearInterval(this.autoSaveInterval);
+
+        // Check every minute
+        this.autoSaveInterval = setInterval(() => {
+            this.checkAutoSave();
+        }, 60 * 1000);
+    }
+
+    async checkAutoSave() {
+        if (!this.hasUnsavedChanges || !this.currentProject) return;
+
+        const tenMinutes = 10 * 60 * 1000;
+        const timeSinceLastSave = Date.now() - this.lastSaveTime;
+
+        if (timeSinceLastSave >= tenMinutes) {
+            console.log(`Auto-saving project: ${this.currentProject.name} (Unsaved changes for ${Math.round(timeSinceLastSave / 1000 / 60)} minutes)`);
+
+            // Call saveChanges from ExportManager.js (it will be on 'this' because it's mixed in)
+            if (typeof this.saveChanges === 'function') {
+                try {
+                    // We might want to pass a flag to saveChanges to indicate it's an auto-save
+                    // to avoid showing the same alerts or to use a different success message.
+                    await this.saveChanges(true);
+                } catch (error) {
+                    console.error("Auto-save failed:", error);
+                }
+            }
         }
     }
 }

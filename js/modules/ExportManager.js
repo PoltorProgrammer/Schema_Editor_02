@@ -2,10 +2,13 @@
  * Export and Save Mixin for SchemaEditor
  */
 Object.assign(SchemaEditor.prototype, {
-    async saveChanges() {
+    async saveChanges(isAutoSave = false) {
         if (!this.hasUnsavedChanges) return;
 
         if (!this.currentProject || this.currentProject.isPreDiscovered) {
+            // Don't prompt for folder connection during auto-save
+            if (isAutoSave) return;
+
             const confirmed = await AppUI.showConfirm(
                 'Folder Not Connected',
                 'This project is currently in read-only mode. Would you like to select the "projects" folder on your computer to enable saving?'
@@ -14,7 +17,7 @@ Object.assign(SchemaEditor.prototype, {
                 await this.scanProjects();
                 // After scanning, if the project is now connected, retry saving
                 if (this.currentProject && !this.currentProject.isPreDiscovered) {
-                    return this.saveChanges();
+                    return this.saveChanges(isAutoSave);
                 }
             }
             return;
@@ -23,6 +26,9 @@ Object.assign(SchemaEditor.prototype, {
         try {
             // Check for Username (required for backups)
             if (!this.settings.username) {
+                // Don't prompt for nickname during auto-save
+                if (isAutoSave) return;
+
                 const name = await AppUI.showNicknamePrompt(
                     "Nickname Required",
                     "Please enter a nickname for version tracking (e.g., 'Joan'):"
@@ -30,14 +36,16 @@ Object.assign(SchemaEditor.prototype, {
                 if (name && name.trim()) {
                     this.settings.username = name.trim();
                     this.saveSettingsToStorage();
+                } else {
+                    return; // Can't save without name
                 }
             }
 
-            AppUI.showProcessing('Saving changes...');
+            if (!isAutoSave) AppUI.showProcessing('Saving changes...');
             const project = this.currentProject;
             const analysisHandle = await project.handle.getDirectoryHandle('analysis_data');
 
-            // 1. Save Main File
+            // 1. Locate Main File
             const baseName = project.name.replace(/[-_]project$/, '');
             let fileName = `${baseName}-analysis_data.json`; // Default modern name
 
@@ -50,20 +58,102 @@ Object.assign(SchemaEditor.prototype, {
             }
 
             const fileHandle = await analysisHandle.getFileHandle(fileName, { create: true });
-            const writable = await fileHandle.createWritable();
 
-            // Update Global Metadata
+            // 2. Read Current Disk State
+            const diskFile = await fileHandle.getFile();
+            const diskText = await diskFile.text();
+            let diskJson;
+            try {
+                diskJson = JSON.parse(diskText);
+            } catch (e) {
+                // If empty or invalid, assume empty object or handle error
+                console.warn("Could not parse disk version, assuming fresh save.");
+                diskJson = {};
+            }
+
+            // 3. Concurrency Check
+            // Ensure we have a Primal Base. If not (legacy session), assume Disk is Primal to avoid false conflict on first save,
+            // OR if session existed, use diskJson as best-effort base if no primal. 
+            // Correct logic: If we loaded the project, primalSchema IS set.
+            const baseSchema = this.primalSchema || diskJson;
+
+            // Update My Metadata before comparison (as this is what I INTEND to save)
             this.currentSchema.last_updated_at = new Date().toISOString();
             this.currentSchema.last_updated_by = this.settings.username;
 
+            // Perform Analysis
+            let result = { status: 'clean' };
+            // specific check: if diskJson differs from baseSchema, then someone else saved.
+            // ConcurrencyManager.analyze handles the 3-way check.
+            if (typeof ConcurrencyManager !== 'undefined') {
+                result = ConcurrencyManager.analyze(baseSchema, diskJson, this.currentSchema);
+            } else {
+                console.warn("ConcurrencyManager not loaded, skipping conflict checks.");
+            }
+
+            let showWarning = false;
+            let warningMessage = "";
+            let showSuccessMessage = isAutoSave ? "Auto-saved!" : "Project saved!";
+
+            // 4. Handle Status
+            if (result.status === 'conflict') {
+                const timestamp = AppUtils.getTimestamp();
+                const conflictDir = await project.handle.getDirectoryHandle('conflicts', { create: true });
+
+                // Save Backup Versions
+                const writeConflict = async (name, data) => {
+                    const h = await conflictDir.getFileHandle(name, { create: true });
+                    const w = await h.createWritable();
+                    await w.write(JSON.stringify(data, null, 2));
+                    await w.close();
+                };
+
+                const userTheirs = diskJson.last_updated_by || 'Unknown';
+                const userMine = this.settings.username || 'Me';
+
+                await writeConflict(`${baseName}_base_${timestamp}.json`, baseSchema);
+                await writeConflict(`${baseName}_conflict_by_${userTheirs}_${timestamp}.json`, diskJson);
+                await writeConflict(`${baseName}_conflict_by_${userMine}_${timestamp}.json`, this.currentSchema);
+
+                const report = ConcurrencyManager.generateReport(baseSchema, diskJson, this.currentSchema, result.conflicts);
+                await writeConflict(`${baseName}_report_${timestamp}.json`, report);
+
+                // Logic: "Version kept... from user who entered the last".
+                // We overwrite with OUR version (Last Writer), but backups exist.
+                // We update our in-memory primal to match what we just wrote.
+
+                showWarning = true;
+                warningMessage = `Conflict detected with user "${userTheirs}".\n\nA conflict report and copies of all versions have been saved to the "conflicts" folder.\n\nYour version has been saved as the working version.`;
+            }
+            else if (result.status === 'mergeable') {
+                // Apply merge
+                this.currentSchema = result.merged;
+                // Update timestamp again on the results? 
+                // The merged result should probably keep the LATEST timestamp or generate new.
+                // analyzing logic usually merges content. Metadata might need refresh.
+                this.currentSchema.last_updated_at = new Date().toISOString();
+                this.currentSchema.last_updated_by = this.settings.username; // I am the merger
+
+                // Refresh UI to show merged changes
+                if (this.processProjectData) this.processProjectData();
+                if (this.renderFieldsTable) this.renderFieldsTable();
+                if (this.selectedField && this.showFieldDetails) this.showFieldDetails(this.selectedField);
+
+                showSuccessMessage = `Merged changes from ${diskJson.last_updated_by}.`;
+            }
+
+            // 5. Write to Disk (Overwrite) - for clean, mergeable, AND conflict (Last Writer Wins policy)
+            const writable = await fileHandle.createWritable();
             const content = JSON.stringify(this.currentSchema, null, 2);
             await writable.write(content);
             await writable.close();
 
-            // Store modification time to avoid redundant polling sync
+            // 6. Update State
+            // The state on disk is now exactly this.currentSchema. So that becomes our new Primal.
+            this.primalSchema = JSON.parse(JSON.stringify(this.currentSchema));
             this.lastKnownModificationTime = (await fileHandle.getFile()).lastModified;
 
-            // 2. Create Security Copy (Backup)
+            // 7. Standard Security Copy (Historical Backup)
             if (this.settings.username) {
                 try {
                     await this.createSecurityCopy(project, baseName, content, this.settings.username);
@@ -72,13 +162,19 @@ Object.assign(SchemaEditor.prototype, {
                 }
             }
 
-            AppUI.hideProcessing();
+            if (!isAutoSave) AppUI.hideProcessing();
             this.hasUnsavedChanges = false;
             this.updateHeaderMetadata();
             this.updateSaveButtonUI();
-            AppUI.showSaveSuccess('Project saved!');
+
+            if (showWarning && AppUI.showAlert) {
+                await AppUI.showAlert("Conflict Warning", warningMessage);
+            } else {
+                AppUI.showSaveSuccess(showSuccessMessage);
+            }
+
         } catch (error) {
-            AppUI.hideProcessing();
+            if (!isAutoSave) AppUI.hideProcessing();
             AppUI.showError(`Error saving project: ${error.message}`);
         }
     },

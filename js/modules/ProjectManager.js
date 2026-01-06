@@ -231,6 +231,7 @@ Object.assign(SchemaEditor.prototype, {
             this.validationData = {};
             this.medixtractOutputData = {};
             this.hasUnsavedChanges = false;
+            this.lastSaveTime = Date.now();
 
             let analysisData;
 
@@ -300,6 +301,7 @@ Object.assign(SchemaEditor.prototype, {
             }
 
             this.currentSchema = analysisData;
+            this.primalSchema = JSON.parse(JSON.stringify(analysisData));
             if (this.currentSchema.last_updated_by) {
                 this.projectNicknames.add(this.currentSchema.last_updated_by);
             }
