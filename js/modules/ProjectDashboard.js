@@ -3,16 +3,10 @@
  */
 Object.assign(SchemaEditor.prototype, {
     async showProjectSelection(forceDashboard) {
-        if (this.hasUnsavedChanges && !forceDashboard) {
-            const confirm = await AppUI.showConfirm(
-                'Leave site?',
-                'Changes you made may not be saved.',
-                'Leave',
-                'Cancel',
-                true
-            );
+        if (this.hasUnsavedChanges) {
+            const confirm = await AppUI.showConfirm('Unsaved Changes', 'You have unsaved changes. Are you sure you want to leave?');
             if (!confirm) return;
-            this.hasUnsavedChanges = false;
+            this.hasUnsavedChanges = false; // Reset if user confirmed leaving
             this.updateSaveButtonUI();
         }
 
