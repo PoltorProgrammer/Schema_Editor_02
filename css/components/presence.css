@@ -1,0 +1,58 @@
+.active-users {
+    display: flex;
+    align-items: center;
+    background: var(--gray-50);
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--gray-800);
+    margin-left: 1rem;
+    border: 1px solid var(--gray-200);
+    animation: fadeIn 0.3s ease;
+}
+
+.active-users-list {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.active-users-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.user-presence-chip {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.user-presence-chip.is-me {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-weight: 400;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Joan Theme adjustments */
+[data-theme="joan"] .active-users {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+[data-theme="joan"] .user-presence-chip {
+    color: #ffeb3b;
+    /* Vibrant yellow for Joan theme */
+}

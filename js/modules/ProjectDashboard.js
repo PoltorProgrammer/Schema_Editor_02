@@ -9,6 +9,9 @@ Object.assign(SchemaEditor.prototype, {
             this.hasUnsavedChanges = false; // Reset if user confirmed leaving
             this.updateSaveButtonUI();
         }
+
+        this.stopPresence();
+
         const projectSelection = document.getElementById('projectSelection');
         const schemaEditor = document.getElementById('schemaEditor');
         const emptyState = document.getElementById('emptyState');

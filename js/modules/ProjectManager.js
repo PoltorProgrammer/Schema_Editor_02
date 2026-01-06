@@ -315,6 +315,7 @@ Object.assign(SchemaEditor.prototype, {
                 this.processProjectData();
                 this.populateFilterOptions();
                 this.showSchemaEditor();
+                this.initPresence();
             } catch (innerError) {
                 console.error("Data processing error:", innerError);
                 throw new Error(`Data processing failed: ${innerError.message}`);

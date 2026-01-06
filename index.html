@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="css/components/feedback.css">
     <link rel="stylesheet" href="css/components/dropdowns.css">
     <link rel="stylesheet" href="css/components/chips.css">
+    <link rel="stylesheet" href="css/components/presence.css">
     <link rel="stylesheet" href="css/components/cards.css">
     <!-- Layouts -->
     <link rel="stylesheet" href="css/layouts/dashboard.css">
@@ -42,6 +43,9 @@
                         <span id="fieldStats" class="field-stats">0 fields</span>
                         <span id="patientStats" class="field-stats" style="display: none;"></span>
                         <span id="lastEditInfo" class="last-edit-info"></span>
+                        <div id="activeUsers" class="active-users" style="display: none;">
+                            <div class="active-users-list" id="activeUsersList"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="header-actions">
@@ -706,6 +710,7 @@
     <script src="js/modules/renderers/FieldDetailsRenderer.js"></script>
     <script src="js/modules/SettingsManager.js"></script>
     <script src="js/modules/ExportManager.js"></script>
+    <script src="js/modules/PresenceManager.js"></script>
     <script src="js/modules/InteractionManager.js"></script>
     <script src="js/main.js"></script>
 </body>
