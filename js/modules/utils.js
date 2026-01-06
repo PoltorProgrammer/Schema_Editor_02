@@ -172,13 +172,48 @@ const AppUtils = {
     },
 
     getTimestamp() {
-        const now = new Date();
-        const yy = String(now.getFullYear()).slice(-2);
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
+        const formatter = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Berlin',
+            year: '2-digit',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hourCycle: 'h23'
+        });
+        const parts = formatter.formatToParts(new Date());
+        const getPart = (type) => parts.find(p => p.type === type).value;
+        const yy = getPart('year');
+        const mm = getPart('month');
+        const dd = getPart('day');
+        const h = getPart('hour');
+        const m = getPart('minute');
+        const s = getPart('second');
         return `${yy}${mm}${dd}${h}${m}${s}`;
+    },
+
+    getTimeAgo(dateInput) {
+        if (!dateInput) return 'Never';
+        const date = new Date(dateInput);
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+
+        if (seconds < 60) return 'just now';
+
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+
+        const days = Math.floor(hours / 24);
+        if (days < 30) return `${days} day${days !== 1 ? 's' : ''} ago`;
+
+        const months = Math.floor(days / 30);
+        if (months < 12) return `${months} month${months !== 1 ? 's' : ''} ago`;
+
+        const years = Math.floor(months / 12);
+        return `${years} year${years !== 1 ? 's' : ''} ago`;
     }
 };

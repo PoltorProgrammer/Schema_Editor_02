@@ -153,7 +153,11 @@ Object.assign(SchemaEditor.prototype, {
         // Save Nickname
         const nicknameInput = document.getElementById('settingsNickname');
         if (nicknameInput) {
-            this.settings.username = nicknameInput.value.trim();
+            const newName = nicknameInput.value.trim();
+            this.settings.username = newName;
+            if (newName && !this.settings.knownNicknames.includes(newName)) {
+                this.settings.knownNicknames.push(newName);
+            }
         }
         this.saveSettingsToStorage();
 

@@ -431,11 +431,13 @@ Object.assign(SchemaEditor.prototype, {
 
     // Label Combobox Handlers
     handleLabelComboboxFocus() {
+        const input = document.getElementById('input-labels');
         const container = document.getElementById('combobox-labels');
         if (container) {
             container.classList.add('open');
-            this.renderLabelComboboxOptions(document.getElementById('input-labels').value);
+            this.renderLabelComboboxOptions('');
         }
+        if (input) input.select();
     },
 
     handleLabelComboboxBlur() {
@@ -516,14 +518,13 @@ Object.assign(SchemaEditor.prototype, {
     // Nickname Combobox Handlers
     handleNicknameComboboxFocus(idSuffix = 'settingsNickname') {
         const input = document.getElementById(idSuffix);
-        if (input) {
-            input.select();
-        }
         const container = document.getElementById(idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`);
         if (container) {
             container.classList.add('open');
-            this.renderNicknameComboboxOptions(input ? input.value : '', idSuffix);
+            // When focusing, show all options by default
+            this.renderNicknameComboboxOptions('', idSuffix);
         }
+        if (input) input.select();
     },
 
     handleNicknameComboboxBlur(idSuffix = 'settingsNickname') {
@@ -536,7 +537,8 @@ Object.assign(SchemaEditor.prototype, {
         }, 200);
     },
 
-    handleNicknameComboboxInput(idSuffix = 'settingsNickname', value) {
+    handleNicknameComboboxInput(value, idSuffix = 'settingsNickname') {
+        // Note: value comes from this.value in HTML, idSuffix defaults to settingsNickname
         this.renderNicknameComboboxOptions(value, idSuffix);
     },
 
@@ -553,7 +555,7 @@ Object.assign(SchemaEditor.prototype, {
         }
     },
 
-    handleNicknameComboboxKey(idSuffix = 'settingsNickname', e) {
+    handleNicknameComboboxKey(e, idSuffix = 'settingsNickname') {
         const container = document.getElementById(idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`);
         const list = document.getElementById(idSuffix === 'settingsNickname' ? 'comboboxList-nickname' : `comboboxList-${idSuffix}`);
         if (!container || !list) return;
@@ -616,11 +618,13 @@ Object.assign(SchemaEditor.prototype, {
 
     // Property Combobox Handlers
     handlePropertyComboboxFocus(prop) {
+        const input = document.getElementById(`input-${prop}`);
         const container = document.getElementById(`combobox-${prop}`);
         if (container) {
             container.classList.add('open');
-            this.renderPropertyComboboxOptions(prop, document.getElementById(`input-${prop}`).value);
+            this.renderPropertyComboboxOptions(prop, '');
         }
+        if (input) input.select();
     },
 
     handlePropertyComboboxBlur(prop) {

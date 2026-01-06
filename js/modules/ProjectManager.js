@@ -13,13 +13,9 @@ Object.assign(SchemaEditor.prototype, {
             // 1. Acquire Handle if needed or forced
             if (!rootHandle || forcePicker) {
                 try {
-                    // Use a specific ID for Google Drive connection so the browser "remembers" G:\
-                    // after the first time you select it.
-                    const isFirstDriveConnect = !this.projectsDirectoryHandle && !this.appRootHandle;
-
                     const pickerOpts = {
                         mode: 'readwrite',
-                        id: isFirstDriveConnect ? 'google-drive-connect' : 'schema-editor-main'
+                        id: 'schema-editor-main'
                     };
 
                     // Prioritize current known handles for startIn to make "Enter" confirmation easy
@@ -30,7 +26,6 @@ Object.assign(SchemaEditor.prototype, {
                     } else if (this.pendingHandle) {
                         pickerOpts.startIn = this.pendingHandle;
                     } else {
-                        // Fallback for the very first time if no handles are known
                         pickerOpts.startIn = 'documents';
                     }
 
@@ -285,7 +280,27 @@ Object.assign(SchemaEditor.prototype, {
 
             }
 
+            // Scan for nicknames in security_copies
+            this.projectNicknames = new Set();
+            if (project.handle) {
+                try {
+                    const securityDir = await project.handle.getDirectoryHandle('security_copies', { create: false });
+                    for await (const [name, handle] of securityDir.entries()) {
+                        if (name.endsWith('.json')) {
+                            const parts = name.split('-');
+                            if (parts.length >= 4) {
+                                const nick = parts[parts.length - 1].replace('.json', '');
+                                if (nick) this.projectNicknames.add(nick);
+                            }
+                        }
+                    }
+                } catch (e) { /* no security copies yet */ }
+            }
+
             this.currentSchema = analysisData;
+            if (this.currentSchema.last_updated_by) {
+                this.projectNicknames.add(this.currentSchema.last_updated_by);
+            }
 
             // Format project name: Remove suffix, replace underscores with spaces, and Capitalize Each Word
             const cleanName = projectName.replace(/[-_]project$/, '').replace(/_/g, ' ');
@@ -294,6 +309,7 @@ Object.assign(SchemaEditor.prototype, {
                 .join(' ');
 
             document.getElementById('currentVersion').innerHTML = `Project: <span class="project-name-vibrant">${capitalizedName}</span>`;
+            this.updateHeaderMetadata();
 
             try {
                 this.processProjectData();
@@ -310,6 +326,23 @@ Object.assign(SchemaEditor.prototype, {
             this.renderProjectList();
         } finally {
             AppUI.hideLoading();
+        }
+    },
+
+    updateHeaderMetadata() {
+        const lastEditInfo = document.getElementById('lastEditInfo');
+        if (!lastEditInfo || !this.currentSchema) return;
+
+        const date = this.currentSchema.last_updated_at;
+        const user = this.currentSchema.last_updated_by || 'Unknown';
+
+        if (date) {
+            const timeAgo = AppUtils.getTimeAgo(date);
+            lastEditInfo.innerHTML = `Edited <span class="edit-time">${timeAgo}</span> by <span class="editor-name">${user}</span>`;
+            lastEditInfo.title = `Last update: ${new Date(date).toLocaleString()}`;
+            lastEditInfo.style.display = 'flex';
+        } else {
+            lastEditInfo.style.display = 'none';
         }
     }
 });

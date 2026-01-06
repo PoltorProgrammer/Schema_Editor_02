@@ -51,6 +51,11 @@ Object.assign(SchemaEditor.prototype, {
 
             const fileHandle = await analysisHandle.getFileHandle(fileName, { create: true });
             const writable = await fileHandle.createWritable();
+
+            // Update Global Metadata
+            this.currentSchema.last_updated_at = new Date().toISOString();
+            this.currentSchema.last_updated_by = this.settings.username;
+
             const content = JSON.stringify(this.currentSchema, null, 2);
             await writable.write(content);
             await writable.close();
@@ -66,6 +71,7 @@ Object.assign(SchemaEditor.prototype, {
 
             AppUI.hideProcessing();
             this.hasUnsavedChanges = false;
+            this.updateHeaderMetadata();
             this.updateSaveButtonUI();
             AppUI.showSaveSuccess('Project saved!');
         } catch (error) {
@@ -80,14 +86,7 @@ Object.assign(SchemaEditor.prototype, {
         const securityDir = await project.handle.getDirectoryHandle('security_copies', { create: true });
 
         // Naming: [project_name]-analysis_data-[YYMMDDhhmmss]-[nickname].json
-        const now = new Date();
-        const yy = String(now.getFullYear()).slice(-2);
-        const MM = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-        const timestamp = `${yy}${MM}${dd}${hh}${mm}${ss}`;
+        const timestamp = AppUtils.getTimestamp();
 
         const backupName = `${projectName}-analysis_data-${timestamp}-${username}.json`;
 

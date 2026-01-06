@@ -258,7 +258,9 @@ Object.assign(SchemaEditor.prototype, {
 
             // 3. Construct Analysis Data
             const newAnalysis = {
-                properties: {}
+                properties: {},
+                last_updated_at: new Date().toISOString(),
+                last_updated_by: this.settings?.username || 'System'
             };
 
             // Get Union of keys from validation data map

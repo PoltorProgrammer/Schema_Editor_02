@@ -210,19 +210,10 @@ Object.assign(SchemaEditor.prototype, {
             fieldStats.textContent = `${this.allFields.length} fields`;
         }
 
-        let patientStats = document.getElementById('patientStats');
-        if (!patientStats) {
-            const infoContainer = document.querySelector('.schema-info');
-            if (infoContainer) {
-                patientStats = document.createElement('span');
-                patientStats.id = 'patientStats';
-                patientStats.className = 'field-stats';
-                infoContainer.appendChild(patientStats);
-            }
-        }
-
+        const patientStats = document.getElementById('patientStats');
         if (patientStats) {
             patientStats.textContent = `${patients.length} patient${patients.length !== 1 ? 's' : ''}`;
+            patientStats.style.display = 'inline-block';
         }
 
         this.applyFilters();

@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "MediXtract Schema Editor",
     "scripts": {
-        "start": "node tools/discover_projects.js && npx serve ."
+        "start": "npx serve ."
     },
     "keywords": [],
     "author": "",

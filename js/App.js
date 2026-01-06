@@ -19,6 +19,7 @@ class SchemaEditor {
         this.medixtractOutputData = {};
         this.hasUnsavedChanges = false;
         this.pendingZipFile = null;
+        this.projectNicknames = new Set();
 
         this.filters = {
             search: '',

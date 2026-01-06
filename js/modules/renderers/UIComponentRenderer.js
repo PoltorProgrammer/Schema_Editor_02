@@ -248,7 +248,13 @@ Object.assign(SchemaEditor.prototype, {
         const container = document.getElementById(listId);
         if (!container) return;
 
-        const options = ["Milan", "Joan", "Tomás"];
+        const defaultNames = ["Milan", "Joan", "Tomás"];
+        const known = this.settings.knownNicknames || [];
+        const projectOnes = Array.from(this.projectNicknames || []);
+
+        // Combine unique names, prioritize known/project names
+        const options = Array.from(new Set([...known, ...projectOnes, ...defaultNames]));
+
         const containerId = idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`;
         const containerWrap = document.getElementById(containerId);
 

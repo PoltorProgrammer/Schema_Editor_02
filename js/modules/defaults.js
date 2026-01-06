@@ -34,7 +34,8 @@ const DEFAULT_SETTINGS = {
         severity: true
     },
     panelWidth: '60vw',
-    username: ''
+    username: '',
+    knownNicknames: []
 };
 
 const FILTER_STATES = ['all', 'true', 'false'];
