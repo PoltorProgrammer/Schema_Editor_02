@@ -14,7 +14,8 @@ Object.assign(SchemaEditor.prototype, {
 
         this.presenceTimers = {
             heartbeat: null,
-            scanner: null
+            scanner: null,
+            metadataRefresh: null
         };
 
         const username = this.settings.username || 'Anonymous';
@@ -62,6 +63,9 @@ Object.assign(SchemaEditor.prototype, {
                         }
                     }
                     this.renderActiveUsers(Array.from(activeUsers));
+
+                    // Also check for external schema changes every scan cycle (15s)
+                    await syncExternalMetadata();
                 } catch (e) {
                     console.warn("Presence scan failed:", e);
                 }
@@ -69,6 +73,33 @@ Object.assign(SchemaEditor.prototype, {
 
             await scanPresence();
             this.presenceTimers.scanner = setInterval(scanPresence, 15000); // Every 15s
+
+            // 4. Start metadata & stats refresh (Keep "time ago" updated)
+            const syncExternalMetadata = async () => {
+                if (!this.currentAnalysisFileHandle || this.hasUnsavedChanges) return;
+
+                try {
+                    const file = await this.currentAnalysisFileHandle.getFile();
+                    if (file.lastModified > this.lastKnownModificationTime) {
+                        const text = await file.text();
+                        const json = JSON.parse(text);
+                        if (json.last_updated_at && json.last_updated_by) {
+                            this.currentSchema.last_updated_at = json.last_updated_at;
+                            this.currentSchema.last_updated_by = json.last_updated_by;
+                            this.lastKnownModificationTime = file.lastModified;
+                            this.updateHeaderMetadata();
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Metadata sync failed:", e);
+                }
+            };
+
+            const refreshTimeLabels = () => {
+                this.updateHeaderMetadata();
+            };
+
+            this.presenceTimers.metadataRefresh = setInterval(refreshTimeLabels, 60000); // Every minute
 
         } catch (error) {
             console.error("Could not initialize presence:", error);
@@ -79,6 +110,7 @@ Object.assign(SchemaEditor.prototype, {
         if (this.presenceTimers) {
             clearInterval(this.presenceTimers.heartbeat);
             clearInterval(this.presenceTimers.scanner);
+            clearInterval(this.presenceTimers.metadataRefresh);
             this.presenceTimers = null;
         }
 

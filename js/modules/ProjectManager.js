@@ -252,7 +252,9 @@ Object.assign(SchemaEditor.prototype, {
                 }
 
                 if (!mainFileHandle) throw new Error('No analysis data found.');
+                this.currentAnalysisFileHandle = mainFileHandle;
                 analysisData = JSON.parse(await (await mainFileHandle.getFile()).text());
+                this.lastKnownModificationTime = (await mainFileHandle.getFile()).lastModified;
 
                 if (project.validationFiles) {
                     for (const vFile of project.validationFiles) {

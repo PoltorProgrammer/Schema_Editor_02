@@ -60,6 +60,9 @@ Object.assign(SchemaEditor.prototype, {
             await writable.write(content);
             await writable.close();
 
+            // Store modification time to avoid redundant polling sync
+            this.lastKnownModificationTime = (await fileHandle.getFile()).lastModified;
+
             // 2. Create Security Copy (Backup)
             if (this.settings.username) {
                 try {
