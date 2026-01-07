@@ -67,6 +67,11 @@ Object.assign(SchemaEditor.prototype, {
                     Object.entries(valueCounts).forEach(([value, count]) => {
                         perf.output.push({ value, count });
                     });
+                    // Deterministic sort to prevent false conflicts due to order changes
+                    perf.output.sort((a, b) => {
+                        if (b.count !== a.count) return b.count - a.count; // Higher count first
+                        return String(a.value).localeCompare(String(b.value)); // Alpha sort
+                    });
                 }
 
                 const patientData = this.validationData[patientId];

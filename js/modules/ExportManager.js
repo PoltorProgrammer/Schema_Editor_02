@@ -381,8 +381,8 @@ Object.assign(SchemaEditor.prototype, {
                         if (myLosses.length > 0) {
                             // Usage: Show Modal
                             const winner = myLosses[0].winner || (log.details && log.details[0] ? log.details[0].winner : 'Another user');
-                            const vars = myLosses.map(d => d.variable_id);
-                            AppUI.showLoserModal(winner, vars);
+                            // Fix: Pass full conflict objects so modal can read variable_id and patient_id
+                            AppUI.showLoserModal(winner, myLosses);
                             this.lastCheckedConflictTime = Date.now();
                             return;
                         }

@@ -19,7 +19,7 @@ class MergeManager {
         const overrodeOthers = []; // Tracks fields where we "won" a conflict
 
         // Helper to normalize data for comparison
-        const normalize = (val) => JSON.stringify(val);
+        const normalize = (val) => MergeManager.canonicalize(val);
 
         // Get all unique variable keys from all three versions
         const allKeys = new Set([
@@ -31,6 +31,9 @@ class MergeManager {
         const baseProps = base.properties || base;
         const localProps = local.properties || local;
         const mergedProps = merged.properties || merged;
+
+        // Extract remote user from project root
+        const remoteUser = remote.last_updated_by || 'Other User';
 
         console.log(`[Merge] Starting merge for ${allKeys.size} keys. forceRemoteWin: ${forceRemoteWin}`);
 
@@ -52,7 +55,7 @@ class MergeManager {
                     mergedProps[key] = localVal;
                 } else {
                     // Both changed it. Check for "Deep Merge" opportunity (Patient data)
-                    const deepMerge = this.deepMergeVariable(baseVal, localVal, remoteVal, forceRemoteWin, currentUser, key);
+                    const deepMerge = this.deepMergeVariable(baseVal, localVal, remoteVal, forceRemoteWin, currentUser, key, remoteUser);
 
                     if (deepMerge.isSafe) {
                         // CLEAN MERGE: They changed different things (e.g. different patients)
@@ -67,7 +70,7 @@ class MergeManager {
                             if (!forceRemoteWin) {
                                 overrodeOthers.push({
                                     variable_id: key,
-                                    remote_user: remote.last_updated_by || 'Other User',
+                                    remote_user: remoteUser,
                                     ...c
                                 });
                             }
@@ -104,8 +107,8 @@ class MergeManager {
      * Attempts to merge a single variable's properties deeply
      * Specifically looks at the 'performance' object which contains patient data.
      */
-    static deepMergeVariable(base, local, remote, forceRemoteWin, currentUser, varId) {
-        const normalize = (val) => JSON.stringify(val);
+    static deepMergeVariable(base, local, remote, forceRemoteWin, currentUser, varId, remoteUser) {
+        const normalize = (val) => MergeManager.canonicalize(val);
         const result = {
             merged: JSON.parse(JSON.stringify(remote)), // Start with Remote foundation
             conflicts: [],
@@ -139,7 +142,7 @@ class MergeManager {
                         full_remote: remote,
                         full_local: local,
                         local_user: currentUser,
-                        remote_user: remote.last_updated_by || 'Other User',
+                        remote_user: remoteUser || 'Other User',
                         action: forceRemoteWin ? 'Remote Win' : 'Local Win'
                     });
                 } else {
@@ -191,7 +194,7 @@ class MergeManager {
                             full_remote: remote,
                             full_local: local,
                             local_user: currentUser,
-                            remote_user: remote.last_updated_by || 'Other User',
+                            remote_user: remoteUser || 'Other User',
                             action: forceRemoteWin ? 'Remote Win' : 'Local Win'
                         });
                     }
@@ -222,5 +225,27 @@ class MergeManager {
             conflict_count: conflicts.length,
             details: conflicts
         };
+    }
+
+    /**
+     * canonicalize
+     * Returns a JSON string of the object with sorted keys to ensure correct comparison logic
+     * regardless of key insertion order.
+     */
+    static canonicalize(obj) {
+        if (obj === undefined) return 'undefined';
+        if (obj === null || typeof obj !== 'object') {
+            return JSON.stringify(obj);
+        }
+        if (Array.isArray(obj)) {
+            // For arrays, order matters, so we just canonicalize elements
+            return '[' + obj.map(item => MergeManager.canonicalize(item)).join(',') + ']';
+        }
+        // For objects, sort keys
+        const keys = Object.keys(obj).sort();
+        const parts = keys.map(key => {
+            return JSON.stringify(key) + ':' + MergeManager.canonicalize(obj[key]);
+        });
+        return '{' + parts.join(',') + '}';
     }
 }
