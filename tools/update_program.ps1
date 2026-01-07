@@ -22,13 +22,13 @@ if (Test-Path (Join-Path $currentDir ".git")) {
         Write-Host "Resetting tracked files to match origin/main..."
         git reset --hard origin/main
         
-        # 3. Clean EVERYTHING (untracked + ignored)
+        # 3. Clean EVERYTHING (untracked + ignored) but EXCLUDE projects
         # -f : force
         # -d : remove directories
         # -x : remove ignored files too
-        # WARNING: This deletes user data (projects) as requested.
-        Write-Host "Removing all extra files (Full Factory Reset - Wiping Data)..."
-        git clean -fdx
+        # -e projects : PROTECT USER DATA
+        Write-Host "Removing extra files (cleaning workspace, preserving projects)..."
+        git clean -fdx -e projects
         
         Write-Host "`nUpdate complete via Git!" -ForegroundColor Green
         Write-Host "Your local changes (if any) were stashed as a backup." -ForegroundColor Gray
