@@ -198,7 +198,9 @@ Object.assign(SchemaEditor.prototype, {
                 }),
                 patientComments: patients.map(pid => {
                     const perf = def.performance[pid];
-                    const comment = perf?.comment;
+                    const medixtractComment = perf?.medixtract_comment;
+                    const reviewerComment = perf?.reviewer_comment;
+                    const comment = [medixtractComment, reviewerComment].filter(Boolean).join('\n');
                     return {
                         pid,
                         label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
@@ -313,7 +315,9 @@ Object.assign(SchemaEditor.prototype, {
                 humanValue: humanVal,
                 patientComments: pidList.map(pid => {
                     const perf = def.performance?.[pid];
-                    const comment = perf?.comment;
+                    const medixtractComment = perf?.medixtract_comment;
+                    const reviewerComment = perf?.reviewer_comment;
+                    const comment = [medixtractComment, reviewerComment].filter(Boolean).join('\n');
                     return {
                         pid,
                         label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,
@@ -403,8 +407,10 @@ Object.assign(SchemaEditor.prototype, {
                 }
             } else if (perfProp === 'severity') {
                 perf.severity = parseInt(val) || 1;
-            } else if (perfProp === 'comment') {
-                perf.comment = val;
+            } else if (perfProp === 'medixtract_comment') {
+                perf.medixtract_comment = val;
+            } else if (perfProp === 'reviewer_comment') {
+                perf.reviewer_comment = val;
             } else if (perfProp === 'primary_output') {
                 if (!perf.output) perf.output = [];
                 if (perf.output.length > 0) perf.output[0].value = val;

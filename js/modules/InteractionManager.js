@@ -538,6 +538,11 @@ Object.assign(SchemaEditor.prototype, {
     },
 
     handleNicknameComboboxInput(value, idSuffix = 'settingsNickname') {
+        const input = document.getElementById(idSuffix);
+        if (value.includes('-')) {
+            value = value.replace(/-/g, '');
+            if (input) input.value = value;
+        }
         // Note: value comes from this.value in HTML, idSuffix defaults to settingsNickname
         this.renderNicknameComboboxOptions(value, idSuffix);
     },
@@ -547,6 +552,7 @@ Object.assign(SchemaEditor.prototype, {
             e.preventDefault();
             e.stopPropagation();
         }
+        value = value.replace(/-/g, ''); // Ensure no hyphens
         const input = document.getElementById(idSuffix);
         if (input) {
             input.value = value;
@@ -934,7 +940,7 @@ Object.assign(SchemaEditor.prototype, {
         this.openPatientDetails(fieldId, patientId, event);
 
         setTimeout(() => {
-            const textarea = document.getElementById(`comment-${patientId}`);
+            const textarea = document.getElementById(`medixtract-comment-${patientId}`);
             if (textarea) {
                 textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 textarea.focus();

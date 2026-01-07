@@ -248,12 +248,38 @@ Object.assign(SchemaEditor.prototype, {
         const container = document.getElementById(listId);
         if (!container) return;
 
-        const defaultNames = ["Milan", "Joan", "Tomás"];
-        const known = this.settings.knownNicknames || [];
-        const projectOnes = Array.from(this.projectNicknames || []);
+        const hardcoded = ["Milan", "Joan", "Tomas"];
 
-        // Combine unique names, prioritize known/project names
-        const options = Array.from(new Set([...known, ...projectOnes, ...defaultNames]));
+        // If no filter, only show the hardcoded priority options
+        if (!filter) {
+            const containerId = idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`;
+            const containerWrap = document.getElementById(containerId);
+
+            if (containerWrap) containerWrap.classList.add('open');
+            const html = hardcoded.map(o => `
+                <div class="combobox-option" data-value="${String(o).replace(/'/g, "\\'")}" onmousedown="app.selectNicknameOption('${String(o).replace(/'/g, "\\'")}', '${idSuffix}', event)">
+                    <span class="option-label">${o}</span>
+                </div>
+            `).join('');
+            container.innerHTML = html;
+            return;
+        }
+
+        // Searching: Include Project copies AND Presence files
+        const projectOnes = Array.from(this.projectNicknames || []);
+        const presenceOnes = Array.from(this.presenceNicknames || []);
+
+        // Combine all sources
+        const allDynamic = new Set([...projectOnes, ...presenceOnes]);
+
+        // Filter out hardcoded names to avoid duplicates
+        const dynamicOnes = Array.from(allDynamic).filter(n => !hardcoded.includes(n));
+
+        // Sort dynamic ones alphabetically
+        dynamicOnes.sort((a, b) => a.localeCompare(b));
+
+        // Combine: Hardcoded first, then dynamic ones
+        const options = [...hardcoded, ...dynamicOnes];
 
         const containerId = idSuffix === 'settingsNickname' ? 'combobox-nickname' : `combobox-${idSuffix}`;
         const containerWrap = document.getElementById(containerId);
@@ -262,7 +288,7 @@ Object.assign(SchemaEditor.prototype, {
             o.toLowerCase().includes(filter.toLowerCase())
         );
 
-        if (filtered.length === 0 && filter === '') {
+        if (filtered.length === 0) {
             container.innerHTML = '<div class="combobox-option no-results">No existing names</div>';
         } else {
             if (containerWrap) containerWrap.classList.add('open');

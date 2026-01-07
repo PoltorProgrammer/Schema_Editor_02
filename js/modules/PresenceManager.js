@@ -52,11 +52,14 @@ Object.assign(SchemaEditor.prototype, {
 
                     for await (const [name, handle] of presenceDir.entries()) {
                         if (name.endsWith('.presence')) {
+                            const user = name.replace('.presence', '');
+                            if (!this.presenceNicknames) this.presenceNicknames = new Set();
+                            this.presenceNicknames.add(user);
+
                             try {
                                 const file = await handle.getFile();
                                 // Using lastModified as the truth for freshness
                                 if (now - file.lastModified < staleThreshold) {
-                                    const user = name.replace('.presence', '');
                                     activeUsers.add(user);
                                 }
                             } catch (e) { }

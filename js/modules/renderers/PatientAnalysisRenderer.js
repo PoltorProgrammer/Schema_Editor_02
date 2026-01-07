@@ -5,6 +5,8 @@ Object.assign(SchemaEditor.prototype, {
     createPatientCollapsible(patientId, def) {
         const valRaw = this.validationData[patientId]?.[this.selectedField];
         const humanValue = AppUtils.normalizeValue((Array.isArray(valRaw) ? valRaw[0] : valRaw) ?? null);
+        const currentUser = this.settings?.username || '';
+        const canEditMedixtract = ['Joan', 'Tomas'].includes(currentUser);
         const perf = def.performance?.[patientId] || { pending: true, output: [] };
         const outputs = perf.output || [];
 
@@ -137,9 +139,19 @@ Object.assign(SchemaEditor.prototype, {
                 </div>
 
                 <div class="bottom-section" style="display: flex; flex-direction: column; gap: 1.25rem;">
-                    <div class="form-field full-width">
-                        <label for="comment-${patientId}">Explanation / Comment</label>
-                        <textarea class="no-dropdown-icon" id="comment-${patientId}" name="comment-${patientId}" data-patient="${patientId}" data-perf-prop="comment" placeholder="Explain the discrepancy or result...">${perf.comment || (Array.isArray(valRaw) ? valRaw[1] : '') || ''}</textarea>
+                    <div class="comments-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                        <div class="form-field">
+                            <label for="medixtract-comment-${patientId}">MediXtract Comment</label>
+                            ${(() => {
+                const actualComment = perf.medixtract_comment || (Array.isArray(valRaw) ? valRaw[1] : '') || '';
+                const displayComment = (!actualComment && !canEditMedixtract) ? 'No comment provided' : actualComment;
+                return `<textarea class="no-dropdown-icon" id="medixtract-comment-${patientId}" name="medixtract-comment-${patientId}" data-patient="${patientId}" data-perf-prop="medixtract_comment" placeholder="MediXtract comment..." ${canEditMedixtract ? '' : 'readonly'}>${displayComment}</textarea>`;
+            })()}
+                        </div>
+                        <div class="form-field">
+                            <label for="reviewer-comment-${patientId}">Reviewer Comment</label>
+                            <textarea class="no-dropdown-icon" id="reviewer-comment-${patientId}" name="reviewer-comment-${patientId}" data-patient="${patientId}" data-perf-prop="reviewer_comment" placeholder="Reviewer comment...">${perf.reviewer_comment || ''}</textarea>
+                        </div>
                     </div>
                     <div class="form-field full-width">
                         <label>Severity (1-5)</label>

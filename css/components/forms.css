@@ -364,3 +364,18 @@ input:checked+.slider:before {
 .form-field textarea.medixtract-output {
     min-height: auto;
 }
+
+/* Read-only styles for textareas */
+.form-field textarea[readonly] {
+    background-color: var(--gray-50);
+    cursor: default;
+    color: var(--gray-500);
+    border-color: var(--gray-200);
+    font-style: italic;
+}
+
+.form-field textarea[readonly]:focus {
+    box-shadow: none;
+    border-color: var(--gray-200);
+    outline: none;
+}
