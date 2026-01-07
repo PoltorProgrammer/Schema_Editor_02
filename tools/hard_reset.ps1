@@ -17,6 +17,16 @@ if (Test-Path (Join-Path $currentDir ".git")) {
         Write-Host "Resetting tracked files to match origin/main..."
         git reset --hard origin/main
         
+        # Explicitly NUKE the projects folder and docs folder
+        if (Test-Path "$currentDir\projects") {
+            Write-Host "Manually deleting projects folder..."
+            Remove-Item -Path "$currentDir\projects" -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if (Test-Path "$currentDir\docs") {
+            Write-Host "Manually deleting docs folder..."
+            Remove-Item -Path "$currentDir\docs" -Recurse -Force -ErrorAction SilentlyContinue
+        }
+
         Write-Host "WIPING ALL UNTRACKED FILES (Including projects folder)..."
         git clean -fdx
         
