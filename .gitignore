@@ -19,5 +19,5 @@ Thumbs.db
 *.json
 *.xlsx
 
-# Ensure docs are always included
-!docs/**
+# Documentation
+docs/
