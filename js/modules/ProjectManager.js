@@ -341,9 +341,15 @@ Object.assign(SchemaEditor.prototype, {
         const date = this.currentSchema.last_updated_at;
         const user = this.currentSchema.last_updated_by || 'Unknown';
 
+        // Check against current user
+        let displayUser = user;
+        if (this.settings && this.settings.username && user === this.settings.username) {
+            displayUser = `${user} (you)`;
+        }
+
         if (date) {
             const timeAgo = AppUtils.getTimeAgo(date);
-            lastEditInfo.innerHTML = `Edited <span class="edit-time">${timeAgo}</span> by <span class="editor-name">${user}</span>`;
+            lastEditInfo.innerHTML = `Edited <span class="edit-time">${timeAgo}</span> by <span class="editor-name">${displayUser}</span>`;
             lastEditInfo.title = `Last update: ${new Date(date).toLocaleString()}`;
             lastEditInfo.style.display = 'flex';
         } else {

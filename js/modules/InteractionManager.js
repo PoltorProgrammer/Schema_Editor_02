@@ -928,5 +928,24 @@ Object.assign(SchemaEditor.prototype, {
                 }
             }, 50);
         }
+    },
+
+    openPatientComment(fieldId, patientId, event) {
+        this.openPatientDetails(fieldId, patientId, event);
+
+        setTimeout(() => {
+            const textarea = document.getElementById(`comment-${patientId}`);
+            if (textarea) {
+                textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                textarea.focus();
+                // Highlight momentarily
+                textarea.style.transition = 'box-shadow 0.3s';
+                const originalShadow = textarea.style.boxShadow;
+                textarea.style.boxShadow = '0 0 0 3px var(--primary-light)';
+                setTimeout(() => {
+                    textarea.style.boxShadow = originalShadow;
+                }, 1000);
+            }
+        }, 200);
     }
 });

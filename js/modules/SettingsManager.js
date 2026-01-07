@@ -7,9 +7,20 @@ Object.assign(SchemaEditor.prototype, {
             const s = localStorage.getItem('schemaEditorSettings');
             if (s) {
                 const saved = JSON.parse(s);
+
+                // Ensure any new columns in DEFAULT_SETTINGS are added to the saved columnOrder
+                let mergedOrder = saved.columnOrder || DEFAULT_SETTINGS.columnOrder;
+                if (Array.isArray(mergedOrder)) {
+                    const missing = DEFAULT_SETTINGS.columnOrder.filter(c => !mergedOrder.includes(c));
+                    if (missing.length > 0) {
+                        mergedOrder = [...mergedOrder, ...missing];
+                    }
+                }
+
                 this.settings = {
                     ...DEFAULT_SETTINGS,
                     ...saved,
+                    columnOrder: mergedOrder,
                     columnVisibility: { ...DEFAULT_SETTINGS.columnVisibility, ...(saved.columnVisibility || {}) },
                     columnWidths: { ...DEFAULT_SETTINGS.columnWidths, ...(saved.columnWidths || {}) }
                 };
@@ -63,7 +74,7 @@ Object.assign(SchemaEditor.prototype, {
         const container = document.getElementById('columnOrderList');
         if (!container) return;
         container.innerHTML = '';
-        const labels = { name: 'Field Name', type: 'Type', group: 'Group', description: 'Description', comments: 'Notes', options: 'Options', indicators: 'Labels', match: 'Status', ai_value: 'MediXtract', human_value: 'Human' };
+        const labels = { name: 'Field Name', type: 'Type', group: 'Group', description: 'Description', comments: 'Notes', options: 'Options', indicators: 'Labels', match: 'Status', ai_value: 'MediXtract', human_value: 'Human', patient_comments: 'Patient Comments' };
 
         this.settings.columnOrder.forEach(id => {
             const item = document.createElement('div');
@@ -78,7 +89,7 @@ Object.assign(SchemaEditor.prototype, {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="drag-handle"><path d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z"/></svg>
                     <span class="column-label">${labels[id] || id}</span>
                 </div>
-                <div class="column-width-adjuster"><input type="range" class="width-slider" min="${isPx ? 40 : 0.5}" max="${isPx ? 300 : 5}" step="${isPx ? 10 : 0.1}" value="${w}" data-column="${id}"><span class="width-display">${w}${isPx ? 'px' : 'fr'}</span></div>
+                <div class="column-width-adjuster"><input type="range" class="width-slider" min="${id === 'indicators' ? 80 : (isPx ? 40 : 0.5)}" max="${isPx ? 300 : 5}" step="${isPx ? 10 : 0.1}" value="${w}" data-column="${id}"><span class="width-display">${w}${isPx ? 'px' : 'fr'}</span></div>
                 <button class="column-visibility-toggle ${vis ? 'visible' : 'hidden'}" data-column="${id}">${eye}</button>`;
 
             item.querySelector('.column-visibility-toggle').onclick = () => this.toggleColumnVisibility(id);
@@ -221,7 +232,7 @@ Object.assign(SchemaEditor.prototype, {
     reorderHeaderColumns(vis) {
         const h = document.querySelector('.table-header');
         if (!h) return;
-        const labs = { match: 'Status', name: 'Field Name', group: 'Group', ai_value: 'MediXtract', human_value: 'Human', description: 'Description', comments: 'Notes', type: 'Type', indicators: 'Labels', options: 'Options' };
+        const labs = { match: 'Status', name: 'Field Name', group: 'Group', ai_value: 'MediXtract', human_value: 'Human', patient_comments: 'Patient Comments', description: 'Description', comments: 'Notes', type: 'Type', indicators: 'Labels', options: 'Options' };
         h.innerHTML = vis.map(id => `<div class="th field-${id}">${labs[id] || id}</div>`).join('');
     }
 });

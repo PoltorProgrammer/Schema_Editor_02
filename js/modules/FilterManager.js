@@ -78,7 +78,9 @@ Object.assign(SchemaEditor.prototype, {
                 // Content Match (Priority 2)
                 if (score === 0) {
                     // Check metadata using normalized search
-                    const matchesProps = [f.description, f.comments, f.group].some(v => v && v.toLowerCase().includes(normSearch));
+                    // Check metadata using normalized search
+                    const matchesProps = [f.description, f.comments, f.group].some(v => v && v.toLowerCase().includes(normSearch)) ||
+                        (f.labels && f.labels.some(l => l.toLowerCase().includes(normSearch)));
                     if (matchesProps) score = 10;
 
                     if (score === 0) {

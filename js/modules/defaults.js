@@ -1,12 +1,13 @@
 const DEFAULT_SETTINGS = {
     theme: 'light',
-    columnOrder: ['match', 'name', 'group', 'ai_value', 'human_value', 'indicators', 'description', 'comments', 'options'],
+    columnOrder: ['match', 'name', 'group', 'ai_value', 'human_value', 'patient_comments', 'indicators', 'description', 'comments', 'options'],
     columnVisibility: {
         match: true,
         name: true,
         group: true,
         ai_value: true,
         human_value: true,
+        patient_comments: false,
         indicators: true,
         description: false,
         comments: false,
@@ -19,6 +20,7 @@ const DEFAULT_SETTINGS = {
         group: 1,
         ai_value: 2,
         human_value: 2,
+        patient_comments: 2,
         indicators: 150,
         options: 1.5,
         description: 3,

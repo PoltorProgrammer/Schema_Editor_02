@@ -196,6 +196,18 @@ Object.assign(SchemaEditor.prototype, {
                         reviewed: perf?.reviewed ?? false
                     };
                 }),
+                patientComments: patients.map(pid => {
+                    const perf = def.performance[pid];
+                    const comment = perf?.comment;
+                    return {
+                        pid,
+                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        value: comment || '',
+                        status: this.getPatientPerformanceStatus(perf),
+                        reviewed: perf?.reviewed ?? false,
+                        hasComment: !!comment
+                    };
+                }),
                 matchStatus: overallMatch,
                 labels: def.labels || []
             };
@@ -299,6 +311,18 @@ Object.assign(SchemaEditor.prototype, {
                 comments: def.notes || def.comment || '',
                 aiValue: aiVal,
                 humanValue: humanVal,
+                patientComments: pidList.map(pid => {
+                    const perf = def.performance?.[pid];
+                    const comment = perf?.comment;
+                    return {
+                        pid,
+                        label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,
+                        value: comment || '',
+                        status: this.getPatientPerformanceStatus(perf),
+                        reviewed: perf?.reviewed ?? false,
+                        hasComment: !!comment
+                    };
+                }),
                 matchStatus: overallMatch,
                 labels: def.labels || []
             };
