@@ -306,8 +306,15 @@ Object.assign(SchemaEditor.prototype, {
                     if (mergeResult.conflicts.length > 0) {
                         // OVERLAP DETECTED: Someone else saved changes to a variable we are currently editing
                         const winner = remoteSchema.last_updated_by || 'Another user';
+
                         // Pass full conflict info so the modal can show variable + patient
-                        const conflicts = mergeResult.conflicts;
+                        // IMPORTANT: We just forced Remote to Win, which means WE (Local) LOST.
+                        // We must tag these conflicts so the UI knows we lost.
+                        const conflicts = mergeResult.conflicts.map(c => ({
+                            ...c,
+                            action: 'External Update' // This ensures ui-utils sees action !== 'Remote Win' -> We Lost
+                        }));
+
                         console.warn("Proactive partial merge detected. Conflict on:", conflicts);
 
                         // Refresh UI to show adoption of non-conflicting remote changes
