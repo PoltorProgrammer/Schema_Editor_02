@@ -169,7 +169,9 @@ Object.assign(SchemaEditor.prototype, {
                 type: AppUtils.getFieldType(def),
                 group,
                 description,
-                comments: def.notes || def.comment || '',
+                medixtract_notes: def.medixtract_notes || '',
+                reviewer_notes: Array.isArray(def.reviewer_notes) ? def.reviewer_notes : [],
+                comments: (def.medixtract_notes || '') + (Array.isArray(def.reviewer_notes) ? def.reviewer_notes.map(n => `\n${n.user}: ${n.note}`).join('') : ''),
                 aiValue: patients.map(pid => {
                     const perf = def.performance[pid];
                     let val = AppUtils.getMostCommonValue(perf?.output);
@@ -199,8 +201,13 @@ Object.assign(SchemaEditor.prototype, {
                 patientComments: patients.map(pid => {
                     const perf = def.performance[pid];
                     const medixtractComment = perf?.medixtract_comment;
-                    const reviewerComment = perf?.reviewer_comment;
-                    const comment = [medixtractComment, reviewerComment].filter(Boolean).join('\n');
+                    const reviewerCommentRaw = perf?.reviewer_comment;
+                    // Format reviewer comments: if array, join user:comment; if string, use directly
+                    const reviewerComment = Array.isArray(reviewerCommentRaw)
+                        ? reviewerCommentRaw.map(c => `${c.user}: ${c.comment}`).join('\n')
+                        : (reviewerCommentRaw || '');
+
+                    const comment = [medixtractComment, (reviewerComment || '')].filter(Boolean).join('\n');
                     return {
                         pid,
                         label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
@@ -310,14 +317,20 @@ Object.assign(SchemaEditor.prototype, {
                 type: AppUtils.getFieldType(def),
                 group: def.group_id || 'ungrouped',
                 description: def.description || '',
-                comments: def.notes || def.comment || '',
+                medixtract_notes: def.medixtract_notes || '',
+                reviewer_notes: Array.isArray(def.reviewer_notes) ? def.reviewer_notes : [],
+                comments: (def.medixtract_notes || '') + (Array.isArray(def.reviewer_notes) ? def.reviewer_notes.map(n => `\n${n.user}: ${n.note}`).join('') : ''),
                 aiValue: aiVal,
                 humanValue: humanVal,
                 patientComments: pidList.map(pid => {
                     const perf = def.performance?.[pid];
                     const medixtractComment = perf?.medixtract_comment;
-                    const reviewerComment = perf?.reviewer_comment;
-                    const comment = [medixtractComment, reviewerComment].filter(Boolean).join('\n');
+                    const reviewerCommentRaw = perf?.reviewer_comment;
+                    const reviewerComment = Array.isArray(reviewerCommentRaw)
+                        ? reviewerCommentRaw.map(c => `${c.user}: ${c.comment}`).join('\n')
+                        : (reviewerCommentRaw || '');
+
+                    const comment = [medixtractComment, (reviewerComment || '')].filter(Boolean).join('\n');
                     return {
                         pid,
                         label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,
@@ -375,7 +388,7 @@ Object.assign(SchemaEditor.prototype, {
         const unmatchedProp = e.target.dataset.unmatched;
 
         // Avoid trimming description and notes to prevent cursor jumps and disappearing spaces while typing
-        if (typeof val === 'string' && !['description', 'notes'].includes(prop)) {
+        if (typeof val === 'string' && !['description', 'notes', 'medixtract_notes', 'reviewer_notes'].includes(prop)) {
             val = val.trim();
         }
         const variables = this.currentSchema.properties || this.currentSchema;
@@ -410,7 +423,32 @@ Object.assign(SchemaEditor.prototype, {
             } else if (perfProp === 'medixtract_comment') {
                 perf.medixtract_comment = val;
             } else if (perfProp === 'reviewer_comment') {
-                perf.reviewer_comment = val;
+                if (!Array.isArray(perf.reviewer_comment)) {
+                    perf.reviewer_comment = [];
+                }
+                const currentUser = this.settings?.username || 'Unknown';
+                const existingIdx = perf.reviewer_comment.findIndex(c => c.user === currentUser);
+
+                if (existingIdx !== -1) {
+                    if (val) {
+                        perf.reviewer_comment[existingIdx].comment = val;
+                        perf.reviewer_comment[existingIdx].timestamp = new Date().toISOString();
+                    } else {
+                        // Remove empty comment to keep list clean
+                        perf.reviewer_comment.splice(existingIdx, 1);
+                    }
+                } else if (val) {
+                    perf.reviewer_comment.push({
+                        user: currentUser,
+                        comment: val,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                // Return early to prevent updateFieldProperty from overwriting with string
+                perf.last_updated = new Date().toISOString();
+                this.markAsUnsaved();
+                this.refreshFieldData(this.selectedField);
+                return;
             } else if (perfProp === 'primary_output') {
                 if (!perf.output) perf.output = [];
                 if (perf.output.length > 0) perf.output[0].value = val;
@@ -442,6 +480,33 @@ Object.assign(SchemaEditor.prototype, {
                 }
             }
             perf.last_updated = new Date().toISOString();
+        } else if (prop === 'medixtract_notes') {
+            def.medixtract_notes = val;
+        } else if (prop === 'reviewer_notes') {
+            if (!Array.isArray(def.reviewer_notes)) {
+                def.reviewer_notes = [];
+            }
+            const currentUser = this.settings?.username || 'Unknown';
+            const existingIdx = def.reviewer_notes.findIndex(n => n.user === currentUser);
+
+            if (existingIdx !== -1) {
+                if (val) {
+                    def.reviewer_notes[existingIdx].note = val;
+                    def.reviewer_notes[existingIdx].timestamp = new Date().toISOString();
+                } else {
+                    def.reviewer_notes.splice(existingIdx, 1);
+                }
+            } else if (val) {
+                def.reviewer_notes.push({
+                    user: currentUser,
+                    note: val,
+                    timestamp: new Date().toISOString()
+                });
+            }
+            // Return early to prevent updateFieldProperty from overwriting with string
+            this.markAsUnsaved();
+            this.refreshFieldData(this.selectedField);
+            return;
         } else if (prop === 'group_id' && val === '__new__') {
             const name = prompt('New group name:');
             if (name?.trim()) {

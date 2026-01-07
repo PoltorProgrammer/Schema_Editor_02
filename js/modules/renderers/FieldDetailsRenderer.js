@@ -37,7 +37,64 @@ Object.assign(SchemaEditor.prototype, {
         const basicFieldsTop = `
             <div class="form-grid">
                 <div class="form-field full-width"><label for="input-description">Description</label><textarea id="input-description" data-property="description" onchange="app.handleFieldPropertyChange(event)">${def.description || ''}</textarea></div>
-                <div class="form-field full-width"><label for="input-notes">Notes</label><textarea id="input-notes" data-property="notes" onchange="app.handleFieldPropertyChange(event)">${def.notes || def.comment || ''}</textarea></div>
+                <div class="form-field full-width">
+                    <label for="medixtract-notes">MediXtract Notes</label>
+                    ${(() => {
+                const canEditMedixtract = ['Joan', 'Tomas', 'Tomás'].some(u => (this.settings?.username || '').includes(u));
+                const actualNote = def.medixtract_notes || '';
+                const displayNote = (!actualNote && !canEditMedixtract) ? 'No notes provided' : actualNote;
+                return `<textarea id="medixtract-notes" data-property="medixtract_notes" onchange="app.handleFieldPropertyChange(event)" placeholder="MediXtract notes..." ${canEditMedixtract ? '' : 'readonly'}>${displayNote}</textarea>`;
+            })()}
+                </div>
+                <div class="form-field full-width">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <label for="reviewer-notes" style="margin-bottom: 0;">Reviewer Notes</label>
+                        ${(() => {
+                const notes = Array.isArray(def.reviewer_notes) ? def.reviewer_notes : [];
+                const currentUser = this.settings?.username || 'Unknown';
+                const otherNotes = notes.filter(n => n.user !== currentUser);
+                if (otherNotes.length === 0) return '';
+
+                const userList = otherNotes.map(n => n.user);
+                const displayLabel = userList.length === 1
+                    ? `Note from ${userList[0]}`
+                    : `${userList.length} Notes (${userList.join(', ')})`;
+
+                return `
+                            <button type="button" class="btn-ghost" 
+                                style="padding: 2px 8px; font-size: 0.7rem; display: flex; align-items: center; gap: 4px; border-radius: 4px; background: var(--gray-100); border: 1px solid var(--gray-200); color: var(--gray-600); font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                                onclick="const el = document.getElementById('other-notes-${id}'); const isHidden = el.style.display === 'none'; el.style.display = isHidden ? 'block' : 'none'; this.style.background = isHidden ? 'var(--primary-light)' : 'var(--gray-100)'; this.style.color = isHidden ? 'var(--primary)' : 'var(--gray-600)';"
+                                title="Click to show/hide other reviewer notes">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21,15H3A2,2 0 0,1 1,13V3A2,2 0 0,1 3,1H21A2,2 0 0,1 23,3V13A2,2 0 0,1 21,15M3,3V13H21V3H3M21,17V19H3V17H21M21,21V23H3V21H21Z"/></svg>
+                                ${displayLabel}
+                            </button>`;
+            })()}
+                    </div>
+                    ${(() => {
+                const notes = Array.isArray(def.reviewer_notes) ? def.reviewer_notes : [];
+                const currentUser = this.settings?.username || 'Unknown';
+                const myNoteObj = notes.find(n => n.user === currentUser);
+                const myNote = myNoteObj ? myNoteObj.note : '';
+
+                const otherNotes = notes.filter(n => n.user !== currentUser);
+                const othersListHtml = otherNotes.map((n, idx) => `
+                        <div style="padding: 0.75rem; ${idx !== otherNotes.length - 1 ? 'border-bottom: 1px solid var(--gray-200);' : ''}">
+                            <div style="font-size: 0.65rem; color: var(--gray-400); display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em;">
+                                <span>${n.user}</span>
+                                <span>${new Date(n.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                            </div>
+                            <div style="font-size: 0.8125rem; color: var(--gray-700); line-height: 1.4; white-space: pre-wrap;">${n.note}</div>
+                        </div>
+                    `).join('');
+
+                return `
+                        <textarea id="reviewer-notes" data-property="reviewer_notes" onchange="app.handleFieldPropertyChange(event)" placeholder="Add your notes...">${myNote}</textarea>
+                        <div id="other-notes-${id}" style="display: none; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); margin-top: 0.5rem; box-shadow: var(--shadow-sm); max-height: 200px; overflow-y: auto;">
+                            ${othersListHtml}
+                        </div>
+                    `;
+            })()}
+                </div>
             </div>
         `;
         this.appendToFormSection(propertiesSec, basicFieldsTop);

@@ -149,8 +149,53 @@ Object.assign(SchemaEditor.prototype, {
             })()}
                         </div>
                         <div class="form-field">
-                            <label for="reviewer-comment-${patientId}">Reviewer Comment</label>
-                            <textarea class="no-dropdown-icon" id="reviewer-comment-${patientId}" name="reviewer-comment-${patientId}" data-patient="${patientId}" data-perf-prop="reviewer_comment" placeholder="Reviewer comment...">${perf.reviewer_comment || ''}</textarea>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+                                <label for="reviewer-comment-${patientId}" style="margin-bottom: 0;">Reviewer Comment</label>
+                                ${(() => {
+                const comments = Array.isArray(perf.reviewer_comment) ? perf.reviewer_comment : [];
+                const currentUser = this.settings?.username || 'Unknown';
+                const otherComments = comments.filter(c => c.user !== currentUser);
+                if (otherComments.length === 0) return '';
+
+                const userList = otherComments.map(c => c.user);
+                const displayLabel = userList.length === 1
+                    ? `Answer from ${userList[0]}`
+                    : `${userList.length} Answers (${userList.join(', ')})`;
+
+                return `
+                                        <button type="button" class="btn-ghost" 
+                                            style="padding: 2px 8px; font-size: 0.7rem; display: flex; align-items: center; gap: 4px; border-radius: 4px; background: var(--gray-100); border: 1px solid var(--gray-200); color: var(--gray-600); font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                                            onclick="const el = document.getElementById('other-comments-${patientId}'); const isHidden = el.style.display === 'none'; el.style.display = isHidden ? 'block' : 'none'; this.style.background = isHidden ? 'var(--primary-light)' : 'var(--gray-100)'; this.style.color = isHidden ? 'var(--primary)' : 'var(--gray-600)';"
+                                            title="Click to show/hide other comments">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21,15H3A2,2 0 0,1 1,13V3A2,2 0 0,1 3,1H21A2,2 0 0,1 23,3V13A2,2 0 0,1 21,15M3,3V13H21V3H3M21,17V19H3V17H21M21,21V23H3V21H21Z"/></svg>
+                                            ${displayLabel}
+                                        </button>`;
+            })()}
+                            </div>
+                            ${(() => {
+                const comments = Array.isArray(perf.reviewer_comment) ? perf.reviewer_comment : [];
+                const currentUser = this.settings?.username || 'Unknown';
+                const myCommentObj = comments.find(c => c.user === currentUser);
+                const myComment = myCommentObj ? myCommentObj.comment : '';
+
+                const otherComments = comments.filter(c => c.user !== currentUser);
+                const othersListHtml = otherComments.map((c, idx) => `
+                                    <div style="padding: 0.75rem; ${idx !== otherComments.length - 1 ? 'border-bottom: 1px solid var(--gray-200);' : ''}">
+                                        <div style="font-size: 0.65rem; color: var(--gray-400); display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em;">
+                                            <span>${c.user}</span>
+                                            <span>${new Date(c.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                                        </div>
+                                        <div style="font-size: 0.8125rem; color: var(--gray-700); line-height: 1.4; white-space: pre-wrap;">${c.comment}</div>
+                                    </div>
+                                `).join('');
+
+                return `
+                                    <textarea class="no-dropdown-icon" id="reviewer-comment-${patientId}" name="reviewer-comment-${patientId}" data-patient="${patientId}" data-perf-prop="reviewer_comment" placeholder="Add your comment...">${myComment}</textarea>
+                                    <div id="other-comments-${patientId}" style="display: none; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); margin-top: 0.5rem; box-shadow: var(--shadow-sm); max-height: 200px; overflow-y: auto;">
+                                        ${othersListHtml}
+                                    </div>
+                                `;
+            })()}
                         </div>
                     </div>
                     <div class="form-field full-width">
