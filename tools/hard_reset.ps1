@@ -43,11 +43,56 @@ if (Test-Path (Join-Path $currentDir ".git")) {
         # Wait, if they are tracked, 'git clean' won't touch them.
         # But the user wants them gone.
         
-        # Delete this script (the caller BAT will fail on exit but that is fine)
-        Remove-Item $MyInvocation.MyCommand.Path -Force
     } else {
-        Write-Host "[ERROR] Git not found in PATH." -ForegroundColor Red
+        Write-Host "[ERROR] Git not found in PATH. Proceeding with ZIP-based reset..." -ForegroundColor Yellow
+        $useZip = $true
     }
 } else {
-     Write-Host "[ERROR] Not a git repository. Cannot perform hard reset." -ForegroundColor Red
+     Write-Host "[NO GIT] Not a git repository. Proceeding with ZIP-based reset..." -ForegroundColor Yellow
+     $useZip = $true
 }
+
+if ($useZip) {
+    # ZIP MODE FACTORY RESET
+    $zipUrl = "$repoUrl/archive/refs/heads/main.zip"
+    $zipFile = Join-Path $env:TEMP "MediXtract_FactoryResult_$(Get-Date -Format 'yyyyMMddHHmmss').zip"
+    $tempExtract = Join-Path $env:TEMP "MediXtract_Extract_$(Get-Date -Format 'yyyyMMddHHmmss')"
+
+    try {
+        Write-Host "Downloading latest version from GitHub..."
+        Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile
+        
+        Write-Host "Wiping local directory (Preserving updater temporarily)..."
+        # Delete everything except 'tools' folder (where we are running) and the bat file
+        Get-ChildItem -Path $currentDir | Where-Object { 
+            $_.Name -ne "tools" -and $_.Name -ne "Factory Reset.bat" 
+        } | Remove-Item -Recurse -Force
+        
+        Write-Host "Extracting clean files..."
+        Expand-Archive -Path $zipFile -DestinationPath $tempExtract -Force
+        
+        $sourceDir = Get-ChildItem -Path $tempExtract -Directory | Select-Object -First 1
+        
+        # Move files to root
+        Get-ChildItem -Path $sourceDir.FullName | Copy-Item -Destination $currentDir -Recurse -Force
+        
+        Write-Host "Factory Reset Complete (ZIP mode)!" -ForegroundColor Green
+        
+    } catch {
+        Write-Host "[ERROR] ZIP Reset failed: $($_.Exception.Message)" -ForegroundColor Red
+        pause
+        exit
+    } finally {
+        if (Test-Path $zipFile) { Remove-Item $zipFile -Force }
+        if (Test-Path $tempExtract) { Remove-Item $tempExtract -Recurse -Force }
+    }
+}
+
+# Self-Destruct this script and the BAT file
+Write-Host "Cleaning up reset tools..." -ForegroundColor Gray
+$batPath = Join-Path $currentDir "Factory Reset.bat"
+if (Test-Path $batPath) { Remove-Item $batPath -Force }
+
+# Delete this script (the caller BAT will fail on exit but that is fine)
+Remove-Item $MyInvocation.MyCommand.Path -Force
+
