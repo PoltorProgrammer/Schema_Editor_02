@@ -35,17 +35,30 @@ Object.assign(SchemaEditor.prototype, {
     },
 
     clearAllFilters() {
-        this.filters = { search: '', types: [], groups: [], labels: [], statuses: [], reviewed: [], severity: [] };
+        this.filters = {
+            search: '',
+            types: [],
+            groups: [],
+            labels: [],
+            statuses: [],
+            reviewed: [],
+            severity: [],
+            reviewerNoteUsers: [],
+            reviewerCommentUsers: []
+        };
         this.dropdowns.type.selected = [];
         this.dropdowns.group.selected = [];
         this.dropdowns.label.selected = [];
         this.dropdowns.status.selected = [];
         this.dropdowns.reviewed.selected = [];
         this.dropdowns.severity.selected = [];
+        this.dropdowns.reviewerNoteUser.selected = [];
+        this.dropdowns.reviewerCommentUser.selected = [];
+
         document.getElementById('searchInput').value = '';
         const clearBtn = document.getElementById('clearSearch');
         if (clearBtn) clearBtn.style.display = 'none';
-        ['type', 'group', 'label', 'status', 'reviewed', 'severity'].forEach(t => {
+        ['type', 'group', 'label', 'status', 'reviewed', 'severity', 'reviewerNoteUser', 'reviewerCommentUser'].forEach(t => {
             this.updateDropdownDisplay(t);
             this.updateDropdownOptions(t);
         });
@@ -78,20 +91,20 @@ Object.assign(SchemaEditor.prototype, {
                 // Content Match (Priority 2)
                 if (score === 0) {
                     // Check metadata using normalized search
-                    // Check metadata using normalized search
-                    const matchesProps = [f.description, f.comments, f.group].some(v => v && v.toLowerCase().includes(normSearch)) ||
+                    const matchesProps = [f.description, f.comments, f.reviewer_notes, f.group].some(v => v && v.toLowerCase().includes(normSearch)) ||
                         (f.labels && f.labels.some(l => l.toLowerCase().includes(normSearch)));
                     if (matchesProps) score = 10;
 
                     if (score === 0) {
                         const matchesPatients = Object.entries(f.definition.performance || {}).some(([pid, perf]) => {
-                            const comment = perf.comment || (
-                                this.validationData &&
-                                this.validationData[pid] &&
-                                Array.isArray(this.validationData[pid][f.id]) &&
-                                this.validationData[pid][f.id][1]
-                            ) || '';
-                            if (comment && comment.toLowerCase().includes(normSearch)) return true;
+                            // Search in comments
+                            const mComment = perf.medixtract_comment || '';
+                            const rComments = Array.isArray(perf.reviewer_comment)
+                                ? perf.reviewer_comment.map(c => c.comment).join(' ')
+                                : (perf.reviewer_comment || '');
+
+                            if (mComment.toLowerCase().includes(normSearch)) return true;
+                            if (rComments.toLowerCase().includes(normSearch)) return true;
 
                             // Helper to check value content or label
                             const checkValueWithLabel = (val) => {
@@ -180,6 +193,23 @@ Object.assign(SchemaEditor.prototype, {
                 if (!hasMatch) return false;
             }
 
+            // Reviewer Note User filter
+            if (this.filters.reviewerNoteUsers.length) {
+                const notes = f.definition.reviewer_notes || [];
+                const hasMatch = Array.isArray(notes) && notes.some(n => this.filters.reviewerNoteUsers.includes(n.user));
+                if (!hasMatch) return false;
+            }
+
+            // Reviewer Comment User filter
+            if (this.filters.reviewerCommentUsers.length) {
+                const perfs = Object.values(f.definition.performance || {});
+                const hasMatch = perfs.some(p => {
+                    const coms = p.reviewer_comment || [];
+                    return Array.isArray(coms) && coms.some(c => this.filters.reviewerCommentUsers.includes(c.user));
+                });
+                if (!hasMatch) return false;
+            }
+
             return true;
         });
 
@@ -250,7 +280,16 @@ Object.assign(SchemaEditor.prototype, {
             else selected.splice(index, 1);
         }
 
-        const filterMap = { 'type': 'types', 'group': 'groups', 'label': 'labels', 'status': 'statuses', 'reviewed': 'reviewed', 'severity': 'severity' };
+        const filterMap = {
+            'type': 'types',
+            'group': 'groups',
+            'label': 'labels',
+            'status': 'statuses',
+            'reviewed': 'reviewed',
+            'severity': 'severity',
+            'reviewerNoteUser': 'reviewerNoteUsers',
+            'reviewerCommentUser': 'reviewerCommentUsers'
+        };
         this.filters[filterMap[type]] = [...selected];
         this.updateDropdownDisplay(type);
         this.updateDropdownOptions(type);
@@ -260,7 +299,16 @@ Object.assign(SchemaEditor.prototype, {
     updateDropdownDisplay(type) {
         const label = document.querySelector(`#${type}Filter .dropdown-label`);
         const selected = this.dropdowns[type].selected;
-        const defaultLabels = { type: 'All Types', group: 'All Groups', label: 'All Labels', status: 'All Statuses', reviewed: 'All Reviewed', severity: 'All Severities' };
+        const defaultLabels = {
+            type: 'All Types',
+            group: 'All Groups',
+            label: 'All Labels',
+            status: 'All Statuses',
+            reviewed: 'All Reviewed',
+            severity: 'All Severities',
+            reviewerNoteUser: 'All Note Users',
+            reviewerCommentUser: 'All Comment Users'
+        };
 
         if (selected.length === 0) {
             label.innerHTML = defaultLabels[type];

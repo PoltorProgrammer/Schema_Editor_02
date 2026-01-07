@@ -85,12 +85,11 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('clearSearch').addEventListener('click', this.clearSearch.bind(this));
 
         // Custom dropdowns
-        ['type', 'group', 'label', 'status', 'reviewed', 'severity', 'headerMore'].forEach(t => {
+        ['type', 'group', 'label', 'status', 'reviewed', 'severity', 'reviewerNoteUser', 'reviewerCommentUser', 'headerMore'].forEach(t => {
             const el = document.getElementById(`${t}Filter`);
             if (el) {
-                // If it's a filter, it has a .dropdown-trigger, otherwise we might just have a btn
-                const trigger = el.querySelector('.dropdown-trigger') || document.getElementById('headerMoreBtn');
-                if (trigger && t !== 'headerMore') { // headerMore handled above specifically
+                const trigger = el.querySelector('.dropdown-trigger');
+                if (trigger) {
                     trigger.addEventListener('click', (e) => {
                         e.stopPropagation();
                         this.toggleDropdown(t);

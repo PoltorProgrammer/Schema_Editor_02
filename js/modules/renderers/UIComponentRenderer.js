@@ -59,7 +59,14 @@ Object.assign(SchemaEditor.prototype, {
         const content = document.querySelector(`#${type}Filter .dropdown-content`);
         if (!content) return;
         content.innerHTML = '';
-        const options = type === 'type' ? this.typeOptions : (type === 'group' ? this.groupOptions : this.labelOptions);
+        let options;
+        if (type === 'type') options = this.typeOptions;
+        else if (type === 'group') options = this.groupOptions;
+        else if (type === 'label') options = this.labelOptions;
+        else if (type === 'reviewerNoteUser') options = this.reviewerNoteUsers;
+        else if (type === 'reviewerCommentUser') options = this.reviewerCommentUsers;
+        else return;
+
         Array.from(options).sort().forEach(val => {
             const div = document.createElement('div');
             div.className = 'dropdown-option';
@@ -72,7 +79,7 @@ Object.assign(SchemaEditor.prototype, {
     },
 
     populateFilterOptions() {
-        ['type', 'group', 'label'].forEach(t => this.renderFilterOptions(t));
+        ['type', 'group', 'label', 'reviewerNoteUser', 'reviewerCommentUser'].forEach(t => this.renderFilterOptions(t));
     },
 
     attachLabelEventListeners() {

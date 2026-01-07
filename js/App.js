@@ -32,12 +32,16 @@ class SchemaEditor {
             labels: [],
             statuses: [],
             reviewed: [],
-            severity: []
+            severity: [],
+            reviewerNoteUsers: [],
+            reviewerCommentUsers: []
         };
 
         this.typeOptions = new Set();
         this.groupOptions = new Set();
         this.labelOptions = new Set();
+        this.reviewerNoteUsers = new Set();
+        this.reviewerCommentUsers = new Set();
 
         this.dropdowns = {
             type: { isOpen: false, selected: [] },
@@ -46,6 +50,8 @@ class SchemaEditor {
             status: { isOpen: false, selected: [] },
             reviewed: { isOpen: false, selected: [] },
             severity: { isOpen: false, selected: [] },
+            reviewerNoteUser: { isOpen: false, selected: [] },
+            reviewerCommentUser: { isOpen: false, selected: [] },
             headerMore: { isOpen: false, selected: [] }
         };
 

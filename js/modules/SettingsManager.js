@@ -74,7 +74,21 @@ Object.assign(SchemaEditor.prototype, {
         const container = document.getElementById('columnOrderList');
         if (!container) return;
         container.innerHTML = '';
-        const labels = { name: 'Field Name', type: 'Type', group: 'Group', description: 'Description', comments: 'Notes', options: 'Options', indicators: 'Labels', match: 'Status', ai_value: 'MediXtract', human_value: 'Human', patient_comments: 'Patient Comments' };
+        const labels = {
+            name: 'Field Name',
+            type: 'Type',
+            group: 'Group',
+            description: 'Description',
+            comments: 'MediXtract Notes',
+            options: 'Options',
+            indicators: 'Labels',
+            match: 'Status',
+            ai_value: 'MediXtract',
+            human_value: 'Human',
+            patient_comments: 'MediXtract Comments',
+            reviewer_notes: 'Reviewer notes',
+            reviewer_comments: 'Reviewer Comments'
+        };
 
         this.settings.columnOrder.forEach(id => {
             const item = document.createElement('div');
@@ -185,7 +199,9 @@ Object.assign(SchemaEditor.prototype, {
             label: 'Label Filter',
             status: 'Status Filter',
             reviewed: 'Reviewed Filter',
-            severity: 'Severity Filter'
+            severity: 'Severity Filter',
+            reviewerNoteUser: 'Note User Filter',
+            reviewerCommentUser: 'Comment User Filter'
         };
 
         const eyeOpen = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/></svg>`;
@@ -232,7 +248,21 @@ Object.assign(SchemaEditor.prototype, {
     reorderHeaderColumns(vis) {
         const h = document.querySelector('.table-header');
         if (!h) return;
-        const labs = { match: 'Status', name: 'Field Name', group: 'Group', ai_value: 'MediXtract', human_value: 'Human', patient_comments: 'Patient Comments', description: 'Description', comments: 'Notes', type: 'Type', indicators: 'Labels', options: 'Options' };
+        const labs = {
+            match: 'Status',
+            name: 'Field Name',
+            group: 'Group',
+            ai_value: 'MediXtract',
+            human_value: 'Human',
+            patient_comments: 'MediXtract Comments',
+            reviewer_comments: 'Reviewer Comments',
+            description: 'Description',
+            comments: 'MediXtract Notes',
+            reviewer_notes: 'Reviewer notes',
+            type: 'Type',
+            indicators: 'Labels',
+            options: 'Options'
+        };
         h.innerHTML = vis.map(id => `<div class="th field-${id}">${labs[id] || id}</div>`).join('');
     }
 });

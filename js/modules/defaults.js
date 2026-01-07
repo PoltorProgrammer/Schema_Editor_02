@@ -1,6 +1,6 @@
 const DEFAULT_SETTINGS = {
     theme: 'light',
-    columnOrder: ['match', 'name', 'group', 'ai_value', 'human_value', 'patient_comments', 'indicators', 'description', 'comments', 'options'],
+    columnOrder: ['match', 'name', 'group', 'ai_value', 'human_value', 'patient_comments', 'reviewer_comments', 'indicators', 'description', 'comments', 'reviewer_notes', 'options'],
     columnVisibility: {
         match: true,
         name: true,
@@ -8,9 +8,11 @@ const DEFAULT_SETTINGS = {
         ai_value: true,
         human_value: true,
         patient_comments: false,
+        reviewer_comments: false,
         indicators: true,
         description: false,
         comments: false,
+        reviewer_notes: false,
         type: false,
         options: false
     },
@@ -21,10 +23,12 @@ const DEFAULT_SETTINGS = {
         ai_value: 2,
         human_value: 2,
         patient_comments: 2,
+        reviewer_comments: 2,
         indicators: 150,
         options: 1.5,
         description: 3,
         comments: 2,
+        reviewer_notes: 2,
         type: 1
     },
     filterVisibility: {
@@ -33,7 +37,9 @@ const DEFAULT_SETTINGS = {
         label: true,
         status: true,
         reviewed: true,
-        severity: true
+        severity: true,
+        reviewerNoteUser: false,
+        reviewerCommentUser: false
     },
     panelWidth: '60vw',
     username: '',

@@ -393,6 +393,34 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Custom Note User Filter Dropdown -->
+                        <div class="custom-dropdown" id="reviewerNoteUserFilter">
+                            <div class="dropdown-trigger">
+                                <span class="dropdown-label">All Note Users</span>
+                                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="currentColor">
+                                    <path d="M7,10L12,15L17,10H7Z" />
+                                </svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <!-- Options will be populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Custom Comment User Filter Dropdown -->
+                        <div class="custom-dropdown" id="reviewerCommentUserFilter">
+                            <div class="dropdown-trigger">
+                                <span class="dropdown-label">All Comment Users</span>
+                                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="currentColor">
+                                    <path d="M7,10L12,15L17,10H7Z" />
+                                </svg>
+                            </div>
+                            <div class="dropdown-content">
+                                <!-- Options will be populated dynamically -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -404,7 +432,7 @@
                             <div class="th field-type">Type</div>
                             <div class="th field-group">Group</div>
                             <div class="th field-description">Description</div>
-                            <div class="th field-comments">Notes</div>
+                            <div class="th field-comments">MediXtract Notes</div>
                             <div class="th field-indicators">Labels</div>
                         </div>
                         <div class="table-body" id="fieldsTableBody">
@@ -546,7 +574,28 @@
                                         <path
                                             d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z" />
                                     </svg>
-                                    Notes
+                                    MediXtract Notes
+                                </div>
+                                <div class="column-item" data-column="reviewer_notes">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z" />
+                                    </svg>
+                                    Reviewer notes
+                                </div>
+                                <div class="column-item" data-column="patient_comments">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z" />
+                                    </svg>
+                                    MediXtract Comments
+                                </div>
+                                <div class="column-item" data-column="reviewer_comments">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z" />
+                                    </svg>
+                                    Reviewer Comments
                                 </div>
                                 <div class="column-item" data-column="indicators">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

@@ -96,8 +96,30 @@ Object.assign(SchemaEditor.prototype, {
                     </div>
                 </div>`;
             }).join('') : '<div></div>'}</div>`,
+            reviewer_comments: `<div class="field-value reviewer-comments" style="gap: 6px;">${f.reviewer_comments && f.reviewer_comments.length > 0 ? f.reviewer_comments.map(v => {
+                const safeVal = (v.value || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                const hasContent = v.hasComment || (v.value && v.value.trim().length > 0);
+
+                if (!hasContent) {
+                    return `
+                    <div class="patient-answer-row" style="display: flex; align-items: center; gap: 4px; visibility: hidden; pointer-events: none;">
+                        <div class="value-chip">
+                             <span class="chip-value">&nbsp;</span>
+                        </div>
+                    </div>`;
+                }
+
+                return `
+                <div class="patient-answer-row" style="display: flex; align-items: center; gap: 4px; width: 100%;">
+                    <div class="value-chip ${v.status}" title="Patient ${v.pid}: ${safeVal}" onclick="app.openPatientComment('${f.id}', '${v.pid}', event)" style="max-width: 100%; display: flex; align-items: center;">
+                        ${v.label ? `<span class="chip-label" style="flex-shrink: 0;">${v.label}:</span>` : ''}
+                        <span class="chip-value" style="display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; flex: 1; min-width: 0;">${safeVal}</span>
+                    </div>
+                </div>`;
+            }).join('') : '<div></div>'}</div>`,
             description: `<div class="field-description"><div class="text-truncate-container">${f.description}</div></div>`,
             comments: `<div class="field-notes"><div class="text-truncate-container">${f.comments}</div></div>`,
+            reviewer_notes: `<div class="field-notes reviewer-notes"><div class="text-truncate-container">${f.reviewer_notes}</div></div>`,
             type: `<div><div class="field-type">${f.type}</div></div>`,
             options: `<div class="field-options">${(f.definition.options || f.definition.enum || []).map(o => typeof o === 'object' ? o.label : o).join(' | ')}</div>`,
             indicators: `<div class="field-indicators" style="display:flex; flex-wrap:wrap; gap:4px;">

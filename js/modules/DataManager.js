@@ -171,7 +171,8 @@ Object.assign(SchemaEditor.prototype, {
                 description,
                 medixtract_notes: def.medixtract_notes || '',
                 reviewer_notes: Array.isArray(def.reviewer_notes) ? def.reviewer_notes : [],
-                comments: (def.medixtract_notes || '') + (Array.isArray(def.reviewer_notes) ? def.reviewer_notes.map(n => `\n${n.user}: ${n.note}`).join('') : ''),
+                comments: def.medixtract_notes || '',
+                reviewer_notes: Array.isArray(def.reviewer_notes) ? def.reviewer_notes.map(n => `${n.user}: ${n.note}`).join('\n') : (def.notes || ''),
                 aiValue: patients.map(pid => {
                     const perf = def.performance[pid];
                     let val = AppUtils.getMostCommonValue(perf?.output);
@@ -200,21 +201,30 @@ Object.assign(SchemaEditor.prototype, {
                 }),
                 patientComments: patients.map(pid => {
                     const perf = def.performance[pid];
-                    const medixtractComment = perf?.medixtract_comment;
+                    const medixtractComment = perf?.medixtract_comment || '';
+                    return {
+                        pid,
+                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        value: medixtractComment,
+                        status: this.getPatientPerformanceStatus(perf),
+                        reviewed: perf?.reviewed ?? false,
+                        hasComment: !!medixtractComment
+                    };
+                }),
+                reviewer_comments: patients.map(pid => {
+                    const perf = def.performance[pid];
                     const reviewerCommentRaw = perf?.reviewer_comment;
-                    // Format reviewer comments: if array, join user:comment; if string, use directly
                     const reviewerComment = Array.isArray(reviewerCommentRaw)
                         ? reviewerCommentRaw.map(c => `${c.user}: ${c.comment}`).join('\n')
                         : (reviewerCommentRaw || '');
 
-                    const comment = [medixtractComment, (reviewerComment || '')].filter(Boolean).join('\n');
                     return {
                         pid,
                         label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
-                        value: comment || '',
+                        value: reviewerComment,
                         status: this.getPatientPerformanceStatus(perf),
                         reviewed: perf?.reviewed ?? false,
-                        hasComment: !!comment
+                        hasComment: !!reviewerComment
                     };
                 }),
                 matchStatus: overallMatch,
@@ -225,11 +235,32 @@ Object.assign(SchemaEditor.prototype, {
         this.typeOptions.clear();
         this.groupOptions.clear();
         this.labelOptions.clear();
+        this.reviewerNoteUsers.clear();
+        this.reviewerCommentUsers.clear();
+
         this.allFields.forEach(f => {
             this.typeOptions.add(f.type);
             this.groupOptions.add(f.group);
             (f.labels || []).forEach(l => this.labelOptions.add(l));
+
+            // Global reviewer notes (field level)
+            const notes = f.definition.reviewer_notes || [];
+            if (Array.isArray(notes)) {
+                notes.forEach(n => { if (n.user) this.reviewerNoteUsers.add(n.user); });
+            }
+
+            // Per-patient reviewer comments
+            Object.values(f.definition.performance || {}).forEach(perf => {
+                const coms = perf.reviewer_comment || [];
+                if (Array.isArray(coms)) {
+                    coms.forEach(c => { if (c.user) this.reviewerCommentUsers.add(c.user); });
+                } else if (typeof coms === 'string' && coms.trim()) {
+                    // Legacy string comments don't have user info associated, so we skip
+                }
+            });
         });
+
+        this.populateFilterOptions();
 
         const fieldStats = document.getElementById('fieldStats');
         if (fieldStats) {
@@ -319,25 +350,36 @@ Object.assign(SchemaEditor.prototype, {
                 description: def.description || '',
                 medixtract_notes: def.medixtract_notes || '',
                 reviewer_notes: Array.isArray(def.reviewer_notes) ? def.reviewer_notes : [],
-                comments: (def.medixtract_notes || '') + (Array.isArray(def.reviewer_notes) ? def.reviewer_notes.map(n => `\n${n.user}: ${n.note}`).join('') : ''),
+                comments: def.medixtract_notes || '',
+                reviewer_notes: Array.isArray(def.reviewer_notes) ? def.reviewer_notes.map(n => `${n.user}: ${n.note}`).join('\n') : (def.notes || ''),
                 aiValue: aiVal,
                 humanValue: humanVal,
                 patientComments: pidList.map(pid => {
                     const perf = def.performance?.[pid];
-                    const medixtractComment = perf?.medixtract_comment;
+                    const medixtractComment = perf?.medixtract_comment || '';
+                    return {
+                        pid,
+                        label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,
+                        value: medixtractComment,
+                        status: this.getPatientPerformanceStatus(perf),
+                        reviewed: perf?.reviewed ?? false,
+                        hasComment: !!medixtractComment
+                    };
+                }),
+                reviewer_comments: pidList.map(pid => {
+                    const perf = def.performance?.[pid];
                     const reviewerCommentRaw = perf?.reviewer_comment;
                     const reviewerComment = Array.isArray(reviewerCommentRaw)
                         ? reviewerCommentRaw.map(c => `${c.user}: ${c.comment}`).join('\n')
                         : (reviewerCommentRaw || '');
 
-                    const comment = [medixtractComment, (reviewerComment || '')].filter(Boolean).join('\n');
                     return {
                         pid,
                         label: pidList.length > 1 ? pid.replace('patient_', 'P') : null,
-                        value: comment || '',
+                        value: reviewerComment,
                         status: this.getPatientPerformanceStatus(perf),
                         reviewed: perf?.reviewed ?? false,
-                        hasComment: !!comment
+                        hasComment: !!reviewerComment
                     };
                 }),
                 matchStatus: overallMatch,
@@ -669,6 +711,8 @@ Object.assign(SchemaEditor.prototype, {
         if (!this.filters.groups || !Array.isArray(this.filters.groups)) this.filters.groups = [];
         if (!this.filters.labels || !Array.isArray(this.filters.labels)) this.filters.labels = [];
         if (!this.filters.statuses || !Array.isArray(this.filters.statuses)) this.filters.statuses = [];
+        if (!this.filters.reviewerNoteUsers || !Array.isArray(this.filters.reviewerNoteUsers)) this.filters.reviewerNoteUsers = [];
+        if (!this.filters.reviewerCommentUsers || !Array.isArray(this.filters.reviewerCommentUsers)) this.filters.reviewerCommentUsers = [];
     },
 
     getPatientPerformanceStatus(p) {
