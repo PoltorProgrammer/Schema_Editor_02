@@ -25,10 +25,10 @@ if (Test-Path (Join-Path $currentDir ".git")) {
         # 3. Clean EVERYTHING (untracked + ignored)
         # -f : force
         # -d : remove directories
-        # -x : remove ignored files too (like node_modules, logs, docs, etc.)
-        # -e projects : EXCLUDE key user data folder so it isn't wiped
-        Write-Host "Removing all extra files (Factory Reset matching Repo)..."
-        git clean -fdx -e projects
+        # -x : remove ignored files too
+        # WARNING: This deletes user data (projects) as requested.
+        Write-Host "Removing all extra files (Full Factory Reset - Wiping Data)..."
+        git clean -fdx
         
         Write-Host "`nUpdate complete via Git!" -ForegroundColor Green
         Write-Host "Your local changes (if any) were stashed as a backup." -ForegroundColor Gray
