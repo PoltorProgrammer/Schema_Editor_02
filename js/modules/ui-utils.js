@@ -413,24 +413,46 @@ const AppUI = {
 
             titleEl.textContent = 'Update Detected - Conflict Resolved';
 
+            // Check if WE won (Remote Win) or THEY won (Local Win/others)
+            // Note: conflicts array contains heterogeneous actions if multiple conflicts happened
+            const weWon = conflicts.every(c => c.action === 'Remote Win');
+            const weLost = conflicts.every(c => c.action !== 'Remote Win');
+
+            let summaryText = '';
+            let styleColor = '';
+
+            if (weWon) {
+                summaryText = `Your changes were preserved and have overwritten the version from <strong style="color: var(--primary);">${winnerName}</strong>:`;
+                styleColor = 'var(--success-dark)'; // Greenish for winning
+            } else if (weLost) {
+                summaryText = `Your changes to the following records were overwritten by a newer save from <strong style="color: var(--primary);">${winnerName}</strong>:`;
+                styleColor = 'var(--gray-700)';
+            } else {
+                // Mixed bag
+                summaryText = `Conflict resolution complete. Review below for details relative to <strong style="color: var(--primary);">${winnerName}</strong>:`;
+                styleColor = 'var(--gray-700)';
+            }
+
             // Build Message
             let varsHtml = conflicts.map(c => {
                 const label = c.patient_id ? `${c.variable_id} (Patient: ${c.patient_id})` : `${c.variable_id} (Settings)`;
-                return `<li style="margin-left: 1rem; margin-bottom: 0.25rem;">${label}</li>`;
+                // Add status badge
+                const status = c.action === 'Remote Win' ? '<span style="color:var(--success); font-weight:bold; font-size:0.8em; margin-left:0.5em;">(KEPT)</span>' : '<span style="color:var(--danger); font-weight:bold; font-size:0.8em; margin-left:0.5em;">(LOST)</span>';
+                return `<li style="margin-left: 1rem; margin-bottom: 0.25rem;">${label} ${status}</li>`;
             }).join('');
 
             messageEl.innerHTML = `
-                <div style="margin-bottom: 1rem; color: var(--gray-700); line-height: 1.5;">
-                    Your changes to the following records were overwritten by a newer save from <strong style="color: var(--primary);">${winnerName}</strong>:
+                <div style="margin-bottom: 1rem; color: ${styleColor}; line-height: 1.5;">
+                    ${summaryText}
                 </div>
                 <ul style="margin-bottom: 1.25rem; background: var(--gray-50); padding: 1rem; border-radius: var(--radius); border: 1px solid var(--gray-200); list-style-type: disc; max-height: 180px; overflow-y: auto;">
                     ${varsHtml}
                 </ul>
                 <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: #fff8f0; border: 1px solid #ffeeba; border-radius: var(--radius); color: #856404; font-size: 0.9rem;">
-                    <strong>Note:</strong> All your non-conflicting edits for other patients were successfully merged and saved.
+                    <strong>Note:</strong> The page will reload to ensure you are seeing the latest synchronized project state.
                 </div>
-                <div style="font-weight: 700; color: var(--danger); text-align: center; font-size: 1.1rem;">
-                    Syncing changes in <span id="loserCountdown">7</span> seconds...
+                <div style="font-weight: 700; color: var(--primary); text-align: center; font-size: 1.1rem;">
+                    Syncing in <span id="loserCountdown">7</span> seconds...
                 </div>
             `;
 

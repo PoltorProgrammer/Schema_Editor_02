@@ -375,12 +375,14 @@ Object.assign(SchemaEditor.prototype, {
                         const text = await file.text();
                         const log = JSON.parse(text);
 
-                        // Check if we are the "Remote User" (the one who was overwritten)
+                        // Check if we are the "Remote User" (involved in the conflict)
+                        // User requested to see notification even if they won (Remote Win)
                         const myLosses = (log.details || []).filter(d => d.remote_user === this.settings.username);
 
                         if (myLosses.length > 0) {
                             // Usage: Show Modal
-                            const winner = myLosses[0].winner || (log.details && log.details[0] ? log.details[0].winner : 'Another user');
+                            // If I am Remote/Loser, then Local (Logger) is the Winner
+                            const winner = myLosses[0].local_user || 'Another user';
                             // Fix: Pass full conflict objects so modal can read variable_id and patient_id
                             AppUI.showLoserModal(winner, myLosses);
                             this.lastCheckedConflictTime = Date.now();
