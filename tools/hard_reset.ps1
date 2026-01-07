@@ -31,6 +31,20 @@ if (Test-Path (Join-Path $currentDir ".git")) {
         git clean -fdx
         
         Write-Host "`nHard Reset Complete!" -ForegroundColor Green
+
+        # Self-Destruct this script and the BAT file
+        Write-Host "Cleaning up reset tools..." -ForegroundColor Gray
+        $batPath = Join-Path $currentDir "Factory Reset.bat"
+        if (Test-Path $batPath) { Remove-Item $batPath -Force }
+        
+        # We can't delete the running script directly while it's executing easily in PS without errors,
+        # but since 'git clean -fdx' ran above, it MIGHT have already deleted them if they weren't ignored? 
+        # But they ARE tracked right now. 
+        # Wait, if they are tracked, 'git clean' won't touch them.
+        # But the user wants them gone.
+        
+        # Delete this script (the caller BAT will fail on exit but that is fine)
+        Remove-Item $MyInvocation.MyCommand.Path -Force
     } else {
         Write-Host "[ERROR] Git not found in PATH." -ForegroundColor Red
     }

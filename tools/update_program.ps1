@@ -12,23 +12,18 @@ if (Test-Path (Join-Path $currentDir ".git")) {
     
     # Check if git is in path
     if (Get-Command git -ErrorAction SilentlyContinue) {
-        Write-Host "Resetting local environment to match GitHub (Hard Refresh)..."
+        Write-Host "Stashing any local modifications (as backup)..."
+        git stash | Out-Null
         
-        # 1. Fetch latest changes
         Write-Host "Fetching latest version from GitHub..."
         git fetch origin
         
-        # 2. Hard Reset to match origin/main exactly (discards modified tracked files)
-        Write-Host "Resetting tracked files to match origin/main..."
-        git reset --hard origin/main
+        $branch = git rev-parse --abbrev-ref HEAD
+        Write-Host "Updating program files to match 'origin/$branch'..."
         
-        # 3. Clean EVERYTHING (untracked + ignored) but EXCLUDE projects
-        # -f : force
-        # -d : remove directories
-        # -x : remove ignored files too
-        # -e projects : PROTECT USER DATA
-        Write-Host "Removing extra files (cleaning workspace, preserving projects)..."
-        git clean -fdx -e projects
+        # This will restore deleted files and ensure everything matches the repo
+        # It won't touch ignored files (like the 'projects' folder)
+        git reset --hard "origin/$branch"
         
         Write-Host "`nUpdate complete via Git!" -ForegroundColor Green
         Write-Host "Your local changes (if any) were stashed as a backup." -ForegroundColor Gray
