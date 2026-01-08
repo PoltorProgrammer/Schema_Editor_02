@@ -1,7 +1,7 @@
 /* Custom Dropdown Styles */
 .custom-dropdown {
     position: relative;
-    min-width: 125px;
+    width: max-content;
 }
 
 #headerMoreFilter {

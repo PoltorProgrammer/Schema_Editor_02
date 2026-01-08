@@ -120,6 +120,7 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('closeSettingsBtn').addEventListener('click', this.cancelSettings.bind(this));
         document.getElementById('cancelSettingsBtn').addEventListener('click', this.cancelSettings.bind(this));
         document.getElementById('saveSettingsBtn').addEventListener('click', this.saveSettings.bind(this));
+        document.getElementById('resetSettingsBtn').addEventListener('click', this.resetToDefaults.bind(this));
 
         ['light', 'dark', 'joan'].forEach(t => {
             const btn = document.getElementById(`${t}ThemeBtn`);

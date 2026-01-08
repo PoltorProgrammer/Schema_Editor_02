@@ -264,5 +264,24 @@ Object.assign(SchemaEditor.prototype, {
             options: 'Options'
         };
         h.innerHTML = vis.map(id => `<div class="th field-${id}">${labs[id] || id}</div>`).join('');
+    },
+
+    resetToDefaults() {
+        // Keep the username and knownNicknames when resetting
+        const currentUser = this.settings.username;
+        const knownNicknames = this.settings.knownNicknames;
+
+        this.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+
+        this.settings.username = currentUser;
+        this.settings.knownNicknames = knownNicknames;
+
+        this.initializeTheme();
+        this.updateThemeButtons();
+        this.updateFilterVisibilityDisplay();
+        this.updateColumnOrderDisplay();
+
+        // Re-initialize drag and drop for the new list
+        this.initializeColumnDragDrop();
     }
 });
