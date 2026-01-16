@@ -127,16 +127,29 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('downloadProgressBtn').style.display = 'none';
         document.getElementById('headerMoreFilter').style.display = 'inline-flex';
         document.getElementById('projectDashboardBtn').style.display = 'flex';
+        document.getElementById('resultsPageBtn').style.display = 'flex';
+        document.getElementById('backToTableBtn').style.display = 'none';
         document.getElementById('loadingIndicator').style.display = 'none';
+
+        // Remember current view
+        localStorage.setItem('lastActivePage', 'editor');
+
+        // Hide Results Page
+        const resultsPage = document.getElementById('resultsPage');
+        if (resultsPage) resultsPage.style.display = 'none';
 
         // Show schema info in editor
         const schemaInfo = document.querySelector('.schema-info');
         if (schemaInfo) schemaInfo.style.display = 'flex';
 
         // Original individual buttons are now hidden (as part of the grouped menu)
-        document.getElementById('addPatientBtn').style.display = 'none';
-        document.getElementById('addOutputBtn').style.display = 'none';
-        document.getElementById('downloadFilteredBtn').style.display = 'none';
+        const hideEl = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        };
+        hideEl('addPatientBtn');
+        hideEl('addOutputBtn');
+        hideEl('downloadFilteredBtn');
         this.applyColumnOrder();
 
         if (this.updateScrollTopVisibility) {

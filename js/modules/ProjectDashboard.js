@@ -25,6 +25,9 @@ Object.assign(SchemaEditor.prototype, {
         if (emptyState) emptyState.style.display = 'none';
         if (loading) loading.style.display = 'none';
 
+        const resultsPage = document.getElementById('resultsPage');
+        if (resultsPage) resultsPage.style.display = 'none';
+
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('downloadProgressBtn').style.display = 'none';
         if (document.getElementById('headerMoreFilter')) {
@@ -43,6 +46,11 @@ Object.assign(SchemaEditor.prototype, {
         }
 
         const isUserAction = forceDashboard && (typeof forceDashboard === 'object' || forceDashboard === true);
+
+        if (isUserAction) {
+            localStorage.removeItem('lastActiveProject');
+            localStorage.removeItem('lastActivePage');
+        }
 
         // Try to auto-connect if we have a stored handle and it's not a user logout/dashboard action
         if (!isUserAction && !this.projectsDirectoryHandle) {
@@ -73,6 +81,12 @@ Object.assign(SchemaEditor.prototype, {
         // Hide dashboard button when on dashboard
         const dashboardBtn = document.getElementById('projectDashboardBtn');
         if (dashboardBtn) dashboardBtn.style.display = 'none';
+
+        const resultsBtn = document.getElementById('resultsPageBtn');
+        if (resultsBtn) resultsBtn.style.display = 'none';
+
+        const backBtn = document.getElementById('backToTableBtn');
+        if (backBtn) backBtn.style.display = 'none';
 
         // 1. "Connect/Rescan" Card (Unified)
         let headerText = "Connect Google Drive";

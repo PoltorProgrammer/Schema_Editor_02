@@ -26,9 +26,12 @@
     <link rel="stylesheet" href="css/layouts/patient-analysis.css">
     <link rel="stylesheet" href="css/layouts/project-upload.css">
     <link rel="stylesheet" href="css/components/scroll-top.css">
+    <link rel="stylesheet" href="css/layouts/results-page.css">
     <!-- Other -->
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/themes.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 </head>
 
 <body>
@@ -49,6 +52,13 @@
                     </div>
                 </div>
                 <div class="header-actions">
+                    <button id="backToTableBtn" class="btn btn-ghost" title="Back to Table"
+                        onclick="app.showSchemaEditor()" style="display: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20,11H7.83L13.42,5.41L12,4L4,12L12,20L13.41,18.59L7.83,13H20V11Z" />
+                        </svg>
+                        Back to Table
+                    </button>
 
                     <button id="projectDashboardBtn" class="btn btn-ghost" title="Projects">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -56,6 +66,15 @@
                                 d="M19,5V7H15V5H19M9,5V7H5V5H9M19,11V13H15V11H19M9,11V13H5V11H9M19,17V19H15V17H19M9,17V19H5V17H9M21,3H13V9H21V3M11,3H3V9H11V3M21,10H13V15H21V10M11,10H3V15H11V10M21,16H13V21H21V16M11,16H3V21H11V16Z" />
                         </svg>
                         Dashboard
+                    </button>
+
+                    <button id="resultsPageBtn" class="btn btn-ghost" title="Results Statistics"
+                        onclick="app.showResultsPage()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V19L10.23,4.75L16,11.78Z" />
+                        </svg>
+                        Results
                     </button>
 
 
@@ -464,6 +483,116 @@
             </div>
         </main>
 
+        <!-- Results Page -->
+        <div id="resultsPage" class="results-page" style="display: none;">
+            <!-- Header -->
+            <div class="results-header">
+                <h2>Results Statistics</h2>
+
+
+                <!-- Visualization Charts -->
+                <div class="results-overview-container">
+                    <div class="chart-box overview-box">
+                        <div class="box-header">
+                            <h3>Global Performance Overview</h3>
+                            <div class="mode-switcher" id="overviewModeSwitcher">
+                                <button class="switcher-btn active" data-mode="outputs">Outputs</button>
+                                <button class="switcher-btn" data-mode="variables">Variables</button>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper overview-wrapper">
+                            <canvas id="overviewChart"></canvas>
+                            <div id="overviewCenterText" class="chart-center-text"></div>
+                        </div>
+                        <div id="overviewLegend" class="overview-legend"></div>
+                    </div>
+                </div>
+
+                <div class="results-charts-container">
+                    <div class="chart-box">
+                        <h3>Improvements Breakdown</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="improvedChart"></canvas>
+                            <div id="improvedCenterText" class="chart-center-text small-center"></div>
+                        </div>
+                        <div id="improvedLegend" class="overview-legend breakdown-legend"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Issues Breakdown</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="issuedChart"></canvas>
+                            <div id="issuedCenterText" class="chart-center-text small-center"></div>
+                        </div>
+                        <div id="issuedLegend" class="overview-legend breakdown-legend"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="results-content">
+                <!-- Patient Stats -->
+                <div class="results-section">
+                    <h3>Status Per Patient (Fields Count)</h3>
+                    <div class="table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 120px;">Patient</th>
+                                    <th class="col-stat" title="Matched">Match</th>
+                                    <th class="col-stat" title="Improved">Impr</th>
+                                    <th class="col-stat" title="Unmatched (Issued)">Issue</th>
+                                    <th class="col-stat" title="Uncertain">Uncer</th>
+                                    <th class="col-stat" title="Pending">Pend</th>
+                                    <th class="col-stat" title="Dismissed">Dism</th>
+                                    <th class="col-stat col-total">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsPatientTbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                            <tfoot id="resultsPatientTfoot">
+                                <!-- Populated by JS -->
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Field Stats -->
+                <div class="results-section">
+                    <h3>Status Per Field (Patients Count)</h3>
+                    <div class="table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 200px;">Field Name</th>
+                                    <th class="col-stat" title="Matched">Match</th>
+                                    <th class="col-stat" title="Improved">Impr</th>
+                                    <th class="col-stat" title="Unmatched (Issued)">Issue</th>
+                                    <th class="col-stat" title="Uncertain">Uncer</th>
+                                    <th class="col-stat" title="Pending">Pend</th>
+                                    <th class="col-stat" title="Dismissed">Dism</th>
+                                    <th class="col-stat col-total">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsFieldTbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                            <tfoot id="resultsFieldTfoot">
+                                <!-- Populated by JS -->
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-summary-wrapper">
+                <h3 class="summary-subtitle">Field Distribution Summary</h3>
+                <p class="summary-description">Number of fields that have at least one patient categorized under
+                    that status</p>
+                <div id="resultsFieldSummary" class="results-field-summary"></div>
+            </div>
+        </div>
+
         <!-- Settings Modal -->
         <div id="settingsModal" class="settings-modal" style="display: none;">
             <div class="settings-overlay"></div>
@@ -768,6 +897,7 @@
     <script src="js/modules/renderers/PatientAnalysisRenderer.js"></script>
     <script src="js/modules/renderers/FieldDetailsRenderer.js"></script>
     <script src="js/modules/SettingsManager.js"></script>
+    <script src="js/modules/ResultsPage.js"></script>
     <script src="js/modules/MergeManager.js"></script>
     <script src="js/modules/ExportManager.js"></script>
     <script src="js/modules/PresenceManager.js"></script>

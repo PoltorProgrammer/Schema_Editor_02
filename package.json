@@ -10,5 +10,8 @@
     "license": "ISC",
     "devDependencies": {
         "serve": "^14.2.0"
+    },
+    "dependencies": {
+        "xlsx": "^0.18.5"
     }
 }

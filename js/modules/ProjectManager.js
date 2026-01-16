@@ -227,6 +227,7 @@ Object.assign(SchemaEditor.prototype, {
             if (!project) throw new Error('Project not found');
 
             this.currentProject = project;
+            this.currentProjectDisplay = null;
             localStorage.setItem('lastActiveProject', projectName);
             this.validationData = {};
             this.medixtractOutputData = {};
@@ -306,19 +307,19 @@ Object.assign(SchemaEditor.prototype, {
                 this.projectNicknames.add(this.currentSchema.last_updated_by);
             }
 
-            // Format project name: Remove suffix, replace underscores with spaces, and Capitalize Each Word
-            const cleanName = projectName.replace(/[-_]project$/, '').replace(/_/g, ' ');
-            const capitalizedName = cleanName.split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-
-            document.getElementById('currentVersion').innerHTML = `Project: <span class="project-name-vibrant">${capitalizedName}</span>`;
-            this.updateHeaderMetadata();
-
             try {
                 this.processProjectData();
                 this.populateFilterOptions();
-                this.showSchemaEditor();
+                this.updateHeaderMetadata();
+
+                // Restore last active page
+                const lastPage = localStorage.getItem('lastActivePage');
+                if (lastPage === 'results') {
+                    this.showResultsPage();
+                } else {
+                    this.showSchemaEditor();
+                }
+
                 this.initPresence();
             } catch (innerError) {
                 console.error("Data processing error:", innerError);
@@ -335,13 +336,40 @@ Object.assign(SchemaEditor.prototype, {
     },
 
     updateHeaderMetadata() {
+        if (!this.currentProject) return;
+
+        // 1. Project Name (if not already set or needs refresh)
+        const currentVersionEl = document.getElementById('currentVersion');
+        if (currentVersionEl) {
+            if (!this.currentProjectDisplay) {
+                const cleanName = this.currentProject.name.replace(/[-_]project$/, '').replace(/_/g, ' ');
+                this.currentProjectDisplay = cleanName.split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+            }
+            currentVersionEl.innerHTML = `Project: <span class="project-name-vibrant">${this.currentProjectDisplay}</span>`;
+        }
+
+        // 2. Stats (Fields and Patients)
+        const fieldStats = document.getElementById('fieldStats');
+        if (fieldStats && this.allFields) {
+            fieldStats.textContent = `${this.allFields.length} fields`;
+        }
+
+        const patientStats = document.getElementById('patientStats');
+        if (patientStats && this.validationData) {
+            const patientCount = Object.keys(this.validationData).length;
+            patientStats.textContent = `${patientCount} patient${patientCount !== 1 ? 's' : ''}`;
+            patientStats.style.display = 'inline-block';
+        }
+
+        // 3. Last Edit Info
         const lastEditInfo = document.getElementById('lastEditInfo');
         if (!lastEditInfo || !this.currentSchema) return;
 
         const date = this.currentSchema.last_updated_at;
         const user = this.currentSchema.last_updated_by || 'Unknown';
 
-        // Check against current user
         let displayUser = user;
         if (this.settings && this.settings.username && user === this.settings.username) {
             displayUser = `${user} (you)`;

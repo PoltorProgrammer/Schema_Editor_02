@@ -179,7 +179,7 @@ Object.assign(SchemaEditor.prototype, {
                     if (val === null || val === undefined) val = '--';
                     return {
                         pid,
-                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        label: patients.length > 1 ? pid.replace(/^Patient[_\s]?/i, 'P') : null,
                         value: AppUtils.formatValueWithLabel(val, def),
                         status: this.getPatientPerformanceStatus(perf),
                         reviewed: perf?.reviewed ?? false
@@ -193,7 +193,7 @@ Object.assign(SchemaEditor.prototype, {
                     else val = '--';
                     return {
                         pid,
-                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        label: patients.length > 1 ? pid.replace(/^Patient[_\s]?/i, 'P') : null,
                         value: AppUtils.formatValueWithLabel(val, def),
                         status: this.getPatientPerformanceStatus(perf),
                         reviewed: perf?.reviewed ?? false
@@ -204,7 +204,7 @@ Object.assign(SchemaEditor.prototype, {
                     const medixtractComment = perf?.medixtract_comment || '';
                     return {
                         pid,
-                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        label: patients.length > 1 ? pid.replace(/^Patient[_\s]?/i, 'P') : null,
                         value: medixtractComment,
                         status: this.getPatientPerformanceStatus(perf),
                         reviewed: perf?.reviewed ?? false,
@@ -220,7 +220,7 @@ Object.assign(SchemaEditor.prototype, {
 
                     return {
                         pid,
-                        label: patients.length > 1 ? pid.replace('patient_', 'P') : null,
+                        label: patients.length > 1 ? pid.replace(/^Patient[_\s]?/i, 'P') : null,
                         value: reviewerComment,
                         status: this.getPatientPerformanceStatus(perf),
                         reviewed: perf?.reviewed ?? false,
@@ -261,17 +261,6 @@ Object.assign(SchemaEditor.prototype, {
         });
 
         this.populateFilterOptions();
-
-        const fieldStats = document.getElementById('fieldStats');
-        if (fieldStats) {
-            fieldStats.textContent = `${this.allFields.length} fields`;
-        }
-
-        const patientStats = document.getElementById('patientStats');
-        if (patientStats) {
-            patientStats.textContent = `${patients.length} patient${patients.length !== 1 ? 's' : ''}`;
-            patientStats.style.display = 'inline-block';
-        }
 
         this.applyFilters();
         this.populateFilterOptions();

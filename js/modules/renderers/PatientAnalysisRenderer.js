@@ -139,7 +139,7 @@ Object.assign(SchemaEditor.prototype, {
                 </div>
 
                 <div class="bottom-section" style="display: flex; flex-direction: column; gap: 1.25rem;">
-                    <div class="comments-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                    <div class="comments-section" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem;">
                         <div class="form-field">
                             <label for="medixtract-comment-${patientId}">MediXtract Comment</label>
                             ${(() => {
@@ -149,55 +149,95 @@ Object.assign(SchemaEditor.prototype, {
             })()}
                         </div>
                         <div class="form-field">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
-                                <label for="reviewer-comment-${patientId}" style="margin-bottom: 0;">Reviewer Comment</label>
-                                ${(() => {
-                const comments = Array.isArray(perf.reviewer_comment) ? perf.reviewer_comment : [];
-                const currentUser = this.settings?.username || 'Unknown';
-                const otherComments = comments.filter(c => c.user !== currentUser);
-                if (otherComments.length === 0) return '';
 
-                const userList = otherComments.map(c => c.user);
-                const displayLabel = userList.length === 1
-                    ? `Answer from ${userList[0]}`
-                    : `${userList.length} Answers (${userList.join(', ')})`;
-
-                return `
-                                        <button type="button" class="btn-ghost" 
-                                            style="padding: 2px 8px; font-size: 0.7rem; display: flex; align-items: center; gap: 4px; border-radius: 4px; background: var(--gray-100); border: 1px solid var(--gray-200); color: var(--gray-600); font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                                            onclick="const el = document.getElementById('other-comments-${patientId}'); const isHidden = el.style.display === 'none'; el.style.display = isHidden ? 'block' : 'none'; this.style.background = isHidden ? 'var(--primary-light)' : 'var(--gray-100)'; this.style.color = isHidden ? 'var(--primary)' : 'var(--gray-600)';"
-                                            title="Click to show/hide other comments">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M21,15H3A2,2 0 0,1 1,13V3A2,2 0 0,1 3,1H21A2,2 0 0,1 23,3V13A2,2 0 0,1 21,15M3,3V13H21V3H3M21,17V19H3V17H21M21,21V23H3V21H21Z"/></svg>
-                                            ${displayLabel}
-                                        </button>`;
-            })()}
-                            </div>
                             ${(() => {
                 const comments = Array.isArray(perf.reviewer_comment) ? perf.reviewer_comment : [];
                 const currentUser = this.settings?.username || 'Unknown';
+                const isPassiveReviewer = ['Joan', 'Tomás', 'Tomas'].includes(currentUser);
+
+                // Passive reviewers: Show "Other Comments" list HERE (Column 2) instead of textarea.
+                if (isPassiveReviewer) {
+                    // Sort: Newest First
+                    const sortedComments = [...comments].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    const listHtml = sortedComments.map((c) => `
+                        <div style="min-width: 220px; max-width: 220px; flex-shrink: 0; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 0.75rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column;">
+                            <div style="font-size: 0.65rem; color: var(--gray-400); display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; border-bottom: 1px solid var(--gray-100); padding-bottom: 0.25rem;">
+                                <span>${c.user}</span>
+                                <span>${new Date(c.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                            </div>
+                            <div style="font-size: 0.8125rem; color: var(--gray-700); line-height: 1.4; white-space: pre-wrap; flex-grow: 1;">${c.comment}</div>
+                        </div>
+                    `).join('');
+
+                    const emptyMsg = '<div style="padding: 0.75rem; color: var(--gray-400); font-size: 0.8125rem;">No details available.</div>';
+
+                    // We want this container to match the height of the MediXtract comment box.
+                    // The MediXtract box is a textarea. We can try `height: 100%` on this container to fill the grid cell.
+                    // And `display: flex; flex-direction: row; overflow-x: auto;` for the horizontal scroll.
+                    return `
+                        <div style="display: flex; flex-direction: column; height: 100%;">
+                             <label>Other Comments</label>
+                             <div id="other-comments-${patientId}" style="flex-grow: 1; display: flex; flex-direction: row; gap: 0.75rem; overflow-x: auto; padding-bottom: 4px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--gray-50); padding: 0.5rem;">
+                                ${listHtml || emptyMsg}
+                             </div>
+                        </div>
+                    `;
+                }
+
+                // Normal Mode Loop
                 const myCommentObj = comments.find(c => c.user === currentUser);
                 const myComment = myCommentObj ? myCommentObj.comment : '';
 
-                const otherComments = comments.filter(c => c.user !== currentUser);
-                const othersListHtml = otherComments.map((c, idx) => `
-                                    <div style="padding: 0.75rem; ${idx !== otherComments.length - 1 ? 'border-bottom: 1px solid var(--gray-200);' : ''}">
-                                        <div style="font-size: 0.65rem; color: var(--gray-400); display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em;">
-                                            <span>${c.user}</span>
-                                            <span>${new Date(c.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
-                                        </div>
-                                        <div style="font-size: 0.8125rem; color: var(--gray-700); line-height: 1.4; white-space: pre-wrap;">${c.comment}</div>
-                                    </div>
-                                `).join('');
-
                 return `
-                                    <textarea class="no-dropdown-icon" id="reviewer-comment-${patientId}" name="reviewer-comment-${patientId}" data-patient="${patientId}" data-perf-prop="reviewer_comment" placeholder="Add your comment...">${myComment}</textarea>
-                                    <div id="other-comments-${patientId}" style="display: none; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); margin-top: 0.5rem; box-shadow: var(--shadow-sm); max-height: 200px; overflow-y: auto;">
-                                        ${othersListHtml}
-                                    </div>
-                                `;
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <label for="reviewer-comment-${patientId}" style="margin-bottom: 0;">Reviewer Comment</label>
+                    </div>
+                    <textarea class="no-dropdown-icon" id="reviewer-comment-${patientId}" name="reviewer-comment-${patientId}" data-patient="${patientId}" data-perf-prop="reviewer_comment" placeholder="Add your comment...">${myComment}</textarea>
+                `;
             })()}
                         </div>
                     </div>
+
+                    ${(() => {
+                const comments = Array.isArray(perf.reviewer_comment) ? perf.reviewer_comment : [];
+                const currentUser = this.settings?.username || 'Unknown';
+                const isPassiveReviewer = ['Joan', 'Tomás', 'Tomas'].includes(currentUser);
+
+                // For passive reviewers, the comments are NOW shown in Column 2 (above).
+                // So we return empty string here to avoid duplication.
+                if (isPassiveReviewer) return '';
+
+                // For normal users, we show only OTHER users' comments here (below grid).
+                const commentsToShow = comments.filter(c => c.user !== currentUser);
+
+                if (commentsToShow.length === 0) return ''; // Don't show empty section for normal users
+
+                // Sort: Newest First
+                const sortedComments = [...commentsToShow].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                const listHtml = sortedComments.map((c) => `
+                        <div style="min-width: 220px; max-width: 220px; flex-shrink: 0; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 0.75rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column;">
+                            <div style="font-size: 0.65rem; color: var(--gray-400); display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; border-bottom: 1px solid var(--gray-100); padding-bottom: 0.25rem;">
+                                <span>${c.user}</span>
+                                <span>${new Date(c.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                            </div>
+                            <div style="font-size: 0.8125rem; color: var(--gray-700); line-height: 1.4; white-space: pre-wrap; flex-grow: 1;">${c.comment}</div>
+                        </div>
+                    `).join('');
+
+                const contentHtml = listHtml;
+
+                // Title Case "Other Comments"
+                return `
+                        <div class="form-field full-width" style="margin-top: 0;">
+                            <label>Other Comments</label>
+                            <div id="other-comments-${patientId}" style="display: flex; flex-direction: row; gap: 0.75rem; overflow-x: auto; padding-bottom: 4px;">
+                                ${contentHtml}
+                            </div>
+                        </div>
+                    `;
+            })()}
                     <div class="form-field full-width">
                         <label>Severity (1-5)</label>
                         <div class="severity-scale" style="display: flex; gap: 4px; align-items: center; height: 36px;">
@@ -372,8 +412,8 @@ Object.assign(SchemaEditor.prototype, {
                 const matchPercentage = matchingStat ? matchingStat.percentage : 0;
 
                 if (matchPercentage >= 90) {
-                    bgColor = '#DCFCE7';
-                    borderColor = '#22C55E';
+                    bgColor = 'var(--white)';
+                    borderColor = 'var(--gray-300)';
                 } else if (matchPercentage >= 80) {
                     bgColor = '#FEF9C3';
                     borderColor = '#EAB308';
