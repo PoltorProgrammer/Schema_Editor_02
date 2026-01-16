@@ -203,8 +203,11 @@ Object.assign(SchemaEditor.prototype, {
             // Auto-load logic if applicable
             const lastActiveProjectName = localStorage.getItem('lastActiveProject');
             const lastActiveProject = lastActiveProjectName ? this.projects.find(p => p.name === lastActiveProjectName) : null;
+            const isGlobalActive = localStorage.getItem('isGlobalViewActive') === 'true';
 
-            if (isAutoLoad && lastActiveProject) {
+            if (isAutoLoad && isGlobalActive) {
+                await this.showGlobalResults(true); // true = skipModal
+            } else if (isAutoLoad && lastActiveProject) {
                 await this.loadProject(lastActiveProject.name);
             } else {
                 this.renderProjectList();
@@ -227,6 +230,8 @@ Object.assign(SchemaEditor.prototype, {
             if (!project) throw new Error('Project not found');
 
             this.currentProject = project;
+            this.isGlobalView = false;
+            localStorage.removeItem('isGlobalViewActive');
             this.currentProjectDisplay = null;
             localStorage.setItem('lastActiveProject', projectName);
             this.validationData = {};
@@ -338,22 +343,28 @@ Object.assign(SchemaEditor.prototype, {
     updateHeaderMetadata() {
         if (!this.currentProject) return;
 
-        // 1. Project Name (if not already set or needs refresh)
+        // 1. Project Name
         const currentVersionEl = document.getElementById('currentVersion');
         if (currentVersionEl) {
-            if (!this.currentProjectDisplay) {
-                const cleanName = this.currentProject.name.replace(/[-_]project$/, '').replace(/_/g, ' ');
-                this.currentProjectDisplay = cleanName.split(' ')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                    .join(' ');
+            if (this.isGlobalView) {
+                currentVersionEl.innerHTML = `Global Meta-Analysis: <span class="project-name-vibrant">${this.globalProjectNames.length} Projects Combined</span>`;
+                currentVersionEl.title = this.globalProjectNames.map(p => p.replace(/[-_]project$/, '')).join(', ');
+            } else {
+                if (!this.currentProjectDisplay) {
+                    const cleanName = this.currentProject.name.replace(/[-_]project$/, '').replace(/_/g, ' ');
+                    this.currentProjectDisplay = cleanName.split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ');
+                }
+                currentVersionEl.innerHTML = `Project: <span class="project-name-vibrant">${this.currentProjectDisplay}</span>`;
             }
-            currentVersionEl.innerHTML = `Project: <span class="project-name-vibrant">${this.currentProjectDisplay}</span>`;
         }
 
         // 2. Stats (Fields and Patients)
         const fieldStats = document.getElementById('fieldStats');
         if (fieldStats && this.allFields) {
-            fieldStats.textContent = `${this.allFields.length} fields`;
+            const count = this.isGlobalView ? this.globalTotalFields : this.allFields.length;
+            fieldStats.textContent = `${count} different fields`;
         }
 
         const patientStats = document.getElementById('patientStats');
@@ -365,8 +376,15 @@ Object.assign(SchemaEditor.prototype, {
 
         // 3. Last Edit Info
         const lastEditInfo = document.getElementById('lastEditInfo');
-        if (!lastEditInfo || !this.currentSchema) return;
+        if (!lastEditInfo) return;
 
+        if (this.isGlobalView) {
+            lastEditInfo.innerHTML = `<span class="edit-time" style="color: #4285F4; font-weight: 500;">Aggregated data across multi-project dataset</span>`;
+            lastEditInfo.style.display = 'flex';
+            return;
+        }
+
+        if (!this.currentSchema) return;
         const date = this.currentSchema.last_updated_at;
         const user = this.currentSchema.last_updated_by || 'Unknown';
 

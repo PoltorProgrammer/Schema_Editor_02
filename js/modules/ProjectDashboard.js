@@ -28,6 +28,9 @@ Object.assign(SchemaEditor.prototype, {
         const resultsPage = document.getElementById('resultsPage');
         if (resultsPage) resultsPage.style.display = 'none';
 
+        const globalResultsBtn = document.getElementById('globalResultsPageBtn');
+        if (globalResultsBtn) globalResultsBtn.style.display = 'none';
+
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('downloadProgressBtn').style.display = 'none';
         if (document.getElementById('headerMoreFilter')) {
@@ -50,6 +53,7 @@ Object.assign(SchemaEditor.prototype, {
         if (isUserAction) {
             localStorage.removeItem('lastActiveProject');
             localStorage.removeItem('lastActivePage');
+            localStorage.removeItem('isGlobalViewActive');
         }
 
         // Try to auto-connect if we have a stored handle and it's not a user logout/dashboard action
@@ -84,6 +88,11 @@ Object.assign(SchemaEditor.prototype, {
 
         const resultsBtn = document.getElementById('resultsPageBtn');
         if (resultsBtn) resultsBtn.style.display = 'none';
+
+        const globalResultsBtn = document.getElementById('globalResultsPageBtn');
+        if (globalResultsBtn) {
+            globalResultsBtn.style.display = (this.projects && this.projects.length >= 2) ? 'flex' : 'none';
+        }
 
         const backBtn = document.getElementById('backToTableBtn');
         if (backBtn) backBtn.style.display = 'none';

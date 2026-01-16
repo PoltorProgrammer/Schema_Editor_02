@@ -159,13 +159,23 @@ Object.assign(SchemaEditor.prototype, {
             // Status filter (multi-select)
             if (this.filters.statuses.length) {
                 const subStatuses = ['filled_blank', 'correction', 'standardized', 'improved_comment', 'missing_docs', 'contradictions', 'ambiguous', 'structural'];
+                const perfs = Object.values(f.definition.performance || {});
                 const hasMatch = this.filters.statuses.some(status => {
+                    // Special case for unmatched_any grouping
                     if (status === 'unmatched_any') {
-                        return f.matchStatus === 'unmatched' || f.matchStatus === 'improved';
+                        return perfs.some(p => {
+                            const s = this.getPatientPerformanceStatus(p);
+                            return s === 'unmatched' || s === 'improved';
+                        });
                     }
-                    if (status === f.matchStatus) return true;
+
+                    // Check if ANY patient has this status (Inclusive filtering)
+                    if (perfs.some(p => this.getPatientPerformanceStatus(p) === status)) {
+                        return true;
+                    }
+
+                    // Check sub-statuses (specific reasons for unmatched/improved)
                     if (subStatuses.includes(status)) {
-                        const perfs = Object.values(f.definition.performance || {});
                         return perfs.some(p => p.unmatched && p.unmatched[status]);
                     }
                     return false;

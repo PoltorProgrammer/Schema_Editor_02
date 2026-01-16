@@ -69,12 +69,21 @@
                     </button>
 
                     <button id="resultsPageBtn" class="btn btn-ghost" title="Results Statistics"
-                        onclick="app.showResultsPage()">
+                        onclick="app.showResultsPage()" style="display: none;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V19L10.23,4.75L16,11.78Z" />
                         </svg>
                         Results
+                    </button>
+
+                    <button id="globalResultsPageBtn" class="btn btn-ghost" title="Global Projects Statistics"
+                        onclick="app.showGlobalResults()" style="display: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M16,11.78L20.24,4.45L21.97,5.45L16.74,14.5L10.23,10.75L5.46,19H22V21H2V19L10.23,4.75L16,11.78Z" />
+                        </svg>
+                        Global Results
                     </button>
 
 
@@ -496,8 +505,8 @@
                         <div class="box-header">
                             <h3>Global Performance Overview</h3>
                             <div class="mode-switcher" id="overviewModeSwitcher">
-                                <button class="switcher-btn active" data-mode="outputs">Outputs</button>
-                                <button class="switcher-btn" data-mode="variables">Variables</button>
+                                <button class="switcher-btn" data-mode="outputs">Outputs</button>
+                                <button class="switcher-btn active" data-mode="variables">Variables</button>
                             </div>
                         </div>
                         <div class="chart-wrapper overview-wrapper">
@@ -507,6 +516,7 @@
                         <div id="overviewLegend" class="overview-legend"></div>
                     </div>
                 </div>
+
 
                 <div class="results-charts-container">
                     <div class="chart-box">
@@ -524,6 +534,25 @@
                             <div id="issuedCenterText" class="chart-center-text small-center"></div>
                         </div>
                         <div id="issuedLegend" class="overview-legend breakdown-legend"></div>
+                    </div>
+                </div>
+
+                <div class="results-charts-container comparison-container">
+                    <div class="chart-box">
+                        <h3>MediXtract Performance</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="medixtractPerfChart"></canvas>
+                            <div id="medixtractPerfCenterText" class="chart-center-text small-center"></div>
+                        </div>
+                        <div id="medixtractPerfLegend" class="overview-legend breakdown-legend"></div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Human Performance</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="humanPerfChart"></canvas>
+                            <div id="humanPerfCenterText" class="chart-center-text small-center"></div>
+                        </div>
+                        <div id="humanPerfLegend" class="overview-legend breakdown-legend"></div>
                     </div>
                 </div>
             </div>
@@ -590,6 +619,21 @@
                 <p class="summary-description">Number of fields that have at least one patient categorized under
                     that status</p>
                 <div id="resultsFieldSummary" class="results-field-summary"></div>
+            </div>
+
+            <div class="results-overview-container" style="margin-top: 3rem; margin-bottom: 2rem;">
+                <div class="chart-box overview-box patient-analysis-box">
+                    <div class="box-header">
+                        <h3>Patient-by-Patient Performance Analysis</h3>
+                        <div class="mode-switcher" id="patientAnalysisModeSwitcher">
+                            <button class="switcher-btn active" data-mode="outputs">Outputs</button>
+                            <button class="switcher-btn" data-mode="variables">Variables</button>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper patient-analysis-wrapper">
+                        <canvas id="patientAnalysisChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -897,10 +941,17 @@
     <script src="js/modules/renderers/PatientAnalysisRenderer.js"></script>
     <script src="js/modules/renderers/FieldDetailsRenderer.js"></script>
     <script src="js/modules/SettingsManager.js"></script>
+    <script src="js/modules/results/ResultsLogic.js"></script>
+    <script src="js/modules/results/ResultsCharts.js"></script>
+    <script src="js/modules/results/ResultsTables.js"></script>
     <script src="js/modules/ResultsPage.js"></script>
     <script src="js/modules/MergeManager.js"></script>
     <script src="js/modules/ExportManager.js"></script>
+    <script src="js/modules/GlobalResults.js"></script>
     <script src="js/modules/PresenceManager.js"></script>
+    <script src="js/modules/interactions/DropdownHandlers.js"></script>
+    <script src="js/modules/interactions/ComboboxHandlers.js"></script>
+    <script src="js/modules/interactions/PanelInteractions.js"></script>
     <script src="js/modules/InteractionManager.js"></script>
     <script src="js/main.js"></script>
 </body>

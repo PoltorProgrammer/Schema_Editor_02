@@ -128,6 +128,10 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('headerMoreFilter').style.display = 'inline-flex';
         document.getElementById('projectDashboardBtn').style.display = 'flex';
         document.getElementById('resultsPageBtn').style.display = 'flex';
+
+        const globalResultsBtn = document.getElementById('globalResultsPageBtn');
+        if (globalResultsBtn) globalResultsBtn.style.display = 'none';
+
         document.getElementById('backToTableBtn').style.display = 'none';
         document.getElementById('loadingIndicator').style.display = 'none';
 
