@@ -154,6 +154,7 @@ Object.assign(SchemaEditor.prototype, {
         hideEl('addPatientBtn');
         hideEl('addOutputBtn');
         hideEl('downloadFilteredBtn');
+        hideEl('downloadGraphicsBtn');
         this.applyColumnOrder();
 
         if (this.updateScrollTopVisibility) {

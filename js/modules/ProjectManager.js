@@ -237,6 +237,7 @@ Object.assign(SchemaEditor.prototype, {
             this.validationData = {};
             this.medixtractOutputData = {};
             this.hasUnsavedChanges = false;
+            this.cachedStats = null; // Reset stats cache to ensure no global data persists
 
             let analysisData;
 

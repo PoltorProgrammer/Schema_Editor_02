@@ -22,6 +22,10 @@ Object.assign(SchemaEditor.prototype, {
         hideEl('downloadProgressBtn');
         hideEl('headerMoreFilter');
 
+        // Show Download Graphics Button
+        const dlBtn = document.getElementById('downloadGraphicsBtn');
+        if (dlBtn) dlBtn.style.display = 'flex';
+
         // Ensure navigation buttons are correct
         const backBtn = document.getElementById('backToTableBtn');
         if (backBtn) {
@@ -165,6 +169,7 @@ Object.assign(SchemaEditor.prototype, {
 
         // Cache for filtering
         this.cachedStats = stats;
+        this.cachedVariableStats = variableStats;
         this.cachedPatientIds = patientIds;
         this.activeTableFilter = null;
 

@@ -43,6 +43,7 @@ Object.assign(SchemaEditor.prototype, {
         document.getElementById('addPatientBtn').style.display = 'none';
         document.getElementById('addOutputBtn').style.display = 'none';
         document.getElementById('downloadFilteredBtn').style.display = 'none';
+        document.getElementById('downloadGraphicsBtn').style.display = 'none';
 
         if (this.updateScrollTopVisibility) {
             this.updateScrollTopVisibility();

@@ -9,6 +9,8 @@ Object.assign(SchemaEditor.prototype, {
         Chart.register({
             id: 'curvedText',
             afterDatasetsDraw(chart) {
+                if (chart.config.type !== 'doughnut' && chart.config.type !== 'pie') return;
+
                 const { ctx, data } = chart;
                 chart.data.datasets.forEach((dataset, i) => {
                     const meta = chart.getDatasetMeta(i);
@@ -28,14 +30,35 @@ Object.assign(SchemaEditor.prototype, {
                             if (isVisible) return sum + val;
                             return sum;
                         }, 0);
-                        const percentage = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
 
-                        const line1 = label;
-                        const line2 = `${value} (${percentage}%)`;
+                        const percentVal = total > 0 ? (value / total) * 100 : 0;
+                        const percentage = percentVal.toFixed(0);
 
                         const midAngle = (startAngle + endAngle) / 2;
                         const midRadius = (innerRadius + outerRadius) / 2;
-                        const lineSpacing = 8;
+
+                        // Calculate scale factor relative to a standard view (e.g., 400px min dimension)
+                        // This ensures that for high-res exports (e.g. 1000px), the text scales up proportionally
+                        const minDim = Math.min(chart.width, chart.height);
+                        const scale = Math.max(1, minDim / 400);
+
+                        // Dynamic Sizing scaled
+                        const percentFactor = Math.min(32, Math.max(11, 10 + (percentVal / 3.5)));
+                        const fontSize = percentFactor * scale;
+
+                        // Calculate offsets to center the text block around midRadius
+                        // We want a constant visual gap between the label and the stats
+                        const gap = 4 * scale;
+                        const statsFontSize = 10 * scale;
+
+                        // Line 1 (Label) is shifted 'up' (visually) by half of Line 2's height + half gap
+                        const radiusOffsetLabel = (statsFontSize + gap) / 2;
+
+                        // Line 2 (Stats) is shifted 'down' (visually) by half of Line 1's height + half gap
+                        const radiusOffsetStats = (fontSize + gap) / 2;
+
+                        const line1 = label;
+                        const line2 = `${value} (${percentage}%)`;
 
                         // Normalize angle to 0-2PI to detect bottom half
                         const normalizedAngle = ((midAngle % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
@@ -97,11 +120,11 @@ Object.assign(SchemaEditor.prototype, {
                             return false;
                         };
 
-                        // Draw Line 1 (Label)
-                        drawCurvedLine(line1, midRadius - lineSpacing, 11, true);
+                        // Draw Line 1 (Label) - shifted "inwards/up"
+                        drawCurvedLine(line1, midRadius - radiusOffsetLabel, fontSize, true);
 
-                        // Draw Line 2 (Stats)
-                        drawCurvedLine(line2, midRadius + lineSpacing, 10, false);
+                        // Draw Line 2 (Stats) - shifted "outwards/down"
+                        drawCurvedLine(line2, midRadius + radiusOffsetStats, statsFontSize, false);
 
                         ctx.restore();
                     });
@@ -110,6 +133,232 @@ Object.assign(SchemaEditor.prototype, {
         });
 
         this.curvedTextPluginRegistered = true;
+    },
+
+    getOverviewData(mode, globalStats, personalStats, variableStats) {
+        const colorPurple = '#8b5cf6';
+        const colorGreen = '#22c55e';
+        const colorOrange = '#f97316';
+        const colorBlue = '#3b82f6';
+
+        const colors = {
+            manual: { main: colorPurple, sub: ['#7c3aed'] },
+            correct: { main: colorGreen, sub: ['#4ade80', '#22c55e', '#16a34a', '#15803d', '#10b981', '#059669', '#047857'] },
+            attention: { main: colorOrange, sub: ['#fb923c', '#f97316', '#ea580c', '#c2410c'] },
+            personal: { main: colorBlue, sub: ['#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a'] }
+        };
+
+        let structure = [];
+        if (mode === 'variables') {
+            const manualData = { 'Manual': variableStats.manual };
+            const correctData = {
+                'Improved': variableStats.correct.improved,
+                'Match': variableStats.correct.match + variableStats.correct.dismissed,
+                'Miss. Doc': variableStats.correct.missing
+            };
+            const attentionData = {
+                'Mixed Perf.': variableStats.attention.mixed,
+                'Uncertain': variableStats.attention.uncertain
+            };
+            const personalData = {
+                'Personal Data': variableStats.personal
+            };
+
+            structure = [
+                { id: 'manual', label: 'Manual Entry', color: colors.manual.main, children: manualData, subColors: colors.manual.sub },
+                { id: 'correct', label: 'Correct', color: colors.correct.main, children: correctData, subColors: colors.correct.sub },
+                { id: 'attention', label: 'Attention Required', color: colors.attention.main, children: attentionData, subColors: colors.attention.sub },
+                { id: 'personal', label: 'Personal Data', color: colors.personal.main, children: personalData, subColors: colors.personal.sub }
+            ];
+        } else {
+            const manualData = { 'Manual': globalStats.pending };
+            const correctData = {
+                'Match': globalStats.matched + globalStats.dismissed,
+                'Correction': globalStats.improved_sub.correction,
+                'F. Blank': globalStats.improved_sub.filled_blank,
+                'Standard.': globalStats.improved_sub.standardized,
+                'Comment': globalStats.improved_sub.improved_comment,
+                'Miss. Doc': globalStats.unmatched_sub.missing_docs
+            };
+            const attentionData = {
+                'Contrad.': globalStats.unmatched_sub.contradictions,
+                'Ambigu.': globalStats.unmatched_sub.ambiguous,
+                'Struct.': globalStats.unmatched_sub.structural,
+                'Uncert.': globalStats.uncertain
+            };
+
+            const personalData = {
+                'Match': (personalStats.matched || 0) + (personalStats.dismissed || 0),
+                'Improved': personalStats.improved || 0,
+                'Issue': personalStats.unmatched || 0,
+                'Uncert.': personalStats.uncertain || 0,
+                'Manual': personalStats.pending || 0
+            };
+
+            structure = [
+                { id: 'manual', label: 'Manual Entry', color: colors.manual.main, children: manualData, subColors: colors.manual.sub },
+                { id: 'correct', label: 'Correct', color: colors.correct.main, children: correctData, subColors: colors.correct.sub },
+                { id: 'attention', label: 'Attention Required', color: colors.attention.main, children: attentionData, subColors: colors.attention.sub },
+                { id: 'personal', label: 'Personal Data', color: colors.personal.main, children: personalData, subColors: colors.personal.sub }
+            ];
+        }
+
+        const outerDataArray = [];
+        const outerColorArray = [];
+        const outerLabelArray = [];
+        const innerDataArray = [];
+        const innerColorArray = [];
+        const innerLabelArray = [];
+
+        structure.forEach(group => {
+            const groupTotal = Object.values(group.children).reduce((a, b) => a + b, 0);
+            if (groupTotal === 0) return;
+            innerDataArray.push(groupTotal);
+            innerColorArray.push(group.color);
+            innerLabelArray.push(group.label);
+            Object.entries(group.children).forEach(([label, val], idx) => {
+                outerDataArray.push(val);
+                outerLabelArray.push(label);
+                outerColorArray.push(group.subColors[idx] || group.color);
+            });
+        });
+
+        return {
+            datasets: [
+                { // OUTER RING
+                    data: [...outerDataArray],
+                    backgroundColor: [...outerColorArray],
+                    labels: [...outerLabelArray],
+                    weight: 1.8,
+                    borderColor: '#ffffff',
+                    borderWidth: 1.5
+                },
+                { // INNER RING
+                    data: [...innerDataArray],
+                    backgroundColor: [...innerColorArray],
+                    labels: [...innerLabelArray],
+                    weight: 1,
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }
+            ],
+            structure: structure // Return structure for legend usage
+        };
+    },
+
+    getPatientAnalysisData(pMode, byPatientStats, byPatientVariableStats) {
+        if (!byPatientStats) return null;
+        const pIds = Object.keys(byPatientStats).sort();
+        let datasets = [];
+
+        if (pMode === 'variables') {
+            datasets = [
+                { label: 'Correct', data: [], backgroundColor: '#22c55e', borderRadius: 4 },
+                { label: 'Attention Required', data: [], backgroundColor: '#f97316', borderRadius: 4 },
+                { label: 'Personal Data', data: [], backgroundColor: '#8b5cf6', borderRadius: 4 }
+            ];
+            pIds.forEach(pid => {
+                const s = byPatientVariableStats[pid];
+                datasets[0].data.push(s.correct.match + s.correct.dismissed + s.correct.improved + s.correct.missing + s.manual);
+                datasets[1].data.push(s.attention.mixed + s.attention.uncertain);
+                datasets[2].data.push(s.personal);
+            });
+        } else {
+            datasets = [
+                { label: 'Match', data: [], backgroundColor: '#3b82f6', borderRadius: 4 },
+                { label: 'Improves', data: [], backgroundColor: '#22c55e', borderRadius: 4 },
+                { label: 'Attention Required', data: [], backgroundColor: '#f97316', borderRadius: 4 },
+                { label: 'Personal Data', data: [], backgroundColor: '#8b5cf6', borderRadius: 4 }
+            ];
+            pIds.forEach(pid => {
+                const s = byPatientStats[pid];
+                datasets[0].data.push(s.matched + s.dismissed);
+                datasets[1].data.push(s.improved_sub.filled_blank + s.improved_sub.correction + s.improved_sub.standardized + s.improved_sub.improved_comment + s.unmatched_sub.missing_docs);
+                datasets[2].data.push(s.unmatched_sub.contradictions + s.unmatched_sub.ambiguous + s.unmatched_sub.structural + s.uncertain);
+                datasets[3].data.push(s.pending);
+            });
+        }
+        return { labels: pIds, datasets };
+    },
+
+    getImprovedData(globalStats) {
+        const data = globalStats.improved_sub;
+        const labelsMap = {
+            correction: 'Correction',
+            filled_blank: 'Filled Blank',
+            standardized: 'Standardized',
+            improved_comment: 'Comment'
+        };
+        return {
+            labels: Object.keys(labelsMap).map(key => labelsMap[key]),
+            datasets: [{
+                data: Object.keys(labelsMap).map(key => data[key]),
+                backgroundColor: ['#4ade80', '#22c55e', '#16a34a', '#15803d'],
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 10
+            }],
+            raw_data: data
+        };
+    },
+
+    getIssuedData(globalStats) {
+        const data = globalStats.unmatched_sub;
+        const labelsMap = {
+            missing_docs: 'Missing Docs',
+            contradictions: 'Contradictions',
+            ambiguous: 'Ambiguous',
+            structural: 'Structural'
+        };
+        return {
+            labels: Object.keys(labelsMap).map(key => labelsMap[key]),
+            datasets: [{
+                data: Object.keys(labelsMap).map(key => data[key]),
+                backgroundColor: ['#f87171', '#ef4444', '#dc2626', '#b91c1c'],
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 10
+            }],
+            raw_data: data
+        };
+    },
+
+    getPerfData(type, globalStats) {
+        // Base Gray Area (Source/Data logic issues)
+        const baseGray = globalStats.unmatched_sub.missing_docs +
+            globalStats.unmatched_sub.contradictions +
+            globalStats.unmatched_sub.ambiguous +
+            globalStats.uncertain;
+
+        let data;
+        if (type === 'mx') {
+            data = {
+                correct: globalStats.matched + globalStats.dismissed + globalStats.improved,
+                error: globalStats.unmatched_sub.structural,
+                gray: baseGray
+            };
+        } else {
+            data = {
+                correct: globalStats.matched + globalStats.dismissed + globalStats.unmatched_sub.structural,
+                error: globalStats.improved,
+                gray: baseGray
+            };
+        }
+
+        const pLabelsMap = { correct: 'Correct', error: 'Error', gray: 'Gray Area' };
+        const pColors = ['#22c55e', '#ef4444', '#94a3b8'];
+
+        return {
+            labels: Object.values(pLabelsMap),
+            datasets: [{
+                data: Object.values(data),
+                backgroundColor: pColors,
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 10
+            }],
+            raw_data: data
+        };
     },
 
     renderResultsCharts(globalStats, personalStats, totals, variableStats, byPatientStats, byPatientVariableStats) {
