@@ -98,12 +98,12 @@ Object.assign(SchemaEditor.prototype, {
             correct: {
                 improved: 0,
                 match: 0,
-                missing: 0,
                 dismissed: 0
             },
             attention: {
                 mixed: 0,
-                uncertain: 0
+                uncertain: 0,
+                missing: 0
             },
             personal: 0
         };
@@ -134,11 +134,15 @@ Object.assign(SchemaEditor.prototype, {
                 return;
             }
 
-            // 3. Correct sub-categories - Priority based on prominence
+            // 3. Attention Required (Missing Docs) - Priority 3
+            if (fPerf.unmatched_sub.missing_docs > 0) {
+                vStats.attention.missing++;
+                return;
+            }
+
+            // 4. Correct sub-categories
             if (fPerf.improved > 0) {
                 vStats.correct.improved++;
-            } else if (fPerf.unmatched_sub.missing_docs > 0) {
-                vStats.correct.missing++;
             } else if (fPerf.dismissed > 0) {
                 vStats.correct.dismissed++;
             } else if (fPerf.matched > 0) {

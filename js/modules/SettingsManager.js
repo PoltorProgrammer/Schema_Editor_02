@@ -36,6 +36,7 @@ Object.assign(SchemaEditor.prototype, {
         this.originalSettings = JSON.parse(JSON.stringify(this.settings));
         document.getElementById('settingsModal').style.display = 'flex';
         this.updateThemeButtons();
+        this.updatePaletteButtons();
         this.updateFilterVisibilityDisplay();
         this.updateColumnOrderDisplay();
         this.initializeColumnDragDrop();
@@ -67,6 +68,18 @@ Object.assign(SchemaEditor.prototype, {
         ['light', 'dark', 'joan'].forEach(t => {
             const btn = document.getElementById(`${t}ThemeBtn`);
             if (btn) btn.classList.toggle('active', this.settings.theme === t);
+        });
+    },
+    
+    selectPalette(p) {
+        this.settings.palette = p;
+        this.updatePaletteButtons();
+    },
+
+    updatePaletteButtons() {
+        ['default', 'eupsa'].forEach(p => {
+            const btn = document.getElementById(`${p}PaletteBtn`);
+            if (btn) btn.classList.toggle('active', this.settings.palette === p);
         });
     },
 
@@ -174,6 +187,10 @@ Object.assign(SchemaEditor.prototype, {
         this.applyColumnOrder();
         this.saveSettingsToStorage();
         if (this.currentSchema) this.renderFieldsTable();
+        
+        if (document.getElementById('resultsPage').style.display !== 'none') {
+            this.calculateAndRenderResults();
+        }
 
         // Save Nickname
         const nicknameInput = document.getElementById('settingsNickname');
@@ -278,6 +295,7 @@ Object.assign(SchemaEditor.prototype, {
 
         this.initializeTheme();
         this.updateThemeButtons();
+        this.updatePaletteButtons();
         this.updateFilterVisibilityDisplay();
         this.updateColumnOrderDisplay();
 

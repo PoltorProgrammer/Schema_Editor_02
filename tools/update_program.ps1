@@ -12,21 +12,25 @@ if (Test-Path (Join-Path $currentDir ".git")) {
     
     # Check if git is in path
     if (Get-Command git -ErrorAction SilentlyContinue) {
-        Write-Host "Stashing any local modifications (as backup)..."
-        git stash | Out-Null
+        Write-Host "Stashing local changes..."
+        git stash
         
-        Write-Host "Fetching latest version from GitHub..."
-        git fetch origin
+        Write-Host "Pulling latest version..."
+        $pullOutput = git pull
+        Write-Host $pullOutput
         
-        $branch = git rev-parse --abbrev-ref HEAD
-        Write-Host "Updating program files to match 'origin/$branch'..."
+        Write-Host "Restoring local changes..."
+        # Quietly pop the stash. We use --quiet if available or just pipe to null.
+        git stash pop 2>$null
         
-        # This will restore deleted files and ensure everything matches the repo
-        # It won't touch ignored files (like the 'projects' folder)
-        git reset --hard "origin/$branch"
+        # Ensure that any core files missing from the disk are restored
+        $deletedFiles = git ls-files --deleted
+        if ($deletedFiles) {
+            Write-Host "Restoring missing program files..." -ForegroundColor Yellow
+            git checkout -- $deletedFiles
+        }
         
         Write-Host "`nUpdate complete via Git!" -ForegroundColor Green
-        Write-Host "Your local changes (if any) were stashed as a backup." -ForegroundColor Gray
         return
     } else {
         Write-Host "[WARNING] .git folder found but 'git' command is not available." -ForegroundColor Yellow

@@ -43,7 +43,8 @@ const DEFAULT_SETTINGS = {
     },
     panelWidth: '60vw',
     username: '',
-    knownNicknames: []
+    knownNicknames: [],
+    palette: 'default'
 };
 
 const FILTER_STATES = ['all', 'true', 'false'];

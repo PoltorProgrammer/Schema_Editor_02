@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schema Field Editor</title>
     <link rel="icon"
-        href="https://raw.githubusercontent.com/MediXTract/MediXtract/refs/heads/main/images/logos/LOGO_MediXtract_Circular.png"
+        href="https://raw.githubusercontent.com/MediXTract/MediXtract/refs/heads/main/assets/images/logos/medixtract/LOGO_MediXtract_Circular.png"
         type="image/png">
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/base.css">
@@ -32,7 +32,6 @@
     <link rel="stylesheet" href="css/themes.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 
 <body>
@@ -813,6 +812,22 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Palette Settings -->
+                    <div class="settings-section">
+                        <h4>Results Palette</h4>
+                        <div class="setting-item">
+                            <label>Choose a color palette for results and graphics</label>
+                            <div class="theme-selector">
+                                <button id="defaultPaletteBtn" class="theme-option active"
+                                    onclick="app.selectPalette('default')">
+                                    Default
+                                </button>
+                                <button id="eupsaPaletteBtn" class="theme-option" onclick="app.selectPalette('eupsa')">
+                                    EUPSA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="settings-footer">
@@ -984,6 +999,9 @@
     <script src="js/modules/renderers/FieldDetailsRenderer.js"></script>
     <script src="js/modules/SettingsManager.js"></script>
     <script src="js/modules/results/ResultsLogic.js"></script>
+    <script src="js/modules/results/ResultsPalette.js"></script>
+    <script src="js/modules/results/ResultsChartPlugins.js"></script>
+    <script src="js/modules/results/ResultsChartConfigs.js"></script>
     <script src="js/modules/results/ResultsCharts.js"></script>
     <script src="js/modules/results/ResultsTables.js"></script>
     <script src="js/modules/results/ResultsExport.js"></script>
